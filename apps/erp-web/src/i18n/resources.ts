@@ -1,0 +1,46 @@
+import type { AppResources } from '@erp/ui';
+
+export const erpResources: AppResources = {
+  en: {
+    'dashboard.greetingMorning': 'Good morning, {{name}}',
+    'dashboard.greetingAfternoon': 'Good afternoon, {{name}}',
+    'dashboard.greetingEvening': 'Good evening, {{name}}',
+    'dashboard.context': '{{account}} · {{unit}}',
+    'dashboard.modules': 'Modules',
+    'dashboard.modulesHint': 'Screens appear here as features are enabled for your business unit.',
+    'dashboard.featureCount_one': '{{count}} feature',
+    'dashboard.featureCount_other': '{{count}} features',
+    'dashboard.subModuleCount_one': '{{count}} sub-module',
+    'dashboard.subModuleCount_other': '{{count}} sub-modules',
+    'dashboard.open': 'Open',
+    'bu.switched': 'Switched to {{name}}',
+    'placeholder.featureTitle': 'Configuration-driven screen',
+    'placeholder.featureText':
+      'This screen is rendered by the metadata engine from the configuration published for your business unit. It becomes available once the feature is built and enabled.',
+    'placeholder.sectionTitle': 'Coming soon',
+    'placeholder.sectionText': 'This area is part of the roadmap and will be available in a later release.',
+    'placeholder.featureKey': 'Feature key',
+    'placeholder.status': 'Not configured',
+  },
+  bn: {
+    'dashboard.greetingMorning': 'শুভ সকাল, {{name}}',
+    'dashboard.greetingAfternoon': 'শুভ অপরাহ্ন, {{name}}',
+    'dashboard.greetingEvening': 'শুভ সন্ধ্যা, {{name}}',
+    'dashboard.context': '{{account}} · {{unit}}',
+    'dashboard.modules': 'মডিউলসমূহ',
+    'dashboard.modulesHint': 'আপনার বিজনেস ইউনিটে ফিচার চালু হলে স্ক্রিনগুলো এখানে দেখা যাবে।',
+    'dashboard.featureCount_one': '{{count}}টি ফিচার',
+    'dashboard.featureCount_other': '{{count}}টি ফিচার',
+    'dashboard.subModuleCount_one': '{{count}}টি সাব-মডিউল',
+    'dashboard.subModuleCount_other': '{{count}}টি সাব-মডিউল',
+    'dashboard.open': 'খুলুন',
+    'bu.switched': '{{name}}-এ পরিবর্তন করা হয়েছে',
+    'placeholder.featureTitle': 'কনফিগারেশন-চালিত স্ক্রিন',
+    'placeholder.featureText':
+      'এই স্ক্রিনটি আপনার বিজনেস ইউনিটের প্রকাশিত কনফিগারেশন থেকে মেটাডেটা ইঞ্জিন দিয়ে তৈরি হয়। ফিচারটি তৈরি ও চালু হলে এটি ব্যবহার করা যাবে।',
+    'placeholder.sectionTitle': 'শীঘ্রই আসছে',
+    'placeholder.sectionText': 'এই অংশটি রোডম্যাপে আছে এবং পরবর্তী রিলিজে পাওয়া যাবে।',
+    'placeholder.featureKey': 'ফিচার কী',
+    'placeholder.status': 'কনফিগার করা হয়নি',
+  },
+};

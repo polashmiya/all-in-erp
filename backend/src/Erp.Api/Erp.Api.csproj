@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Erp.Api</RootNamespace>
+    <UserSecretsId>erp-api-7c1f3b2e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Erp.Core\Erp.Core.csproj" />
+    <ProjectReference Include="..\Erp.Metadata\Erp.Metadata.csproj" />
+    <ProjectReference Include="..\Erp.Infrastructure\Erp.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Inventory\Erp.Modules.Inventory.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+</Project>

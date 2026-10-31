@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Erp.Modules.Inventory</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Erp.Core\Erp.Core.csproj" />
+    <ProjectReference Include="..\..\Erp.Metadata\Erp.Metadata.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Feature manifests are copied next to the binaries so the metadata loader can find them at runtime. -->
+    <None Include="Features\**\*.manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

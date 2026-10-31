@@ -1,0 +1,100 @@
+# myErp — Configurable ERP
+
+One ERP codebase whose screens and data shape are driven by configuration, per **Account › Business Unit**.
+
+| App | Who uses it | Dev URL |
+|---|---|---|
+| **Panel** (`apps/panel-web`) | Internal team (Super Admin, Implementer): accounts, business units, fields, layouts | http://localhost:5173 |
+| **ERP** (`apps/erp-web`) | Client users; UI rendered from the business unit's resolved configuration | http://localhost:5174 |
+| **API** (`backend/src/Erp.Api`) | Both apps: `/api/panel/*` and `/api/erp/*` | http://localhost:5000 (docs: `/docs`) |
+
+## Prerequisites
+
+- .NET SDK 10 (`dotnet --list-sdks`)
+- Node.js 22+ and pnpm 10 (`npm i -g pnpm@10`)
+- SQL Server LocalDB with a database named **`myErp`** (`(localdb)\MSSQLLocalDB`). Docker is not required.
+
+## Getting started
+
+```powershell
+pnpm install                  # frontend workspace
+pnpm dev:api                  # API on :5000 (runs against LocalDB / myErp)
+pnpm dev                      # Panel on :5173 and ERP on :5174
+```
+
+Check the API at http://localhost:5000/health (it reports database health) and http://localhost:5000/docs (Scalar).
+
+The connection string is in [appsettings.Development.json](backend/src/Erp.Api/appsettings.Development.json).
+Override it without editing files via `ConnectionStrings__Erp`.
+
+## Scripts
+
+| Script | What it does |
+|---|---|
+| `pnpm dev` | Both frontends with HMR |
+| `pnpm dev:api` | ASP.NET Core API (`http` launch profile, port 5000) |
+| `pnpm gen:api` | Regenerates `packages/api-client` from `http://localhost:5000/openapi/v1.json` (**API must be running**) |
+| `pnpm test` | Vitest (all packages) + `dotnet test` |
+| `pnpm typecheck` / `pnpm lint` / `pnpm format` | Static checks |
+| `pnpm build` | Production build of both apps |
+
+API integration tests boot the real API against a throwaway **`myErp_Test`** LocalDB database, which they
+create and drop themselves; your `myErp` database is never touched. Set `ERP_TEST_CONNECTION` to use a
+different server.
+
+## Repository layout
+
+```
+backend/
+  Erp.sln, Directory.Build.props, Directory.Packages.props   (central package versions)
+  src/Erp.Api               Minimal API host: Serilog, ProblemDetails, CORS, OpenAPI + Scalar, /health
+  src/Erp.Core              Domain primitives, tenancy and permission abstractions
+  src/Erp.Metadata          Manifests, field definitions, screen resolver, dynamic entity service
+  src/Erp.Infrastructure    EF Core (ErpDbContext), migrations, persistence
+  src/Modules/Inventory     Inventory module; features live in Features/<Feature>/ with a *.manifest.json
+  tests/Erp.Tests           xUnit + WebApplicationFactory against LocalDB
+apps/
+  panel-web                 Panel (Vite + React 19 + AntD 5 + ProLayout)
+  erp-web                   ERP client
+packages/
+  ui                        Theme tokens (light/dark/compact), i18n (EN/বাংলা), AppShell, shared components
+  api-client                orval-generated TanStack Query hooks + fetch client (token, X-Business-Unit)
+  metadata-schema           zod schemas/types for manifests and layouts (Phase 2)
+  metadata-engine           Generic recursive screen renderer (Phase 4)
+```
+
+Project references: `Api → all`, `Modules → Core, Metadata`, `Infrastructure → Core, Metadata`, `Metadata → Core`.
+
+## Conventions
+
+- **Navigation is three levels:** Module › Sub-module › Feature (e.g. Inventory › Master Data › Item Profile),
+  plus top-level entries (Dashboard, Reports Center, Settings, Help). Menu nodes are `MenuNode` objects in
+  `packages/ui`. Only leaves have routes.
+- **Feature key** = `{module}.{feature}` (e.g. `inventory.item`); route = `/app/{module}/{feature}`.
+- **Permission code** = `{module}.{feature}.{action}` (e.g. `inventory.item.create`), enforced by the API.
+- No industry-specific branches in code; behaviour differences come from configuration only.
+- `packages/metadata-engine` must stay generic; it never references a concrete feature.
+- Labels that come from metadata are `LocalizedText` (`{ en, bn }`); UI strings use i18next keys.
+
+## Version pins and machine notes
+
+- **antd 5** (not 6), because `@ant-design/pro-components` 2.x supports only antd 5. React 19 support comes from
+  `@ant-design/v5-patch-for-react-19`, which `packages/ui` imports.
+- **React Router 7**, **TypeScript 6.0** (typescript-eslint does not support TS 7 yet).
+- pnpm is also a root devDependency, so nested `pnpm` calls inside scripts use `node_modules/.bin`. Windows
+  user-profile paths containing `&` break npm's global `pnpm.cmd` shim.
+- Stop the running API before `dotnet build` or `dotnet test`, because the running process locks `Erp.Api.dll`.
+
+## Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Repo skeleton, API host, LocalDB health, shared UI shell (3-level menu, dark mode, EN/বাংলা) | ✅ Done |
+| 1 | Core domain, migrations, JWT auth (panel/erp audiences), tenant context, login + BU picker | ⏳ |
+| 2 | Metadata schema, manifests, screen resolver, bootstrap endpoint | ⏳ |
+| 3 | Dynamic data API (JSON attributes, query builder, CRUD, import/export) | ⏳ |
+| 4 | Frontend metadata-engine (DynamicPage/Table/Filter/Form/View, rules) | ⏳ |
+| 5 | ERP wiring: Item Profile end-to-end from configuration | ⏳ |
+| 6 | Panel: accounts, business units, entitlements, field manager | ⏳ |
+| 7 | Panel: visual layout builder + live preview, draft/publish | ⏳ |
+| 8 | Hardening: E2E, caching, audit log, docs | ⏳ |
