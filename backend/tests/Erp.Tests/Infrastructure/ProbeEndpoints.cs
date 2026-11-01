@@ -25,10 +25,10 @@ internal sealed class ProbeEndpoints : IErpEndpoints
         probe.MapGet("/context", (ICurrentContext c) => new ProbeContext(c.UserId, c.AccountId, c.BusinessUnitId));
 
         probe.MapGet("/view", (ICurrentContext c) => new ProbeContext(c.UserId, c.AccountId, c.BusinessUnitId))
-            .RequirePermission(InventoryPermissions.ItemView);
+            .RequirePermission($"{ItemManagementMenu.ItemProfile}.view");
 
         probe.MapPost("/create", () => TypedResults.NoContent())
-            .RequirePermission(InventoryPermissions.ItemCreate);
+            .RequirePermission($"{ItemManagementMenu.ItemProfile}.create");
 
         // Plain query, no explicit account condition: only the tenant filter limits it.
         probe.MapGet("/business-units", async (ErpDbContext db) =>

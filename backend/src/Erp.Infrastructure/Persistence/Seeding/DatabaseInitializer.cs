@@ -1,5 +1,6 @@
 using Erp.Core.Authorization;
 using Erp.Core.Domain.Identity;
+using Erp.Core.Modules;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -30,6 +31,7 @@ public static class DatabaseInitializer
 
         await SyncPermissionCatalogAsync(db, provider.GetRequiredService<PermissionCatalog>(), logger, cancellationToken);
         await PanelMenuSynchronizer.SyncAsync(db, logger, cancellationToken);
+        await ErpMenuSynchronizer.SyncAsync(db, provider.GetRequiredService<ErpMenuCatalog>(), logger, cancellationToken);
 
         if (options.SeedDemoData)
         {
@@ -37,11 +39,17 @@ public static class DatabaseInitializer
         }
     }
 
-    /// <summary>Inserts new permissions and refreshes descriptions. Removed permissions are kept (roles may reference them).</summary>
+    /// <summary>
+    /// Makes the Permissions table match the catalog: new codes are inserted, descriptions refreshed, and codes no
+    /// module declares any more are deleted (their role grants go with them).
+    /// </summary>
     private static async Task SyncPermissionCatalogAsync(
         ErpDbContext db, PermissionCatalog catalog, ILogger logger, CancellationToken cancellationToken)
     {
         var existing = await db.Permissions.ToDictionaryAsync(p => p.Code, cancellationToken);
+        var declared = catalog.Codes.ToHashSet(StringComparer.Ordinal);
+        var obsolete = existing.Values.Where(p => !declared.Contains(p.Code)).ToList();
+        db.Permissions.RemoveRange(obsolete);
         var added = 0;
 
         foreach (var definition in catalog.All)
@@ -65,5 +73,6 @@ public static class DatabaseInitializer
 
         await db.SaveChangesAsync(cancellationToken);
         if (added > 0) logger.LogInformation("Permission catalog: added {Count} permission(s)", added);
+        if (obsolete.Count > 0) logger.LogInformation("Permission catalog: removed {Codes}", string.Join(", ", obsolete.Select(p => p.Code)));
     }
 }

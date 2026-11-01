@@ -1,5 +1,6 @@
 import {
   ApartmentOutlined,
+  AppstoreOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   BankOutlined,
@@ -28,6 +29,7 @@ import {
 } from './setup-model';
 import { AccountStep } from './steps/AccountStep';
 import { BusinessUnitsStep } from './steps/BusinessUnitsStep';
+import { MenuAccessStep } from './steps/MenuAccessStep';
 import { OfficesStep } from './steps/OfficesStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { WarehousesStep } from './steps/WarehousesStep';
@@ -195,6 +197,7 @@ export function AccountSetupPage() {
     { icon: <ApartmentOutlined />, title: t('setup.step.units'), description: t('setup.step.unitsDesc') },
     { icon: <ShopOutlined />, title: t('setup.step.offices'), description: t('setup.step.optional') },
     { icon: <InboxOutlined />, title: t('setup.step.warehouses'), description: t('setup.step.optional') },
+    { icon: <AppstoreOutlined />, title: t('setup.step.menus'), description: t('setup.step.menusDesc') },
     { icon: <SafetyCertificateOutlined />, title: t('setup.step.review'), description: t('setup.step.reviewDesc') },
   ].map((item, index) => ({ ...item, disabled: index > reached }));
 
@@ -225,7 +228,8 @@ export function AccountSetupPage() {
                 {step === 1 && <BusinessUnitsStep />}
                 {step === 2 && <OfficesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
                 {step === 3 && <WarehousesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
-                {step === 4 && <ReviewStep onEdit={(target) => void goTo(target)} />}
+                {step === 4 && <MenuAccessStep />}
+                {step === 5 && <ReviewStep onEdit={(target) => void goTo(target)} />}
               </Form>
             </div>
 

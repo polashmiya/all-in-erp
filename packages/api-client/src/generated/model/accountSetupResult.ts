@@ -14,5 +14,6 @@ export interface AccountSetupResult {
   businessUnits: number;
   offices: number;
   warehouses: number;
+  features: number;
   admin: AdminCredentials;
 }

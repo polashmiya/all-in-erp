@@ -1,6 +1,7 @@
 using Erp.Api.Auth;
 using Erp.Api.Endpoints;
 using Erp.Api.Hosting;
+using Erp.Api.Navigation;
 using Erp.Api.Panel.Accounts;
 using Erp.Api.Panel.Navigation;
 using Erp.Core.Modules;
@@ -30,6 +31,7 @@ builder.Services.AddLoginRateLimiting(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInventoryModule();
 builder.Services.AddScoped<AccountSetupService>();
+builder.Services.AddScoped<AccountFeatureService>();
 
 var app = builder.Build();
 
@@ -55,10 +57,12 @@ var panel = app.MapPanelApi();
 panel.MapPanelAuthEndpoints();
 panel.MapPanelNavigationEndpoints();
 panel.MapAccountEndpoints();
+panel.MapPanelErpMenuEndpoints();
 foreach (var endpoints in app.Services.GetServices<IPanelEndpoints>()) endpoints.Map(panel);
 
 var erp = app.MapErpApi();
 erp.MapErpAuthEndpoints();
+erp.MapErpNavigationEndpoints();
 foreach (var endpoints in app.Services.GetServices<IErpEndpoints>()) endpoints.Map(erp);
 
 app.Run();

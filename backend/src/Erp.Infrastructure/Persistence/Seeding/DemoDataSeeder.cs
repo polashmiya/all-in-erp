@@ -52,8 +52,19 @@ public sealed class DemoDataSeeder(
         var administrator = await EnsureRoleAsync(account, AdministratorRole, () => SystemRoles.CreateAdministrator(account.Id, catalog), catalog.Codes, cancellationToken);
         await EnsureRoleAsync(account, ViewerRole, () => SystemRoles.CreateViewer(account.Id, catalog), SystemRoles.ViewerPermissions(catalog), cancellationToken);
         await EnsureErpAdminAsync(seed.ErpAdmin, account, units, administrator, cancellationToken);
+        await EnsureFeaturesAsync(account, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>The demo account gets every ERP feature, but only the first time (later Panel changes are kept).</summary>
+    private async Task EnsureFeaturesAsync(Account account, CancellationToken ct)
+    {
+        if (await db.AccountFeatures.AcrossTenants().AnyAsync(af => af.AccountId == account.Id, ct)) return;
+
+        var features = await db.ErpFeatures.Where(f => f.IsActive).Select(f => f.Id).ToListAsync(ct);
+        db.AccountFeatures.AddRange(features.Select(id => new AccountFeature { AccountId = account.Id, FeatureId = id }));
+        if (features.Count > 0) logger.LogInformation("Granted {Count} ERP feature(s) to {Account}", features.Count, account.Name);
     }
 
     private async Task EnsurePanelAdminAsync(SeedUserOptions seed, CancellationToken ct)

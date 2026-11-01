@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Erp.Infrastructure.Authorization;
 
-/// <summary>Resolves role permissions per (user, business unit); the current request's set is loaded once.</summary>
+/// <summary>
+/// Resolves permissions per (user, business unit), limited to the features the account has been given.
+/// The current request's set is loaded once.
+/// </summary>
 public sealed class PermissionService(ErpDbContext db, ICurrentContext current, PermissionCatalog catalog) : IPermissionService
 {
     private PermissionSet? _current;
@@ -13,23 +16,30 @@ public sealed class PermissionService(ErpDbContext db, ICurrentContext current, 
     public async Task<PermissionSet> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
         if (_current is not null) return _current;
-        if (current.UserId is not { } userId || current.BusinessUnitId is not { } businessUnitId) return PermissionSet.Empty;
+        if (current.UserId is not { } userId || current.AccountId is not { } accountId || current.BusinessUnitId is not { } businessUnitId)
+        {
+            return PermissionSet.Empty;
+        }
 
-        return _current = await GetAsync(userId, businessUnitId, current.IsPrimaryAdmin, cancellationToken);
+        return _current = await GetAsync(userId, accountId, businessUnitId, current.IsPrimaryAdmin, cancellationToken);
     }
 
     public async Task<PermissionSet> GetAsync(
-        Guid userId, Guid businessUnitId, bool isPrimaryAdmin, CancellationToken cancellationToken = default)
+        Guid userId, Guid accountId, Guid businessUnitId, bool isPrimaryAdmin, CancellationToken cancellationToken = default)
     {
-        if (isPrimaryAdmin) return PermissionSet.All(catalog.Codes);
+        var features = await db.AccountFeatureCodesAsync(accountId, cancellationToken);
+        if (features.Count == 0) return PermissionSet.Empty;
 
-        var codes = await db.UserBusinessUnits
-            .AcrossTenants()
-            .Where(x => x.UserId == userId && x.BusinessUnitId == businessUnitId)
-            .SelectMany(x => x.Role!.Permissions.Select(p => p.PermissionCode))
-            .ToListAsync(cancellationToken);
+        IEnumerable<string> granted = isPrimaryAdmin
+            ? catalog.Codes
+            : await db.UserBusinessUnits
+                .AcrossTenants()
+                .Where(x => x.UserId == userId && x.BusinessUnitId == businessUnitId && x.AccountId == accountId)
+                .SelectMany(x => x.Role!.Permissions.Select(p => p.PermissionCode))
+                .ToListAsync(cancellationToken);
 
-        return PermissionSet.Of(codes);
+        return PermissionSet.Of(granted.Where(code =>
+            PermissionCode.TryParse(code, out var parsed) && features.Contains(parsed.FeatureCode)));
     }
 }
 

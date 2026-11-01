@@ -52,6 +52,24 @@ public class ErpDbContext : DbContext
 
     public DbSet<PanelMenuItem> PanelMenuItems => Set<PanelMenuItem>();
 
+    public DbSet<ErpModule> ErpModules => Set<ErpModule>();
+
+    public DbSet<ErpSubModule> ErpSubModules => Set<ErpSubModule>();
+
+    public DbSet<ErpFeature> ErpFeatures => Set<ErpFeature>();
+
+    public DbSet<AccountFeature> AccountFeatures => Set<AccountFeature>();
+
+    /// <summary>Codes of the active features an account has been given (e.g. "system-setup.item-profile").</summary>
+    public async Task<HashSet<string>> AccountFeatureCodesAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        var codes = await AccountFeatures.AcrossTenants()
+            .Where(af => af.AccountId == accountId && af.Feature!.IsActive)
+            .Select(af => af.Feature!.Code)
+            .ToListAsync(cancellationToken);
+        return codes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     public DbSet<PanelUser> PanelUsers => Set<PanelUser>();
 
     public DbSet<ErpUser> ErpUsers => Set<ErpUser>();

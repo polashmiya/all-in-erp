@@ -1,11 +1,11 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { useSystemStatus } from '@erp/api-client';
 import { flattenLeaves, localize, ShellPage, SystemStatusCard, useBrand, useLanguageStore, type MenuNode } from '@erp/ui';
-import { Avatar, Card, Col, Flex, List, Row, Space, Tag, Typography } from 'antd';
+import { Avatar, Card, Col, Empty, Flex, List, Row, Space, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { erpMenu } from '@/navigation/menu';
+import { useErpNavigation } from '@/navigation/useErpNavigation';
 import { selectCurrentUnit, useAuthStore } from '@/state/auth-store';
 
 function greetingKey(hour: number) {
@@ -13,8 +13,6 @@ function greetingKey(hour: number) {
   if (hour < 17) return 'dashboard.greetingAfternoon';
   return 'dashboard.greetingEvening';
 }
-
-const modules = erpMenu.filter((node) => node.children?.length);
 
 function ModuleCard({ module }: { module: MenuNode }) {
   const { t } = useTranslation();
@@ -74,6 +72,7 @@ export function DashboardPage() {
   const userName = user?.fullName ?? '';
   const accountName = user?.accountName ?? '';
   const systemStatus = useSystemStatus();
+  const { modules, loading } = useErpNavigation();
   const now = dayjs();
 
   return (
@@ -101,7 +100,15 @@ export function DashboardPage() {
             <Card title={t('dashboard.modules')} extra={<Typography.Text type="secondary">{t('dashboard.modulesHint')}</Typography.Text>}>
               <List
                 grid={{ gutter: 16, xs: 1, sm: 1, md: 2, lg: 2, xl: 2, xxl: 3 }}
+                loading={loading}
                 dataSource={modules}
+                locale={{
+                  emptyText: (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('dashboard.noModules')} style={{ paddingBlock: 16 }}>
+                      <Typography.Text type="secondary">{t('dashboard.noModulesHint')}</Typography.Text>
+                    </Empty>
+                  ),
+                }}
                 renderItem={(module) => (
                   <List.Item>
                     <ModuleCard module={module} />

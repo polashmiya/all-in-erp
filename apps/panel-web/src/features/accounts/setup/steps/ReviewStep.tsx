@@ -2,6 +2,7 @@ import { LockOutlined, MailOutlined, SafetyCertificateOutlined, UserOutlined } f
 import { useLanguageStore } from '@erp/ui';
 import { Alert, Button, Card, Col, Descriptions, Divider, Form, Input, Radio, Row } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { FeatureAccessSummary } from '../../components/FeatureAccess';
 import { structureFromForm } from '../../components/structure';
 import { StructureTree } from '../../components/StructureTree';
 import { countryName } from '../../format';
@@ -113,6 +114,9 @@ export function ReviewStep({ onEdit }: { onEdit: (step: number) => void }) {
         />
         <Card size="small" title={t('detail.structure')} extra={edit(1)} style={{ marginTop: 16 }}>
           <StructureTree units={structureFromForm(values.businessUnits)} />
+        </Card>
+        <Card size="small" title={t('menus.title')} extra={edit(4)} style={{ marginTop: 16 }}>
+          <FeatureAccessSummary codes={values.featureCodes ?? []} />
         </Card>
       </FormSection>
     </>

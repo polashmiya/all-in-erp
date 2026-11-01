@@ -1,3 +1,4 @@
+using Erp.Modules.Inventory;
 using System.Net;
 using System.Net.Http.Json;
 using Erp.Api.Auth;
@@ -22,7 +23,13 @@ public sealed class PanelAccountTests(ApiFactory factory)
 
     private static string UniqueCode() => $"T{Guid.NewGuid():N}"[..12].ToUpperInvariant();
 
-    private static AccountSetupRequest Request(string code, string adminEmail, string? password = null) => new(
+    private static readonly string[] AllFeatures =
+    [
+        ItemManagementMenu.ItemProfile, ItemManagementMenu.ItemDepartment, ItemManagementMenu.ItemCategory,
+        ItemManagementMenu.ItemSubCategory, ItemManagementMenu.ItemMinorCategory, ItemManagementMenu.Uom,
+    ];
+
+    internal static AccountSetupRequest Request(string code, string adminEmail, string? password = null, string[]? features = null) => new(
         new AccountInfoInput(
             code.ToLowerInvariant(), "Test Trading Ltd", "info@test.example", "+8801711111111", "https://test.example",
             "Distribution", "BIN-001", "House 1, Road 2, Gulshan", "Dhaka", "bd", "bdt", "Asia/Dhaka"),
@@ -34,6 +41,7 @@ public sealed class PanelAccountTests(ApiFactory factory)
                 [],
                 [new WarehouseInput("swh", "South Warehouse", null, "Khulna")]),
         ],
+        features ?? AllFeatures,
         new AdminUserInput("Test Admin", adminEmail, password));
 
     [Fact]
@@ -119,7 +127,7 @@ public sealed class PanelAccountTests(ApiFactory factory)
 
         var selected = await factory.CreateClient(erp.AccessToken)
             .PostAsJsonAsync("/api/erp/auth/select-unit", new SelectUnitRequest(erp.BusinessUnits[0].Id));
-        Assert.Equal(6, (await selected.Content.ReadFromJsonAsync<SelectUnitResponse>())!.Permissions.Count);
+        Assert.Equal(36, (await selected.Content.ReadFromJsonAsync<SelectUnitResponse>())!.Permissions.Count); // 6 features x 6 actions
     }
 
     [Fact]

@@ -24,6 +24,7 @@ export interface AccountListItem {
   offices: number;
   warehouses: number;
   users: number;
+  features: number;
   /** @nullable */
   adminEmail: string | null;
 }

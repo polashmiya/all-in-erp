@@ -8,6 +8,8 @@
 
 export * from './accountAdminDto';
 export * from './accountDetail';
+export * from './accountFeaturesRequest';
+export * from './accountFeaturesResponse';
 export * from './accountInfoInput';
 export * from './accountListItem';
 export * from './accountListResponse';
@@ -23,6 +25,9 @@ export * from './businessUnitDetail';
 export * from './businessUnitInput';
 export * from './checkAccountAvailabilityParams';
 export * from './erpLoginResponse';
+export * from './erpMenuFeature';
+export * from './erpMenuModule';
+export * from './erpMenuSubModule';
 export * from './erpSessionResponse';
 export * from './erpUserDto';
 export * from './healthCheckEntry';

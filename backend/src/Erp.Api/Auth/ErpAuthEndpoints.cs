@@ -124,7 +124,7 @@ public static class ErpAuthEndpoints
         await db.SaveChangesAsync(cancellationToken);
 
         var unit = (await GetBusinessUnitsAsync(db, user, cancellationToken)).Single(u => u.Id == request.BusinessUnitId);
-        var granted = await permissions.GetAsync(userId, request.BusinessUnitId, current.IsPrimaryAdmin, cancellationToken);
+        var granted = await permissions.GetAsync(userId, accountId, request.BusinessUnitId, current.IsPrimaryAdmin, cancellationToken);
 
         return TypedResults.Ok(new SelectUnitResponse(unit, granted.Codes.Order(StringComparer.Ordinal).ToList()));
     }

@@ -1,9 +1,8 @@
+using Erp.Api.Navigation;
 using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Erp.Api.Panel.Navigation;
-
-public sealed record LocalizedLabel(string En, string? Bn);
 
 public sealed record PanelMenuItemDto(
     string Key,

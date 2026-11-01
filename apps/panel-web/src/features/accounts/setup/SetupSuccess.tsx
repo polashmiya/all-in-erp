@@ -17,6 +17,7 @@ export function SetupSuccess({ result, onDone, onAnother }: { result: AccountSet
           units: result.businessUnits,
           offices: result.offices,
           warehouses: result.warehouses,
+          features: result.features,
         })}
         extra={[
           <Button key="list" type="primary" onClick={onDone}>

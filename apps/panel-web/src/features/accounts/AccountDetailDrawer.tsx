@@ -1,13 +1,16 @@
-import { ApartmentOutlined, InboxOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
+import { ApartmentOutlined, EditOutlined, InboxOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
 import { useGetAccount } from '@erp/api-client';
 import { useLanguageStore } from '@erp/ui';
-import { Avatar, Badge, Card, Descriptions, Drawer, Flex, Grid, Result, Skeleton, Space, Tag, Typography, theme } from 'antd';
+import { Avatar, Badge, Button, Card, Descriptions, Drawer, Flex, Grid, Result, Skeleton, Space, Tag, Typography, theme } from 'antd';
+import { useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+import { FeatureAccessSummary } from './components/FeatureAccess';
 import { structureFromDetail } from './components/structure';
 import { useStructureColors } from './components/structure-colors';
 import { StructureTree } from './components/StructureTree';
 import { countryName, initials } from './format';
+import { MenuAccessModal } from './MenuAccessModal';
 
 export function AccountDetailDrawer({ accountId, onClose }: { accountId: string | undefined; onClose: () => void }) {
   const { t } = useTranslation();
@@ -17,6 +20,7 @@ export function AccountDetailDrawer({ accountId, onClose }: { accountId: string 
   const colors = useStructureColors();
   const query = useGetAccount(accountId ?? '', { query: { enabled: !!accountId } });
   const account = query.data;
+  const [editingMenus, setEditingMenus] = useState(false);
 
   const counts = account && {
     offices: account.businessUnits.reduce((sum, b) => sum + b.offices.length, 0),
@@ -126,6 +130,25 @@ export function AccountDetailDrawer({ accountId, onClose }: { accountId: string 
           >
             <StructureTree units={structureFromDetail(account.businessUnits)} />
           </Card>
+
+          <Card
+            size="small"
+            title={t('menus.title')}
+            extra={
+              <Button size="small" type="link" icon={<EditOutlined />} onClick={() => setEditingMenus(true)}>
+                {t('menus.edit')}
+              </Button>
+            }
+          >
+            <FeatureAccessSummary codes={account.featureCodes} />
+          </Card>
+          <MenuAccessModal
+            accountId={account.id}
+            accountName={account.name}
+            initial={account.featureCodes}
+            open={editingMenus}
+            onClose={() => setEditingMenus(false)}
+          />
         </Space>
       )}
     </Drawer>

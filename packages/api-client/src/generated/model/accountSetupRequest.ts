@@ -12,5 +12,6 @@ import type { BusinessUnitInput } from './businessUnitInput';
 export interface AccountSetupRequest {
   account: AccountInfoInput;
   businessUnits: BusinessUnitInput[];
+  featureCodes: string[];
   admin: AdminUserInput;
 }

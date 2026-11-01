@@ -1,4 +1,5 @@
 using Erp.Core.Authorization;
+using Erp.Core.Modules;
 using Erp.Core.Security;
 using Erp.Infrastructure.Authorization;
 using Erp.Infrastructure.Persistence;
@@ -37,6 +38,8 @@ public static class DependencyInjection
             .UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(ErpDbContext).Assembly.FullName))
             .AddInterceptors(provider.GetRequiredService<AuditingInterceptor>()));
 
+        services.AddSingleton<ErpMenuCatalog>();
+        services.AddSingleton<IPermissionProvider, MenuPermissionProvider>();
         services.AddSingleton<PermissionCatalog>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IBusinessUnitAccess, BusinessUnitAccess>();

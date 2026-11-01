@@ -33,9 +33,11 @@ public sealed record BusinessUnitInput(
 /// <summary>The account's first ERP user. Leave <see cref="Password"/> empty to have a secure one generated.</summary>
 public sealed record AdminUserInput(string FullName, string Email, string? Password);
 
+/// <param name="FeatureCodes">ERP features (menus) the account gets, e.g. system-setup.item-profile.</param>
 public sealed record AccountSetupRequest(
     AccountInfoInput Account,
     IReadOnlyList<BusinessUnitInput> BusinessUnits,
+    IReadOnlyList<string> FeatureCodes,
     AdminUserInput Admin);
 
 public sealed record AdminCredentials(string FullName, string Email, string? GeneratedPassword);
@@ -47,6 +49,7 @@ public sealed record AccountSetupResult(
     int BusinessUnits,
     int Offices,
     int Warehouses,
+    int Features,
     AdminCredentials Admin);
 
 public sealed record AvailabilityResponse(bool? AccountCodeAvailable, bool? AdminEmailAvailable);
@@ -67,6 +70,7 @@ public sealed record AccountListItem(
     int Offices,
     int Warehouses,
     int Users,
+    int Features,
     string? AdminEmail);
 
 public sealed record AccountSummary(int Accounts, int ActiveAccounts, int BusinessUnits, int Offices, int Warehouses);
@@ -117,4 +121,11 @@ public sealed record AccountDetail(
     bool IsActive,
     DateTimeOffset CreatedAt,
     AccountAdminDto? Admin,
-    IReadOnlyList<BusinessUnitDetail> BusinessUnits);
+    IReadOnlyList<BusinessUnitDetail> BusinessUnits,
+    IReadOnlyList<string> FeatureCodes);
+
+// ---------- Menu access (features) ----------
+
+public sealed record AccountFeaturesRequest(IReadOnlyList<string> FeatureCodes);
+
+public sealed record AccountFeaturesResponse(IReadOnlyList<string> FeatureCodes);

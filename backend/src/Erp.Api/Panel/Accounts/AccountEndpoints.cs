@@ -31,11 +31,48 @@ public static class AccountEndpoints
 
         accounts.MapPost("/setup", Setup)
             .WithName("SetupAccount")
-            .WithSummary("Create an account with its business units, offices, warehouses and ERP admin in one transaction")
+            .WithSummary("Create an account with its business units, offices, warehouses, ERP features and ERP admin in one transaction")
             .Validate<AccountSetupRequest>()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        accounts.MapGet("/{id:guid}/features", GetFeatures)
+            .WithName("GetAccountFeatures")
+            .WithSummary("Codes of the ERP features (menus) the account has")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        accounts.MapPut("/{id:guid}/features", UpdateFeatures)
+            .WithName("UpdateAccountFeatures")
+            .WithSummary("Replace the account's ERP features; its users' menus and permissions follow immediately")
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return panel;
+    }
+
+    private static async Task<Results<Ok<AccountFeaturesResponse>, NotFound>> GetFeatures(
+        Guid id, ErpDbContext db, AccountFeatureService features, CancellationToken cancellationToken)
+    {
+        if (!await db.Accounts.AnyAsync(a => a.Id == id, cancellationToken)) return TypedResults.NotFound();
+        return TypedResults.Ok(new AccountFeaturesResponse(await features.CodesAsync(id, cancellationToken)));
+    }
+
+    private static async Task<Results<Ok<AccountFeaturesResponse>, ValidationProblem, NotFound>> UpdateFeatures(
+        Guid id, AccountFeaturesRequest request, ErpDbContext db, AccountFeatureService features, CancellationToken cancellationToken)
+    {
+        if (!await db.Accounts.AnyAsync(a => a.Id == id, cancellationToken)) return TypedResults.NotFound();
+
+        var (featureIds, unknown) = await features.ResolveAsync(request.FeatureCodes ?? [], cancellationToken);
+        if (unknown.Count > 0)
+        {
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                [AccountFeatureService.ErrorKey] = [AccountFeatureService.UnknownMessage(unknown)],
+            });
+        }
+
+        await features.ReplaceAsync(id, featureIds, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return TypedResults.Ok(new AccountFeaturesResponse(await features.CodesAsync(id, cancellationToken)));
     }
 
     /// <param name="status">all (default), active or inactive.</param>
@@ -99,6 +136,7 @@ public static class AccountEndpoints
                 db.Offices.Count(o => o.AccountId == a.Id),
                 db.Warehouses.Count(w => w.AccountId == a.Id),
                 db.ErpUsers.Count(u => u.AccountId == a.Id),
+                db.AccountFeatures.Count(f => f.AccountId == a.Id),
                 db.ErpUsers.Where(u => u.AccountId == a.Id && u.IsPrimaryAdmin)
                     .OrderBy(u => u.CreatedAt).Select(u => u.Email).FirstOrDefault()))
             .ToListAsync(cancellationToken);
@@ -133,7 +171,8 @@ public static class AccountEndpoints
         return new AvailabilityResponse(codeFree, emailFree);
     }
 
-    private static async Task<Results<Ok<AccountDetail>, NotFound>> Get(Guid id, ErpDbContext db, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<AccountDetail>, NotFound>> Get(
+        Guid id, ErpDbContext db, AccountFeatureService features, CancellationToken cancellationToken)
     {
         var account = await db.Accounts.AcrossTenants().AsNoTracking().AsSplitQuery()
             .Include(a => a.BusinessUnits).ThenInclude(b => b.Offices).ThenInclude(o => o.Warehouses)
@@ -164,7 +203,7 @@ public static class AccountEndpoints
         return TypedResults.Ok(new AccountDetail(
             account.Id, account.Code, account.Name, account.Email, account.Phone, account.Website, account.Industry,
             account.TaxId, account.Address, account.City, account.Country, account.BaseCurrency, account.TimeZone,
-            account.IsActive, account.CreatedAt, admin, units));
+            account.IsActive, account.CreatedAt, admin, units, await features.CodesAsync(id, cancellationToken)));
     }
 
     private static async Task<Results<Created<AccountSetupResult>, ValidationProblem, ProblemHttpResult>> Setup(

@@ -29,6 +29,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         "Server=(localdb)\\MSSQLLocalDB;Database=myErp_Test;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=True;Connect Timeout=30";
 
     public const string ViewerEmail = "viewer@demopharma.com";
+    public const string NewUserEmail = "new.user@demopharma.com";
     public const string OtherAdminEmail = "admin@othertrading.com";
     public const string TestPassword = "Test@12345";
 
@@ -123,6 +124,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         };
         viewerUser.BusinessUnits.Add(new UserBusinessUnit { AccountId = demo.Id, BusinessUnitId = DhakaId, RoleId = viewer.Id });
         db.ErpUsers.Add(viewerUser);
+
+        // A new user whose role has no permissions yet: the admin has not given them anything.
+        var noAccess = new Role { AccountId = demo.Id, Name = "No access yet" };
+        var newUser = new ErpUser
+        {
+            AccountId = demo.Id,
+            Email = NewUserEmail,
+            FullName = "New User",
+            PasswordHash = hasher.Hash(TestPassword),
+        };
+        newUser.BusinessUnits.Add(new UserBusinessUnit { AccountId = demo.Id, BusinessUnitId = DhakaId, Role = noAccess });
+        db.AddRange(noAccess, newUser);
 
         // A second tenant with its own unit and primary admin.
         var other = new Account { Code = "OTHER", Name = "Other Trading" };

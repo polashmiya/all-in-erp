@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { useShallow } from 'zustand/react/shallow';
-import { erpMenu } from '@/navigation/menu';
+import { useErpNavigation } from '@/navigation/useErpNavigation';
 import { selectCurrentUnit, useAuthStore } from '@/state/auth-store';
 
 export function ShellLayout() {
@@ -26,6 +26,7 @@ export function ShellLayout() {
   const { status } = useSystemStatus();
   const session = useGetErpSession({ query: { staleTime: 5 * 60_000 } });
   const select = useSelectBusinessUnit();
+  const navigation = useErpNavigation();
 
   // Keep user and unit list current (e.g. access revoked or units renamed since login).
   useEffect(() => {
@@ -53,7 +54,8 @@ export function ShellLayout() {
     <AppShell
       appName="myErp"
       appBadge="ERP"
-      menu={erpMenu}
+      menu={navigation.menu}
+      menuLoading={navigation.loading}
       user={{
         name: user?.fullName ?? '',
         description: [user?.accountName, currentUnit?.roleName].filter(Boolean).join(' · '),

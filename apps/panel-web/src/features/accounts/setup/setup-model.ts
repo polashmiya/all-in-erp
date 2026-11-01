@@ -52,12 +52,14 @@ export interface AdminForm {
 export interface SetupFormValues {
   account?: AccountForm;
   businessUnits?: BusinessUnitForm[];
+  /** ERP feature codes the account gets; filled with every feature when the step first opens. */
+  featureCodes?: string[];
   admin?: AdminForm;
 }
 
 export type FieldPath = (string | number)[];
 
-export const STEP_KEYS = ['account', 'businessUnits', 'offices', 'warehouses', 'review'] as const;
+export const STEP_KEYS = ['account', 'businessUnits', 'offices', 'warehouses', 'menus', 'review'] as const;
 
 export const UNIT_LEVEL = '';
 
@@ -149,6 +151,7 @@ export function toSetupRequest(values: SetupFormValues): AccountSetupRequest {
         address: optional(warehouse.address),
       })),
     })),
+    featureCodes: values.featureCodes ?? [],
     admin: {
       fullName: text(admin.fullName),
       email: text(admin.email).toLowerCase(),
@@ -176,7 +179,8 @@ export function stepOfField(path: FieldPath): number {
     if (path[2] === 'warehouses') return 3;
     return 1;
   }
-  return 4;
+  if (path[0] === 'featureCodes') return 4;
+  return 5;
 }
 
 export function countStructure(units: BusinessUnitForm[] | undefined) {

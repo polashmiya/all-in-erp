@@ -89,7 +89,7 @@ public sealed class TenantAndPermissionTests(ApiFactory factory)
         var create = await client.PostAsync("/api/erp/__probe/create", null);
         Assert.Equal(HttpStatusCode.Forbidden, create.StatusCode);
         var problem = await create.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Equal(InventoryPermissions.ItemCreate, problem!.Extensions["permission"]?.ToString());
+        Assert.Equal($"{ItemManagementMenu.ItemProfile}.create", problem!.Extensions["permission"]?.ToString());
     }
 
     [Fact]

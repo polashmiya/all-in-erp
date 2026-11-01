@@ -47,7 +47,6 @@ public sealed class PermissionSetTests
 
         Assert.True(set.Has("inventory.item.view"));
         Assert.False(set.Has("inventory.item.create"));
-        Assert.False(set.GrantsAll);
     }
 
     [Fact]
@@ -57,13 +56,9 @@ public sealed class PermissionSetTests
     }
 
     [Fact]
-    public void Primary_admin_set_grants_codes_outside_the_snapshot()
+    public void Permission_code_knows_its_feature()
     {
-        var set = PermissionSet.All(["inventory.item.view"]);
-
-        Assert.True(set.Has("inventory.item.view"));
-        Assert.True(set.Has("sales.order.approve"));
-        Assert.Equal(["inventory.item.view"], set.Codes);
+        Assert.Equal("system-setup.item-profile", PermissionCode.Parse("system-setup.item-profile.create").FeatureCode);
     }
 
     [Fact]

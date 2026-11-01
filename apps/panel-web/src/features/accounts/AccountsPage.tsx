@@ -1,5 +1,6 @@
 import {
   ApartmentOutlined,
+  AppstoreOutlined,
   BankOutlined,
   InboxOutlined,
   MailOutlined,
@@ -155,7 +156,7 @@ export function AccountsPage() {
     {
       title: t('accounts.col.structure'),
       dataIndex: 'businessUnits',
-      width: 140,
+      width: 175,
       render: (_, account) => (
         <Space size={10}>
           <Tooltip title={t('accounts.stat.businessUnits')}>
@@ -171,6 +172,11 @@ export function AccountsPage() {
           <Tooltip title={t('accounts.stat.warehouses')}>
             <span>
               <InboxOutlined style={{ color: colors.warehouse }} /> {account.warehouses}
+            </span>
+          </Tooltip>
+          <Tooltip title={t('menus.title')}>
+            <span>
+              <AppstoreOutlined style={{ color: token.colorTextTertiary }} /> {account.features}
             </span>
           </Tooltip>
         </Space>
@@ -253,7 +259,7 @@ export function AccountsPage() {
         }}
         search={false}
         cardBordered
-        scroll={{ x: 1060 }}
+        scroll={{ x: 1095 }}
         pagination={{ defaultPageSize: 10, showSizeChanger: true }}
         options={{ reload: true, density: true, setting: true }}
         toolbar={{

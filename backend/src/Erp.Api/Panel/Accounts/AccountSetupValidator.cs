@@ -13,6 +13,7 @@ internal sealed class AccountSetupRequestValidator : AbstractValidator<AccountSe
     {
         RuleFor(x => x.Account).NotNull().SetValidator(new AccountInfoValidator());
         RuleFor(x => x.Admin).NotNull().SetValidator(new AdminUserValidator());
+        RuleFor(x => x.FeatureCodes).NotNull();
 
         RuleFor(x => x.BusinessUnits).NotNull().NotEmpty().WithMessage("Add at least one business unit.");
         RuleForEach(x => x.BusinessUnits).SetValidator(new BusinessUnitValidator());

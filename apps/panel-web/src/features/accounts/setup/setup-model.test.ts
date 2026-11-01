@@ -72,6 +72,11 @@ describe('toSetupRequest', () => {
     expect(request.businessUnits[0]!.offices[0]).toEqual({ code: 'HO', name: 'Head Office', email: null, phone: null, address: null });
   });
 
+  it('sends the chosen features, or none when the step was never filled', () => {
+    expect(toSetupRequest({ ...values, featureCodes: ['system-setup.uom'] }).featureCodes).toEqual(['system-setup.uom']);
+    expect(toSetupRequest(values).featureCodes).toEqual([]);
+  });
+
   it('maps the unit-level choice to a null office', () => {
     const [central, transit] = toSetupRequest(values).businessUnits[0]!.warehouses;
 
@@ -99,7 +104,8 @@ describe('server error mapping', () => {
     expect(stepOfField(['businessUnits', 1, 'code'])).toBe(1);
     expect(stepOfField(['businessUnits', 0, 'offices', 2, 'name'])).toBe(2);
     expect(stepOfField(['businessUnits', 0, 'warehouses', 0, 'officeCode'])).toBe(3);
-    expect(stepOfField(['admin', 'email'])).toBe(4);
+    expect(stepOfField(['featureCodes'])).toBe(4);
+    expect(stepOfField(['admin', 'email'])).toBe(5);
   });
 });
 

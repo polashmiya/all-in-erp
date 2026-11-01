@@ -1,4 +1,4 @@
-import { ApartmentOutlined, BankOutlined, InboxOutlined, ShopOutlined } from '@ant-design/icons';
+import { ApartmentOutlined, AppstoreOutlined, BankOutlined, InboxOutlined, ShopOutlined } from '@ant-design/icons';
 import { Avatar, Card, Col, Divider, Flex, Row, Tag, Typography, theme } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,6 +60,13 @@ export function SetupSummary({ values }: { values: SetupFormValues | undefined }
           <Count icon={<InboxOutlined />} value={counts.warehouses} label={t('accounts.stat.warehouses')} color={colors.warehouse} />
         </Col>
       </Row>
+
+      {values?.featureCodes !== undefined && (
+        <Typography.Text type="secondary" style={{ display: 'block', marginTop: 14, fontSize: 13 }}>
+          <AppstoreOutlined style={{ marginInlineEnd: 6 }} />
+          {t('setup.menusSelected', { count: values.featureCodes.length })}
+        </Typography.Text>
+      )}
 
       <Divider style={{ margin: '16px 0 12px' }} />
       <StructureTree units={structureFromForm(values?.businessUnits)} />

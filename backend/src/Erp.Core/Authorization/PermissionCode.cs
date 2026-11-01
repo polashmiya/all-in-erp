@@ -8,6 +8,9 @@ public readonly partial record struct PermissionCode(string Module, string Featu
 {
     public string Value => $"{Module}.{Feature}.{Action}";
 
+    /// <summary>The feature this permission belongs to, <c>{module}.{feature}</c>.</summary>
+    public string FeatureCode => $"{Module}.{Feature}";
+
     public override string ToString() => Value;
 
     public static PermissionCode Parse(string value) =>

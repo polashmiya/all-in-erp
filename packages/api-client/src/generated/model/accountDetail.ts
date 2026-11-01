@@ -34,4 +34,5 @@ export interface AccountDetail {
   createdAt: string;
   admin: null | AccountAdminDto;
   businessUnits: BusinessUnitDetail[];
+  featureCodes: string[];
 }

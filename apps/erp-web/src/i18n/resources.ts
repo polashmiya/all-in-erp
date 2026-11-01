@@ -18,6 +18,8 @@ export const erpResources: AppResources = {
     'dashboard.subModuleCount_one': '{{count}} sub-module',
     'dashboard.subModuleCount_other': '{{count}} sub-modules',
     'dashboard.open': 'Open',
+    'dashboard.noModules': 'No menus assigned to you yet',
+    'dashboard.noModulesHint': 'Your administrator decides which screens you can use.',
     'bu.switched': 'Switched to {{name}}',
     'placeholder.featureTitle': 'Configuration-driven screen',
     'placeholder.featureText':
@@ -44,6 +46,8 @@ export const erpResources: AppResources = {
     'dashboard.subModuleCount_one': '{{count}}টি সাব-মডিউল',
     'dashboard.subModuleCount_other': '{{count}}টি সাব-মডিউল',
     'dashboard.open': 'খুলুন',
+    'dashboard.noModules': 'আপনাকে এখনো কোনো মেনু দেওয়া হয়নি',
+    'dashboard.noModulesHint': 'কোন স্ক্রিন ব্যবহার করবেন তা আপনার অ্যাডমিনিস্ট্রেটর ঠিক করেন।',
     'bu.switched': '{{name}}-এ পরিবর্তন করা হয়েছে',
     'placeholder.featureTitle': 'কনফিগারেশন-চালিত স্ক্রিন',
     'placeholder.featureText':

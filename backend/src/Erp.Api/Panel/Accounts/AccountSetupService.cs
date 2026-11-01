@@ -13,10 +13,10 @@ namespace Erp.Api.Panel.Accounts;
 public sealed record AccountSetupOutcome(AccountSetupResult? Result, IDictionary<string, string[]>? Errors);
 
 /// <summary>
-/// Creates an account with its business units, offices, warehouses, system roles and primary ERP admin.
+/// Creates an account with its business units, offices, warehouses, ERP features, system roles and primary ERP admin.
 /// Everything is saved with one SaveChanges, i.e. one transaction: either the whole tree exists or nothing does.
 /// </summary>
-public sealed class AccountSetupService(ErpDbContext db, IPasswordHasher hasher, PermissionCatalog catalog)
+public sealed class AccountSetupService(ErpDbContext db, IPasswordHasher hasher, PermissionCatalog catalog, AccountFeatureService features)
 {
     public async Task<AccountSetupOutcome> SetupAsync(AccountSetupRequest request, CancellationToken cancellationToken)
     {
@@ -33,6 +33,12 @@ public sealed class AccountSetupService(ErpDbContext db, IPasswordHasher hasher,
         if (await db.ErpUsers.AcrossTenants().AnyAsync(u => u.Email == adminEmail, cancellationToken))
         {
             errors["admin.email"] = ["A user with this email already exists."];
+        }
+
+        var (featureIds, unknownFeatures) = await features.ResolveAsync(request.FeatureCodes, cancellationToken);
+        if (unknownFeatures.Count > 0)
+        {
+            errors[AccountFeatureService.ErrorKey] = [AccountFeatureService.UnknownMessage(unknownFeatures)];
         }
 
         if (errors.Count > 0) return new AccountSetupOutcome(null, errors);
@@ -55,6 +61,7 @@ public sealed class AccountSetupService(ErpDbContext db, IPasswordHasher hasher,
         db.Accounts.Add(account); // assigns account.Id
 
         var units = request.BusinessUnits.Select(input => AddBusinessUnit(account, input)).ToList();
+        await features.ReplaceAsync(account.Id, featureIds, cancellationToken);
 
         var administrator = SystemRoles.CreateAdministrator(account.Id, catalog);
         db.Roles.AddRange(administrator, SystemRoles.CreateViewer(account.Id, catalog));
@@ -84,6 +91,7 @@ public sealed class AccountSetupService(ErpDbContext db, IPasswordHasher hasher,
                 units.Count,
                 units.Sum(u => u.Offices.Count),
                 units.Sum(u => u.Warehouses.Count),
+                featureIds.Count,
                 new AdminCredentials(admin.FullName, admin.Email, generatedPassword)),
             null);
     }

@@ -124,7 +124,8 @@ public sealed class AuthEndpointTests(ApiFactory factory)
         response.EnsureSuccessStatusCode();
         var selected = await response.Content.ReadFromJsonAsync<SelectUnitResponse>();
         Assert.Equal("Dhaka Depot", selected!.BusinessUnit.Name);
-        Assert.Equal(new InventoryPermissions().GetPermissions().Select(p => p.Code.Value).Order(), selected.Permissions);
+        Assert.Equal(36, selected.Permissions.Count); // 6 features x 6 actions, all given to the demo account
+        Assert.Contains($"{ItemManagementMenu.Uom}.import", selected.Permissions);
     }
 
     [Fact]
@@ -136,7 +137,8 @@ public sealed class AuthEndpointTests(ApiFactory factory)
             .PostAsJsonAsync("/api/erp/auth/select-unit", new SelectUnitRequest(factory.DhakaId));
 
         var selected = await response.Content.ReadFromJsonAsync<SelectUnitResponse>();
-        Assert.Equal([InventoryPermissions.ItemExport, InventoryPermissions.ItemView], selected!.Permissions);
+        Assert.Equal(12, selected!.Permissions.Count); // view + export for each of the 6 features
+        Assert.All(selected.Permissions, code => Assert.True(code.EndsWith(".view") || code.EndsWith(".export")));
     }
 
     [Theory]

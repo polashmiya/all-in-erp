@@ -23,6 +23,8 @@ import type {
 
 import type {
   AccountDetail,
+  AccountFeaturesRequest,
+  AccountFeaturesResponse,
   AccountListResponse,
   AccountSetupRequest,
   AccountSetupResult,
@@ -465,7 +467,7 @@ export const getSetupAccountUrl = () => {
 };
 
 /**
- * @summary Create an account with its business units, offices, warehouses and ERP admin in one transaction
+ * @summary Create an account with its business units, offices, warehouses, ERP features and ERP admin in one transaction
  */
 export const setupAccount = async (
   accountSetupRequest: AccountSetupRequest,
@@ -542,7 +544,7 @@ export type SetupAccountMutationError = ErrorType<HttpValidationProblemDetails |
 export type SetupAccountMutationVariables = { data: BodyType<AccountSetupRequest> };
 
 /**
- * @summary Create an account with its business units, offices, warehouses and ERP admin in one transaction
+ * @summary Create an account with its business units, offices, warehouses, ERP features and ERP admin in one transaction
  */
 export const useSetupAccount = <
   TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
@@ -565,4 +567,246 @@ export const useSetupAccount = <
   TContext
 > => {
   return useMutation(getSetupAccountMutationOptions(options), queryClient);
+};
+export const getGetAccountFeaturesUrl = (id: string) => {
+  return `/api/panel/accounts/${id}/features`;
+};
+
+/**
+ * @summary Codes of the ERP features (menus) the account has
+ */
+export const getAccountFeatures = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AccountFeaturesResponse> => {
+  return customFetch<AccountFeaturesResponse>(getGetAccountFeaturesUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetAccountFeaturesQueryKey = (id: string) => {
+  return [`/api/panel/accounts/${id}/features`] as const;
+};
+
+export const getGetAccountFeaturesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountFeatures>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccountFeaturesQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountFeatures>>> = ({ signal }) =>
+    getAccountFeatures(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAccountFeaturesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountFeatures>>
+>;
+export type GetAccountFeaturesQueryError = ErrorType<ProblemDetails>;
+
+export function useGetAccountFeatures<
+  TData = Awaited<ReturnType<typeof getAccountFeatures>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountFeatures>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountFeatures>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountFeatures<
+  TData = Awaited<ReturnType<typeof getAccountFeatures>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountFeatures>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountFeatures>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountFeatures<
+  TData = Awaited<ReturnType<typeof getAccountFeatures>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Codes of the ERP features (menus) the account has
+ */
+
+export function useGetAccountFeatures<
+  TData = Awaited<ReturnType<typeof getAccountFeatures>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountFeatures>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccountFeaturesQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateAccountFeaturesUrl = (id: string) => {
+  return `/api/panel/accounts/${id}/features`;
+};
+
+/**
+ * @summary Replace the account's ERP features; its users' menus and permissions follow immediately
+ */
+export const updateAccountFeatures = async (
+  id: string,
+  accountFeaturesRequest: AccountFeaturesRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AccountFeaturesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<AccountFeaturesResponse>(getUpdateAccountFeaturesUrl(id), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accountFeaturesRequest),
+  });
+};
+
+export const getUpdateAccountFeaturesMutationKey = () => ['updateAccountFeatures'] as const;
+
+export const getUpdateAccountFeaturesMutationOptions = <
+  TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAccountFeatures>>,
+    TError,
+    UpdateAccountFeaturesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAccountFeatures>>,
+  TError,
+  UpdateAccountFeaturesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateAccountFeaturesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAccountFeatures>>,
+    UpdateAccountFeaturesMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAccountFeatures(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAccountFeaturesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAccountFeatures>>
+>;
+export type UpdateAccountFeaturesMutationBody = BodyType<AccountFeaturesRequest>;
+export type UpdateAccountFeaturesMutationError = ErrorType<
+  HttpValidationProblemDetails | ProblemDetails
+>;
+export type UpdateAccountFeaturesMutationVariables = {
+  id: string;
+  data: BodyType<AccountFeaturesRequest>;
+};
+
+/**
+ * @summary Replace the account's ERP features; its users' menus and permissions follow immediately
+ */
+export const useUpdateAccountFeatures = <
+  TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAccountFeatures>>,
+      TError,
+      UpdateAccountFeaturesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAccountFeatures>>,
+  TError,
+  UpdateAccountFeaturesMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateAccountFeaturesMutationOptions(options), queryClient);
 };
