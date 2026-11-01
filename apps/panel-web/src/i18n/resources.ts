@@ -2,6 +2,13 @@ import type { AppResources } from '@erp/ui';
 
 export const panelResources: AppResources = {
   en: {
+    'login.headline': 'Configure every screen, for every client',
+    'login.description': 'Accounts, business units, fields and layouts, managed in one place.',
+    'login.point1': 'Configuration per business unit',
+    'login.point2': 'Custom fields without migrations',
+    'login.point3': 'Draft, preview and publish layouts',
+    'role.SuperAdmin': 'Super Admin',
+    'role.Implementer': 'Implementer',
     'dashboard.title': 'Implementation workspace',
     'dashboard.subtitle': 'Set up client accounts and configure every screen of every feature, per business unit.',
     'dashboard.workflow': 'Implementation workflow',
@@ -24,6 +31,13 @@ export const panelResources: AppResources = {
     'placeholder.genericText': 'This area will be available in a later release.',
   },
   bn: {
+    'login.headline': 'প্রতিটি ক্লায়েন্টের প্রতিটি স্ক্রিন কনফিগার করুন',
+    'login.description': 'অ্যাকাউন্ট, বিজনেস ইউনিট, ফিল্ড ও লেআউট — এক জায়গা থেকে পরিচালনা।',
+    'login.point1': 'বিজনেস ইউনিট অনুযায়ী কনফিগারেশন',
+    'login.point2': 'মাইগ্রেশন ছাড়াই কাস্টম ফিল্ড',
+    'login.point3': 'লেআউট খসড়া, প্রিভিউ ও প্রকাশ',
+    'role.SuperAdmin': 'সুপার অ্যাডমিন',
+    'role.Implementer': 'ইমপ্লিমেন্টার',
     'dashboard.title': 'ইমপ্লিমেন্টেশন ওয়ার্কস্পেস',
     'dashboard.subtitle': 'ক্লায়েন্ট অ্যাকাউন্ট সেটআপ করুন এবং প্রতিটি বিজনেস ইউনিটের জন্য প্রতিটি ফিচারের স্ক্রিন কনফিগার করুন।',
     'dashboard.workflow': 'ইমপ্লিমেন্টেশন ধাপসমূহ',

@@ -4,4 +4,9 @@
     <RootNamespace>Erp.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Endpoint conventions (RequirePermission, module endpoint contracts) are shared with feature modules. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
 </Project>

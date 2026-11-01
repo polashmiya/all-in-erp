@@ -1,10 +1,20 @@
 import { configureApiClient } from '@erp/api-client';
 import { QueryClient } from '@tanstack/react-query';
-
-configureApiClient({ baseUrl: import.meta.env.VITE_API_BASE_URL });
+import { useAuthStore } from '@/state/auth-store';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
+  },
+});
+
+configureApiClient({
+  baseUrl: import.meta.env.VITE_API_BASE_URL,
+  getAccessToken: () => useAuthStore.getState().accessToken,
+  // Expired or revoked token: drop the session; RequireSignedIn sends the user to /login.
+  onUnauthorized: () => {
+    if (!useAuthStore.getState().accessToken) return;
+    useAuthStore.getState().signOut();
+    queryClient.clear();
   },
 });

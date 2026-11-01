@@ -27,6 +27,46 @@ Check the API at http://localhost:5000/health (it reports database health) and h
 The connection string is in [appsettings.Development.json](backend/src/Erp.Api/appsettings.Development.json).
 Override it without editing files via `ConnectionStrings__Erp`.
 
+### Database and demo sign-in
+
+In Development the API **applies pending EF migrations and seeds demo data on startup**
+(`Database:MigrateOnStartup` / `Database:SeedDemoData`). Seeding only fills in missing rows, so restarting is safe.
+
+| App | Email | Password | What you get |
+|---|---|---|---|
+| Panel | `superadmin@myerp.local` | `Admin@12345` | Super Admin |
+| ERP | `admin@demopharma.com` | `Demo@12345` | Primary admin of **Demo Pharma Ltd**, with access to Dhaka Depot and Chattogram Depot |
+
+These are development-only values from `appsettings.Development.json`. The login pages show a "Fill in" helper
+in dev builds only.
+
+Migrations live in `backend/src/Erp.Infrastructure/Persistence/Migrations` (`dotnet-ef` is a local tool):
+
+```powershell
+dotnet tool restore
+dotnet ef migrations add <Name> --project backend/src/Erp.Infrastructure --startup-project backend/src/Erp.Api --output-dir Persistence/Migrations
+dotnet ef database update      --project backend/src/Erp.Infrastructure --startup-project backend/src/Erp.Api
+```
+
+### Authentication model
+
+- **Two surfaces, two audiences.** Panel tokens (`aud=panel`) only work on `/api/panel/*`, and ERP tokens
+  (`aud=erp`) only on `/api/erp/*`. Each surface has its own bearer scheme, so a token for one gets **401** on the other.
+- **ERP tokens are account-scoped.** The active business unit travels in the **`X-Business-Unit`** header and is
+  validated on every request against `UserBusinessUnit` (the account's primary admin may use every active unit).
+  Switching units therefore needs no new token.
+- **Tenant isolation is a global EF query filter.** Entities implementing `IAccountOwned` / `IBusinessUnitOwned`
+  are filtered to the current account and unit. With no tenant in context the filter matches nothing, so
+  code that must cross tenants (login, seeding, Panel) uses `IgnoreQueryFilters()` explicitly.
+- **Permissions** are `{module}.{feature}.{action}` codes contributed by modules through `IPermissionProvider`
+  and synced to the `Permissions` table at startup. Endpoints declare `.RequirePermission("inventory.item.create")`:
+  a missing business unit returns 400, and a missing permission returns 403. The UI hides what a role can't do,
+  but the API is the actual protection.
+- Login endpoints are rate-limited per IP (`RateLimiting:LoginPerMinute`, default 10). Unknown email, wrong
+  password and disabled users all get the same 401.
+- The JWT signing key in `appsettings.Development.json` is for development only. Set `Jwt__SigningKey`
+  (≥ 32 characters) in every other environment.
+
 ## Scripts
 
 | Script | What it does |
@@ -38,9 +78,9 @@ Override it without editing files via `ConnectionStrings__Erp`.
 | `pnpm typecheck` / `pnpm lint` / `pnpm format` | Static checks |
 | `pnpm build` | Production build of both apps |
 
-API integration tests boot the real API against a throwaway **`myErp_Test`** LocalDB database, which they
-create and drop themselves; your `myErp` database is never touched. Set `ERP_TEST_CONNECTION` to use a
-different server.
+API integration tests boot the real API (migrations and seed included) against a throwaway **`myErp_Test`**
+LocalDB database. Tenant-filter tests use **`myErp_Test_Tenancy`**. Both are created and dropped by the tests,
+so your `myErp` database is never touched. Set `ERP_TEST_CONNECTION` to use a different server.
 
 ## Repository layout
 
@@ -90,7 +130,7 @@ Project references: `Api → all`, `Modules → Core, Metadata`, `Infrastructure
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Repo skeleton, API host, LocalDB health, shared UI shell (3-level menu, dark mode, EN/বাংলা) | ✅ Done |
-| 1 | Core domain, migrations, JWT auth (panel/erp audiences), tenant context, login + BU picker | ⏳ |
+| 1 | Core domain, migrations, JWT auth (panel/erp audiences), tenant context, login + BU picker | ✅ Done |
 | 2 | Metadata schema, manifests, screen resolver, bootstrap endpoint | ⏳ |
 | 3 | Dynamic data API (JSON attributes, query builder, CRUD, import/export) | ⏳ |
 | 4 | Frontend metadata-engine (DynamicPage/Table/Filter/Form/View, rules) | ⏳ |

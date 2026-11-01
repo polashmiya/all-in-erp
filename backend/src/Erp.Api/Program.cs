@@ -1,6 +1,11 @@
+using Erp.Api.Auth;
 using Erp.Api.Endpoints;
 using Erp.Api.Hosting;
+using Erp.Core.Modules;
+using Erp.Core.Tenancy;
 using Erp.Infrastructure;
+using Erp.Infrastructure.Persistence.Seeding;
+using Erp.Modules.Inventory;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -14,14 +19,26 @@ builder.Services.AddSerilog((services, logger) => logger
 builder.Services.AddProblemDetails();
 builder.Services.AddErpOpenApi();
 builder.Services.AddFrontendCors(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<HttpCurrentContext>();
+builder.Services.AddScoped<ICurrentContext>(provider => provider.GetRequiredService<HttpCurrentContext>());
+builder.Services.AddErpAuthentication(builder.Configuration);
+builder.Services.AddRequestValidation();
+builder.Services.AddLoginRateLimiting(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInventoryModule();
 
 var app = builder.Build();
+
+await app.Services.InitializeDatabaseAsync();
 
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors(CorsSetup.PolicyName);
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapOpenApi();
 app.MapScalarApiReference("/docs", options => options
@@ -30,8 +47,14 @@ app.MapScalarApiReference("/docs", options => options
 
 app.MapHealthEndpoints();
 app.MapSystemEndpoints();
-app.MapPanelApi();
-app.MapErpApi();
+
+var panel = app.MapPanelApi();
+panel.MapPanelAuthEndpoints();
+foreach (var endpoints in app.Services.GetServices<IPanelEndpoints>()) endpoints.Map(panel);
+
+var erp = app.MapErpApi();
+erp.MapErpAuthEndpoints();
+foreach (var endpoints in app.Services.GetServices<IErpEndpoints>()) endpoints.Map(erp);
 
 app.Run();
 

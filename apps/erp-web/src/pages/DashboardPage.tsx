@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { erpMenu } from '@/navigation/menu';
-import { useSessionStore } from '@/state/session-store';
+import { selectCurrentUnit, useAuthStore } from '@/state/auth-store';
 
 function greetingKey(hour: number) {
   if (hour < 12) return 'dashboard.greetingMorning';
@@ -69,8 +69,10 @@ function ModuleCard({ module }: { module: MenuNode }) {
 export function DashboardPage() {
   const { t } = useTranslation();
   const { token } = theme.useToken();
-  const { userName, accountName, businessUnits, currentBusinessUnitId } = useSessionStore();
-  const unit = businessUnits.find((u) => u.id === currentBusinessUnitId);
+  const user = useAuthStore((s) => s.user);
+  const unit = useAuthStore(selectCurrentUnit);
+  const userName = user?.fullName ?? '';
+  const accountName = user?.accountName ?? '';
   const systemStatus = useSystemStatus();
   const now = dayjs();
 

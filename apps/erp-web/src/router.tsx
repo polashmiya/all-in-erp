@@ -1,10 +1,37 @@
 import { FullPageLoader, RouteErrorResult } from '@erp/ui';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { ShellLayout } from '@/layout/ShellLayout';
+import { LoginPage } from '@/pages/LoginPage';
+import { SelectUnitPage } from '@/pages/SelectUnitPage';
+import { GuestOnly, RequireBusinessUnit, RequireSignedIn } from '@/routes/guards';
 
 export const router = createBrowserRouter([
   {
-    element: <ShellLayout />,
+    path: '/login',
+    element: (
+      <GuestOnly>
+        <LoginPage />
+      </GuestOnly>
+    ),
+    errorElement: <RouteErrorResult />,
+  },
+  {
+    path: '/select-unit',
+    element: (
+      <RequireSignedIn>
+        <SelectUnitPage />
+      </RequireSignedIn>
+    ),
+    errorElement: <RouteErrorResult />,
+  },
+  {
+    element: (
+      <RequireSignedIn>
+        <RequireBusinessUnit>
+          <ShellLayout />
+        </RequireBusinessUnit>
+      </RequireSignedIn>
+    ),
     errorElement: <RouteErrorResult />,
     hydrateFallbackElement: <FullPageLoader />,
     children: [

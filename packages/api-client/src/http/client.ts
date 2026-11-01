@@ -10,7 +10,7 @@ export interface ApiClientConfig {
 }
 
 /** RFC 7807 problem details as produced by the ASP.NET Core API. */
-export interface ProblemDetails {
+export interface ApiProblemDetails {
   type?: string;
   title?: string;
   status?: number;
@@ -23,7 +23,7 @@ export interface ProblemDetails {
 export class ApiError extends Error {
   constructor(
     readonly status: number,
-    readonly problem: ProblemDetails | undefined,
+    readonly problem: ApiProblemDetails | undefined,
     readonly body?: unknown,
   ) {
     super(problem?.title ?? problem?.detail ?? `Request failed with status ${status}`);
@@ -70,11 +70,21 @@ export async function customFetch<T>(url: string, init: RequestInit = {}): Promi
 
   if (!response.ok) {
     if (response.status === 401) config.onUnauthorized?.();
-    const problem = body && typeof body === 'object' ? (body as ProblemDetails) : undefined;
+    const problem = body && typeof body === 'object' ? (body as ApiProblemDetails) : undefined;
     throw new ApiError(response.status, problem, body);
   }
 
   return body as T;
+}
+
+/** HTTP status of a failed call; 0 when the server could not be reached at all. */
+export function errorStatus(error: unknown): number {
+  return error instanceof ApiError ? error.status : 0;
+}
+
+/** True when an access token exists and its expiry (ISO string) is still in the future. */
+export function isTokenActive(token: string | null | undefined, expiresAt: string | null | undefined, now = Date.now()) {
+  return !!token && !!expiresAt && Date.parse(expiresAt) > now;
 }
 
 /** Picked up by orval: every generated hook's error type is ApiError. */

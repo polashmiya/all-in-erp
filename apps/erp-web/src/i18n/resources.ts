@@ -2,6 +2,11 @@ import type { AppResources } from '@erp/ui';
 
 export const erpResources: AppResources = {
   en: {
+    'login.headline': 'One ERP, shaped for every business unit',
+    'login.description': "Screens, fields and actions follow your business unit's configuration.",
+    'login.point1': 'Role-based access down to every action',
+    'login.point2': 'Switch business units without signing out',
+    'login.point3': 'English and বাংলা, light and dark',
     'dashboard.greetingMorning': 'Good morning, {{name}}',
     'dashboard.greetingAfternoon': 'Good afternoon, {{name}}',
     'dashboard.greetingEvening': 'Good evening, {{name}}',
@@ -23,6 +28,11 @@ export const erpResources: AppResources = {
     'placeholder.status': 'Not configured',
   },
   bn: {
+    'login.headline': 'একটি ERP, প্রতিটি বিজনেস ইউনিটের মতো করে সাজানো',
+    'login.description': 'স্ক্রিন, ফিল্ড ও অ্যাকশন আপনার বিজনেস ইউনিটের কনফিগারেশন অনুযায়ী চলে।',
+    'login.point1': 'প্রতিটি অ্যাকশন পর্যন্ত রোল-ভিত্তিক অনুমতি',
+    'login.point2': 'সাইন আউট ছাড়াই বিজনেস ইউনিট পরিবর্তন',
+    'login.point3': 'English ও বাংলা, লাইট ও ডার্ক মোড',
     'dashboard.greetingMorning': 'শুভ সকাল, {{name}}',
     'dashboard.greetingAfternoon': 'শুভ অপরাহ্ন, {{name}}',
     'dashboard.greetingEvening': 'শুভ সন্ধ্যা, {{name}}',

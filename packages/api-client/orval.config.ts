@@ -16,7 +16,6 @@ export default defineConfig({
       override: {
         mutator: { path: 'src/http/client.ts', name: 'customFetch' },
         fetch: { includeHttpResponseReturnType: false },
-        query: { useQuery: true, useSuspenseQuery: false },
       },
     },
   },

@@ -1,4 +1,22 @@
-import { ApiError, configureApiClient, customFetch } from './client';
+import { ApiError, configureApiClient, customFetch, errorStatus, isTokenActive } from './client';
+
+describe('errorStatus', () => {
+  it('returns the HTTP status for API errors and 0 for network failures', () => {
+    expect(errorStatus(new ApiError(429, undefined))).toBe(429);
+    expect(errorStatus(new TypeError('Failed to fetch'))).toBe(0);
+  });
+});
+
+describe('isTokenActive', () => {
+  const now = Date.parse('2026-11-01T10:00:00Z');
+
+  it('requires a token and a future expiry', () => {
+    expect(isTokenActive('t', '2026-11-01T18:00:00Z', now)).toBe(true);
+    expect(isTokenActive('t', '2026-11-01T09:59:59Z', now)).toBe(false);
+    expect(isTokenActive(null, '2026-11-01T18:00:00Z', now)).toBe(false);
+    expect(isTokenActive('t', null, now)).toBe(false);
+  });
+});
 
 function jsonResponse(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {

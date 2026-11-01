@@ -1,6 +1,9 @@
 // AntD v5 needs this shim to render static methods (message/modal) under React 19.
 import '@ant-design/v5-patch-for-react-19';
 
+export { LoginIllustration } from './auth/LoginIllustration';
+export { LoginLayout } from './auth/LoginLayout';
+export type { LoginLayoutProps } from './auth/LoginLayout';
 export { BrandMark } from './components/BrandMark';
 export { BusinessUnitSwitcher } from './components/BusinessUnitSwitcher';
 export type { BusinessUnitOption, BusinessUnitSwitcherProps } from './components/BusinessUnitSwitcher';
