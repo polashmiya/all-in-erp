@@ -49,7 +49,7 @@ public static class ErpAuthEndpoints
     {
         // No tenant is known before login, so this lookup deliberately bypasses the tenant filter.
         var email = request.Email.Trim().ToLowerInvariant();
-        var user = await db.ErpUsers.IgnoreQueryFilters()
+        var user = await db.ErpUsers.AcrossTenants()
             .Include(u => u.Account)
             .SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
 
@@ -136,12 +136,12 @@ public static class ErpAuthEndpoints
     private static async Task<List<BusinessUnitAccessDto>> GetBusinessUnitsAsync(
         ErpDbContext db, ErpUser user, CancellationToken cancellationToken)
     {
-        var assignments = await db.UserBusinessUnits.IgnoreQueryFilters()
+        var assignments = await db.UserBusinessUnits.AcrossTenants()
             .Where(x => x.UserId == user.Id && x.AccountId == user.AccountId)
             .Select(x => new { x.BusinessUnitId, RoleName = x.Role!.Name })
             .ToDictionaryAsync(x => x.BusinessUnitId, x => x.RoleName, cancellationToken);
 
-        var units = await db.BusinessUnits.IgnoreQueryFilters()
+        var units = await db.BusinessUnits.AcrossTenants()
             .Where(b => b.AccountId == user.AccountId && b.IsActive)
             .Where(b => user.IsPrimaryAdmin || assignments.Keys.Contains(b.Id))
             .OrderBy(b => b.Name)

@@ -3,11 +3,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { queryClient } from '@/lib/api';
 import { router } from '@/router';
+import { HOME_PATH } from '@/routes/redirect';
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UiProvider>
+      <UiProvider homePath={HOME_PATH}>
         <RouterProvider router={router} />
       </UiProvider>
     </QueryClientProvider>

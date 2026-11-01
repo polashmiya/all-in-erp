@@ -2,7 +2,7 @@ namespace Erp.Core.Tenancy;
 
 /// <summary>
 /// Context for work outside a request (startup seeding, design-time tooling). Tenant filters match nothing,
-/// so such code must opt out explicitly with IgnoreQueryFilters.
+/// so such code must opt out explicitly (AcrossTenants()).
 /// </summary>
 public sealed class SystemCurrentContext : ICurrentContext
 {

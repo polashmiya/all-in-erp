@@ -1,7 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { useSystemStatus } from '@erp/api-client';
-import { flattenLeaves, localize, ShellPage, SystemStatusCard, useLanguageStore, type MenuNode } from '@erp/ui';
-import { Avatar, Card, Col, Flex, List, Row, Space, Tag, Typography, theme } from 'antd';
+import { flattenLeaves, localize, ShellPage, SystemStatusCard, useBrand, useLanguageStore, type MenuNode } from '@erp/ui';
+import { Avatar, Card, Col, Flex, List, Row, Space, Tag, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -18,7 +18,7 @@ const modules = erpMenu.filter((node) => node.children?.length);
 
 function ModuleCard({ module }: { module: MenuNode }) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
+  const brand = useBrand();
   const language = useLanguageStore((s) => s.language);
   const features = flattenLeaves([module]);
   const first = features[0];
@@ -42,7 +42,7 @@ function ModuleCard({ module }: { module: MenuNode }) {
           shape="square"
           size={44}
           icon={module.icon}
-          style={{ background: token.colorPrimaryBg, color: token.colorPrimary, flexShrink: 0 }}
+          style={{ background: brand.tintBg, color: brand.mode === 'light' ? brand.primary : brand.palette[3], flexShrink: 0, borderRadius: 12 }}
         />
         <div style={{ minWidth: 0 }}>
           <Typography.Title level={5} style={{ margin: 0 }}>
@@ -68,7 +68,7 @@ function ModuleCard({ module }: { module: MenuNode }) {
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
+  const brand = useBrand();
   const user = useAuthStore((s) => s.user);
   const unit = useAuthStore(selectCurrentUnit);
   const userName = user?.fullName ?? '';
@@ -82,7 +82,7 @@ export function DashboardPage() {
         <Card
           variant="borderless"
           style={{
-            background: `linear-gradient(120deg, ${token.colorPrimary} 0%, #1D39C4 60%, #10239E 100%)`,
+            background: brand.hero,
             overflow: 'hidden',
           }}
           styles={{ body: { padding: '28px 32px' } }}

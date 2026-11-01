@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
-import { panelMenu } from '@/navigation/menu';
+import { useNavigation } from '@/navigation/useNavigation';
 import { useAuthStore } from '@/state/auth-store';
 
 export function ShellLayout() {
@@ -15,6 +15,7 @@ export function ShellLayout() {
   const signOut = useAuthStore((s) => s.signOut);
   const { status } = useSystemStatus();
   const session = useGetPanelSession({ query: { staleTime: 5 * 60_000 } });
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (session.data) setUser(session.data);
@@ -29,7 +30,8 @@ export function ShellLayout() {
     <AppShell
       appName="myErp"
       appBadge="Panel"
-      menu={panelMenu}
+      menu={navigation.menu}
+      menuLoading={navigation.loading}
       user={{ name: user?.fullName ?? '', description: user ? t(`role.${user.role}`) : undefined }}
       onLogout={logout}
       footer={<ShellFooter appName="myErp Panel" version={status?.version} />}

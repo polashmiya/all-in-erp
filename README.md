@@ -48,6 +48,25 @@ dotnet ef migrations add <Name> --project backend/src/Erp.Infrastructure --start
 dotnet ef database update      --project backend/src/Erp.Infrastructure --startup-project backend/src/Erp.Api
 ```
 
+### Panel: accounts and account setup
+
+- **The Panel sidebar is read from the `PanelMenuItems` table** (`GET /api/panel/navigation`): any depth, EN/বাংলা
+  labels, an icon name from the shared icon registry, path and sort order. Startup only *inserts* missing default
+  items (currently just **Accounts**) and never overwrites edited rows. Menu entries without a built screen show a
+  placeholder.
+- **Accounts** (`/accounts`) has totals, a server-paged table (status tabs, search, sort) and a detail drawer with
+  the business unit → office → warehouse tree.
+- **New account setup** (`/accounts/new`) is one page with five steps: account info → business units → offices and
+  branches per unit → warehouses per unit, either at unit level or under an office → ERP admin and review. Nothing is
+  stored until **Create account**. `POST /api/panel/accounts/setup` then saves the whole tree, the system roles
+  (Administrator, Viewer) and a **primary ERP admin** in one transaction. Leave the password empty and a secure one is
+  generated, then shown once.
+- Validation errors come back keyed by JSON path (e.g. `businessUnits[1].warehouses[0].officeCode`), and the form
+  jumps to that step and field.
+- Data model: `Account` (profile, base currency, time zone) → `BusinessUnit` → `Office` → `Warehouse`
+  (`Warehouse.OfficeId` is optional). Offices and warehouses are business-unit-owned, so in the ERP they are filtered
+  to the selected unit.
+
 ### Authentication model
 
 - **Two surfaces, two audiences.** Panel tokens (`aud=panel`) only work on `/api/panel/*`, and ERP tokens
@@ -104,6 +123,20 @@ packages/
 ```
 
 Project references: `Api → all`, `Modules → Core, Metadata`, `Infrastructure → Core, Metadata`, `Metadata → Core`.
+
+## Theme system
+
+Both apps share one theme engine in `packages/ui/src/theme`:
+
+- **Presets** (`presets.ts`) are a primary + accent pair: **Teal & Amber** (default), Ocean, Indigo, Emerald, Violet,
+  Rose, Sunset, Graphite and Royal. Every primary carries white text at WCAG AA contrast.
+- **`buildBrand(preset, mode, sidebarStyle)`** derives every other colour: page background and sidebar tints,
+  borders, table header and hover rows, menu hover and selected states, the hero gradient, and accent shades for
+  icons. Unit tests check text contrast in **every preset × light/dark × sidebar style**.
+- **Appearance panel** (header): the colour preset, Light / Dark / System mode, sidebar style (**Tinted** = light
+  tint of the primary, Light, Dark, Brand) and compact density. Choices are saved per browser.
+- Components read colours with `useBrand()` (or AntD tokens). To add a preset, append a `{ key, name, primary, accent }`
+  entry. The contrast test fails if the primary is too light for white text.
 
 ## Conventions
 

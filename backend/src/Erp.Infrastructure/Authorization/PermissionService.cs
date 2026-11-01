@@ -24,7 +24,7 @@ public sealed class PermissionService(ErpDbContext db, ICurrentContext current, 
         if (isPrimaryAdmin) return PermissionSet.All(catalog.Codes);
 
         var codes = await db.UserBusinessUnits
-            .IgnoreQueryFilters()
+            .AcrossTenants()
             .Where(x => x.UserId == userId && x.BusinessUnitId == businessUnitId)
             .SelectMany(x => x.Role!.Permissions.Select(p => p.PermissionCode))
             .ToListAsync(cancellationToken);
@@ -39,15 +39,15 @@ public sealed class BusinessUnitAccess(ErpDbContext db) : IBusinessUnitAccess
     public async Task<bool> CanAccessAsync(
         Guid userId, Guid accountId, Guid businessUnitId, bool isPrimaryAdmin, CancellationToken cancellationToken = default)
     {
-        var userActive = await db.ErpUsers.IgnoreQueryFilters()
+        var userActive = await db.ErpUsers.AcrossTenants()
             .AnyAsync(u => u.Id == userId && u.AccountId == accountId && u.IsActive, cancellationToken);
         if (!userActive) return false;
 
-        var unitActive = await db.BusinessUnits.IgnoreQueryFilters()
+        var unitActive = await db.BusinessUnits.AcrossTenants()
             .AnyAsync(b => b.Id == businessUnitId && b.AccountId == accountId && b.IsActive && b.Account!.IsActive, cancellationToken);
         if (!unitActive) return false;
 
-        return isPrimaryAdmin || await db.UserBusinessUnits.IgnoreQueryFilters()
+        return isPrimaryAdmin || await db.UserBusinessUnits.AcrossTenants()
             .AnyAsync(x => x.UserId == userId && x.BusinessUnitId == businessUnitId && x.AccountId == accountId, cancellationToken);
     }
 }

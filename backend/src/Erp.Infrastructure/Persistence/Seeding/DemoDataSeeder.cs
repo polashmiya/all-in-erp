@@ -2,6 +2,7 @@ using Erp.Core.Authorization;
 using Erp.Core.Domain.Identity;
 using Erp.Core.Domain.Tenancy;
 using Erp.Core.Security;
+using Erp.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,8 +10,8 @@ using Microsoft.Extensions.Options;
 namespace Erp.Infrastructure.Persistence.Seeding;
 
 /// <summary>
-/// Idempotent demo data: the Panel super admin, "Demo Pharma Ltd" with Dhaka and Chattogram depots,
-/// Administrator / Viewer roles and a primary ERP admin with access to both depots.
+/// Idempotent demo data: the Panel super admin, "Demo Pharma Ltd" with Dhaka and Chattogram depots (each with
+/// offices and warehouses), Administrator / Viewer roles and a primary ERP admin with access to both depots.
 /// Every lookup is by natural key, so re-running only fills in what is missing.
 /// </summary>
 public sealed class DemoDataSeeder(
@@ -21,10 +22,24 @@ public sealed class DemoDataSeeder(
     ILogger<DemoDataSeeder> logger)
 {
     public const string AccountCode = "DEMO-PHARMA";
-    public const string AdministratorRole = "Administrator";
-    public const string ViewerRole = "Viewer";
+    public const string AdministratorRole = SystemRoles.Administrator;
+    public const string ViewerRole = SystemRoles.Viewer;
 
-    private static readonly (string Code, string Name)[] Units = [("DHK", "Dhaka Depot"), ("CTG", "Chattogram Depot")];
+    private sealed record DemoOffice(string Code, string Name, string Address);
+
+    private sealed record DemoWarehouse(string Code, string Name, string? OfficeCode);
+
+    private sealed record DemoUnit(string Code, string Name, string Address, DemoOffice[] Offices, DemoWarehouse[] Warehouses);
+
+    private static readonly DemoUnit[] Units =
+    [
+        new("DHK", "Dhaka Depot", "Plot 12, Tejgaon I/A, Dhaka 1208",
+            [new("HO", "Dhaka Head Office", "Plot 12, Tejgaon I/A, Dhaka 1208"), new("MIR", "Mirpur Branch", "Section 10, Mirpur, Dhaka 1216")],
+            [new("CWH", "Central Warehouse", "HO"), new("MWH", "Mirpur Store", "MIR"), new("TRN", "Transit Warehouse", null)]),
+        new("CTG", "Chattogram Depot", "Agrabad C/A, Chattogram 4100",
+            [new("AGR", "Agrabad Office", "Agrabad C/A, Chattogram 4100")],
+            [new("CTW", "Chattogram Warehouse", "AGR"), new("PBW", "Port Bonded Warehouse", null)]),
+    ];
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -34,13 +49,8 @@ public sealed class DemoDataSeeder(
 
         var account = await EnsureAccountAsync(cancellationToken);
         var units = await EnsureBusinessUnitsAsync(account, cancellationToken);
-        var administrator = await EnsureRoleAsync(account, AdministratorRole, "Full access to every feature", catalog.Codes, cancellationToken);
-        await EnsureRoleAsync(
-            account,
-            ViewerRole,
-            "Read-only access with export",
-            catalog.All.Where(p => p.Code.Action is "view" or "export").Select(p => p.Code.Value).ToList(),
-            cancellationToken);
+        var administrator = await EnsureRoleAsync(account, AdministratorRole, () => SystemRoles.CreateAdministrator(account.Id, catalog), catalog.Codes, cancellationToken);
+        await EnsureRoleAsync(account, ViewerRole, () => SystemRoles.CreateViewer(account.Id, catalog), SystemRoles.ViewerPermissions(catalog), cancellationToken);
         await EnsureErpAdminAsync(seed.ErpAdmin, account, units, administrator, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
@@ -64,39 +74,76 @@ public sealed class DemoDataSeeder(
     private async Task<Account> EnsureAccountAsync(CancellationToken ct)
     {
         var account = await db.Accounts.SingleOrDefaultAsync(a => a.Code == AccountCode, ct);
-        if (account is not null) return account;
+        if (account is null)
+        {
+            account = new Account { Code = AccountCode, Name = "Demo Pharma Ltd" };
+            db.Accounts.Add(account);
+            logger.LogInformation("Seeded account {Account}", account.Name);
+        }
 
-        account = new Account { Code = AccountCode, Name = "Demo Pharma Ltd" };
-        db.Accounts.Add(account);
-        logger.LogInformation("Seeded account {Account}", account.Name);
+        // Profile fields arrived after the first seed; fill them for older databases too.
+        account.Email ??= "info@demopharma.com";
+        account.Phone ??= "+8801700000000";
+        account.Website ??= "https://demopharma.com";
+        account.Industry ??= "Pharmaceuticals";
+        account.Address ??= "Plot 12, Tejgaon I/A";
+        account.City ??= "Dhaka";
+        account.Country ??= "BD";
         return account;
     }
 
     private async Task<List<BusinessUnit>> EnsureBusinessUnitsAsync(Account account, CancellationToken ct)
     {
-        var existing = await db.BusinessUnits.IgnoreQueryFilters().Where(b => b.AccountId == account.Id).ToListAsync(ct);
+        var existing = await db.BusinessUnits.AcrossTenants()
+            .Include(b => b.Offices)
+            .Include(b => b.Warehouses)
+            .Where(b => b.AccountId == account.Id)
+            .ToListAsync(ct);
 
-        foreach (var (code, name) in Units.Where(u => existing.All(e => e.Code != u.Code)))
+        foreach (var demo in Units)
         {
-            var unit = new BusinessUnit { AccountId = account.Id, Code = code, Name = name };
-            db.BusinessUnits.Add(unit);
-            existing.Add(unit);
+            var unit = existing.SingleOrDefault(e => e.Code == demo.Code);
+            if (unit is null)
+            {
+                unit = new BusinessUnit { AccountId = account.Id, Code = demo.Code, Name = demo.Name };
+                db.BusinessUnits.Add(unit);
+                existing.Add(unit);
+            }
+
+            unit.Address ??= demo.Address;
+
+            // Offices and warehouses are only seeded into a unit that has none, so user edits are left alone.
+            if (unit.Offices.Count > 0 || unit.Warehouses.Count > 0) continue;
+
+            var offices = demo.Offices.ToDictionary(
+                o => o.Code,
+                o => new Office { AccountId = account.Id, BusinessUnit = unit, Code = o.Code, Name = o.Name, Address = o.Address });
+            db.Offices.AddRange(offices.Values);
+            db.Warehouses.AddRange(demo.Warehouses.Select(w => new Warehouse
+            {
+                AccountId = account.Id,
+                BusinessUnit = unit,
+                Office = w.OfficeCode is null ? null : offices[w.OfficeCode],
+                Code = w.Code,
+                Name = w.Name,
+            }));
         }
 
         return existing.Where(e => Units.Any(u => u.Code == e.Code)).ToList();
     }
 
     private async Task<Role> EnsureRoleAsync(
-        Account account, string name, string description, IReadOnlyCollection<string> permissions, CancellationToken ct)
+        Account account, string name, Func<Role> create, IReadOnlyCollection<string> permissions, CancellationToken ct)
     {
-        var role = await db.Roles.IgnoreQueryFilters()
+        var role = await db.Roles.AcrossTenants()
             .Include(r => r.Permissions)
             .SingleOrDefaultAsync(r => r.AccountId == account.Id && r.Name == name, ct);
 
         if (role is null)
         {
-            role = new Role { AccountId = account.Id, Name = name, Description = description, IsSystem = true };
+            role = create();
             db.Roles.Add(role);
+            return role;
         }
 
         // Keep system roles in step with the catalog as modules add permissions.
@@ -112,7 +159,7 @@ public sealed class DemoDataSeeder(
         SeedUserOptions seed, Account account, List<BusinessUnit> units, Role role, CancellationToken ct)
     {
         var email = Require(seed, "Seed:ErpAdmin");
-        var user = await db.ErpUsers.IgnoreQueryFilters()
+        var user = await db.ErpUsers.AcrossTenants()
             .Include(u => u.BusinessUnits)
             .SingleOrDefaultAsync(u => u.Email == email, ct);
 

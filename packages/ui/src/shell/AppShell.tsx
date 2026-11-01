@@ -5,13 +5,15 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 import { BrandMark } from '../components/BrandMark';
-import { LanguageSwitch, NotificationBell, PreferencesMenu, ThemeToggle } from '../components/HeaderActions';
+import { LanguageSwitch, NotificationBell, ThemeToggle } from '../components/HeaderActions';
+import { ThemeSettingsButton } from '../components/ThemeSettings';
 import { ErrorBoundary } from '../components/ResultPages';
 import { useLanguageStore } from '../i18n/i18n';
 import { localize, type Language } from '../i18n/language';
+import { useBrand } from '../theme/brand-context';
 import { useThemeStore } from '../theme/theme-store';
 import { collectGroupKeys, filterMenu, findTrail, type MenuNode } from './menu';
-import { ShellContext } from './ShellContext';
+import { ShellContext, useHomePath } from './ShellContext';
 
 export interface ShellUser {
   name: string;
@@ -25,6 +27,8 @@ export interface AppShellProps {
   /** Small tag beside the product name, e.g. "Panel" or "ERP". */
   appBadge?: string;
   menu: MenuNode[];
+  /** Shows a skeleton in the sider while a server-provided menu loads. */
+  menuLoading?: boolean;
   user: ShellUser;
   /** Rendered first in the header actions, e.g. the business-unit switcher. */
   headerExtra?: ReactNode;
@@ -57,6 +61,7 @@ export function AppShell({
   appName,
   appBadge,
   menu,
+  menuLoading = false,
   user,
   headerExtra,
   userMenuItems = [],
@@ -68,6 +73,8 @@ export function AppShell({
   const { t } = useTranslation();
   const { token } = theme.useToken();
   const { pathname } = useLocation();
+  const homePath = useHomePath();
+  const brand = useBrand();
   const language = useLanguageStore((s) => s.language);
   const collapsed = useThemeStore((s) => s.siderCollapsed);
   const setCollapsed = useThemeStore((s) => s.setSiderCollapsed);
@@ -79,30 +86,32 @@ export function AppShell({
   const trail = useMemo(() => findTrail(menu, pathname), [menu, pathname]);
   const shell = useMemo(() => ({ menu, trail }), [menu, trail]);
 
+  // Header, sidebar and page background come from the brand (theme colour + sidebar style + mode).
   const layoutToken = useMemo(
     () => ({
-      bgLayout: token.colorBgLayout,
+      bgLayout: brand.layoutBg,
       header: {
-        colorBgHeader: token.colorBgContainer,
-        colorHeaderTitle: token.colorText,
+        colorBgHeader: brand.headerBg,
+        colorHeaderTitle: brand.textStrong,
         colorTextRightActionsItem: token.colorTextSecondary,
-        colorBgRightActionsItemHover: token.colorFillTertiary,
-        heightLayoutHeader: 56,
+        colorBgRightActionsItemHover: brand.tintBg,
+        heightLayoutHeader: 60,
       },
       sider: {
-        colorMenuBackground: token.colorBgContainer,
-        colorMenuItemDivider: token.colorSplit,
-        colorTextMenu: token.colorTextSecondary,
-        colorTextMenuSecondary: token.colorTextTertiary,
-        colorTextMenuTitle: token.colorText,
-        colorTextMenuActive: token.colorText,
-        colorTextMenuItemHover: token.colorText,
-        colorTextMenuSelected: token.colorPrimary,
-        colorBgMenuItemHover: token.colorFillTertiary,
-        colorBgMenuItemSelected: token.colorPrimaryBg,
-        colorBgCollapsedButton: token.colorBgContainer,
+        colorMenuBackground: brand.sider.bg,
+        colorMenuItemDivider: brand.sider.border,
+        colorTextMenu: brand.sider.text,
+        colorTextMenuSecondary: brand.sider.textMuted,
+        colorTextMenuTitle: brand.sider.text,
+        colorTextMenuActive: brand.sider.hoverText,
+        colorTextMenuItemHover: brand.sider.hoverText,
+        colorTextMenuSelected: brand.sider.selectedText,
+        colorBgMenuItemHover: brand.sider.hoverBg,
+        colorBgMenuItemSelected: brand.sider.selectedBg,
+        colorBgMenuItemCollapsedElevated: brand.sider.inverse ? brand.sider.bg : brand.containerBg,
+        colorBgCollapsedButton: brand.containerBg,
         colorTextCollapsedButton: token.colorTextSecondary,
-        colorTextCollapsedButtonHover: token.colorText,
+        colorTextCollapsedButtonHover: brand.primary,
       },
       pageContainer: {
         colorBgPageContainer: 'transparent',
@@ -110,7 +119,7 @@ export function AppShell({
         paddingInlinePageContainerContent: 24,
       },
     }),
-    [token],
+    [brand, token.colorTextSecondary],
   );
 
   const userMenu: MenuProps = {
@@ -154,11 +163,14 @@ export function AppShell({
         title={appName}
         menuHeaderRender={false}
         headerTitleRender={(logo, title) => (
-          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link to={homePath} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {logo}
             {title}
             {appBadge && (
-              <Tag color="blue" bordered={false} style={{ marginInlineEnd: 0, fontWeight: 500 }}>
+              <Tag
+                bordered={false}
+                style={{ marginInlineEnd: 0, fontWeight: 600, background: brand.tintBg, color: brand.mode === 'light' ? brand.palette[7] : brand.palette[2] }}
+              >
                 {appBadge}
               </Tag>
             )}
@@ -166,7 +178,7 @@ export function AppShell({
         )}
         location={{ pathname }}
         route={route}
-        menu={{ locale: false }}
+        menu={{ locale: false, loading: menuLoading }}
         openKeys={searching ? collectGroupKeys(filtered) : undefined}
         collapsed={collapsed}
         onCollapse={setCollapsed}
@@ -175,17 +187,22 @@ export function AppShell({
         }
         menuExtraRender={({ collapsed: isCollapsed }) =>
           isCollapsed ? undefined : (
-            <div style={{ padding: '4px 4px 0' }}>
+            <div style={{ padding: '8px 4px 4px' }}>
               <Input
                 allowClear
-                variant="filled"
-                prefix={<SearchOutlined style={{ color: token.colorTextTertiary }} />}
+                className={`erp-sider-search${brand.sider.inverse ? ' is-inverse' : ''}`}
+                prefix={<SearchOutlined style={{ color: brand.sider.textMuted }} />}
                 placeholder={t('shell.searchMenu')}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
+                style={{
+                  background: brand.sider.inverse ? brand.sider.hoverBg : brand.containerBg,
+                  borderColor: brand.sider.border,
+                  color: brand.sider.text,
+                }}
               />
               {searching && filtered.length === 0 && (
-                <Typography.Text type="secondary" style={{ display: 'block', padding: '12px 4px', fontSize: 13 }}>
+                <Typography.Text style={{ display: 'block', padding: '12px 4px', fontSize: 13, color: brand.sider.textMuted }}>
                   {t('shell.noMenuMatch')}
                 </Typography.Text>
               )}
@@ -196,7 +213,7 @@ export function AppShell({
           headerExtra ? <span key="extra">{headerExtra}</span> : null,
           <LanguageSwitch key="language" />,
           <ThemeToggle key="theme" />,
-          <PreferencesMenu key="preferences" />,
+          <ThemeSettingsButton key="appearance" />,
           <NotificationBell key="notifications" />,
         ]}
         avatarProps={{

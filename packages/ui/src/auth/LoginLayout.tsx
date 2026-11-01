@@ -3,6 +3,7 @@ import { Flex, Grid, Space, Tag, Typography, theme } from 'antd';
 import type { ReactNode } from 'react';
 import { BrandMark } from '../components/BrandMark';
 import { LanguageSwitch, ThemeToggle } from '../components/HeaderActions';
+import { useBrand } from '../theme/brand-context';
 import { LoginIllustration } from './LoginIllustration';
 
 export interface LoginLayoutProps {
@@ -20,6 +21,7 @@ export interface LoginLayoutProps {
  */
 export function LoginLayout({ appName, appBadge, headline, description, highlights, children }: LoginLayoutProps) {
   const { token } = theme.useToken();
+  const brand = useBrand();
   const screens = Grid.useBreakpoint();
   const showBrand = screens.lg === true;
 
@@ -41,7 +43,7 @@ export function LoginLayout({ appName, appBadge, headline, description, highligh
             display: 'flex',
             flexDirection: 'column',
             color: '#fff',
-            background: 'linear-gradient(145deg, #2F54EB 0%, #1D39C4 55%, #10239E 100%)',
+            background: brand.hero,
           }}
         >
           <Flex align="center" gap={10}>
@@ -63,7 +65,7 @@ export function LoginLayout({ appName, appBadge, headline, description, highligh
             <Space direction="vertical" size={10}>
               {highlights.map((item) => (
                 <Typography.Text key={item} style={{ color: 'rgba(255,255,255,0.92)' }}>
-                  <CheckCircleFilled style={{ marginInlineEnd: 10, color: '#ADC6FF' }} />
+                  <CheckCircleFilled style={{ marginInlineEnd: 10, color: brand.accent }} />
                   {item}
                 </Typography.Text>
               ))}
@@ -91,7 +93,7 @@ export function LoginLayout({ appName, appBadge, headline, description, highligh
               <Typography.Text strong style={{ fontSize: 16 }}>
                 {appName}
               </Typography.Text>
-              <Tag color="blue" bordered={false}>
+              <Tag bordered={false} style={{ background: brand.tintBg, color: brand.palette[7], fontWeight: 600 }}>
                 {appBadge}
               </Tag>
             </Flex>

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Erp.Core.Domain;
 using Erp.Core.Domain.Identity;
+using Erp.Core.Domain.Navigation;
 using Erp.Core.Domain.Tenancy;
 using Erp.Core.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,13 @@ public static class QueryFilters
 {
     /// <summary>Restricts account-owned data to the current account (and BU-owned data to the current unit).</summary>
     public const string Tenant = "Tenant";
+
+    /// <summary>
+    /// Lifts only the tenant filter, for code that legitimately works across tenants (Panel, login, seeding).
+    /// Other filters added later (e.g. soft delete) still apply.
+    /// </summary>
+    public static IQueryable<T> AcrossTenants<T>(this IQueryable<T> query) where T : class =>
+        query.IgnoreQueryFilters([Tenant]);
 }
 
 /// <summary>
@@ -37,6 +45,12 @@ public class ErpDbContext : DbContext
     public DbSet<Account> Accounts => Set<Account>();
 
     public DbSet<BusinessUnit> BusinessUnits => Set<BusinessUnit>();
+
+    public DbSet<Office> Offices => Set<Office>();
+
+    public DbSet<Warehouse> Warehouses => Set<Warehouse>();
+
+    public DbSet<PanelMenuItem> PanelMenuItems => Set<PanelMenuItem>();
 
     public DbSet<PanelUser> PanelUsers => Set<PanelUser>();
 

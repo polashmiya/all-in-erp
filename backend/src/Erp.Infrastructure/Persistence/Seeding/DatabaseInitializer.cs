@@ -29,6 +29,7 @@ public static class DatabaseInitializer
         }
 
         await SyncPermissionCatalogAsync(db, provider.GetRequiredService<PermissionCatalog>(), logger, cancellationToken);
+        await PanelMenuSynchronizer.SyncAsync(db, logger, cancellationToken);
 
         if (options.SeedDemoData)
         {

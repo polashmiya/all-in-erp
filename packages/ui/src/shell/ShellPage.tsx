@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useLanguageStore } from '../i18n/i18n';
 import { localize } from '../i18n/language';
-import { useShell } from './ShellContext';
+import { useHomePath, useShell } from './ShellContext';
 
 export type ShellPageProps = PageContainerProps & {
   /** Extra breadcrumb crumbs after the menu trail, e.g. "New" or a record code. */
@@ -18,11 +18,12 @@ export type ShellPageProps = PageContainerProps & {
 export function ShellPage({ crumbs = [], title, ...props }: ShellPageProps) {
   const { t } = useTranslation();
   const { trail } = useShell();
+  const homePath = useHomePath();
   const language = useLanguageStore((s) => s.language);
   const leaf = trail.at(-1);
 
   const items = [
-    { title: <Link to="/dashboard" aria-label={t('shell.home')}><HomeOutlined /></Link> },
+    { title: <Link to={homePath} aria-label={t('shell.home')}><HomeOutlined /></Link> },
     ...trail.map((node, index) => {
       const label = localize(node.label, language);
       const linkable = node.path && (index < trail.length - 1 || crumbs.length > 0);

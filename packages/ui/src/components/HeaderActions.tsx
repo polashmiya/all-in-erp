@@ -1,21 +1,15 @@
-import {
-  BellOutlined,
-  CheckOutlined,
-  MoonOutlined,
-  SettingOutlined,
-  SunOutlined,
-  TranslationOutlined,
-} from '@ant-design/icons';
-import { Badge, Button, Dropdown, Empty, Popover, Switch, Tooltip, Typography } from 'antd';
+import { BellOutlined, CheckOutlined, MoonOutlined, SunOutlined, TranslationOutlined } from '@ant-design/icons';
+import { Badge, Button, Dropdown, Empty, Popover, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { useLanguageStore } from '../i18n/i18n';
 import { languageNames, languages } from '../i18n/language';
-import { useThemeStore } from '../theme/theme-store';
+import { useResolvedMode, useThemeStore } from '../theme/theme-store';
 
+/** Quick light/dark switch; the appearance drawer offers "system" and the other options. */
 export function ThemeToggle() {
   const { t } = useTranslation();
-  const mode = useThemeStore((s) => s.mode);
-  const toggleMode = useThemeStore((s) => s.toggleMode);
+  const mode = useResolvedMode();
+  const setMode = useThemeStore((s) => s.setMode);
   const label = mode === 'dark' ? t('shell.lightMode') : t('shell.darkMode');
 
   return (
@@ -24,7 +18,7 @@ export function ThemeToggle() {
         type="text"
         aria-label={label}
         icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-        onClick={toggleMode}
+        onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
       />
     </Tooltip>
   );
@@ -53,28 +47,6 @@ export function LanguageSwitch() {
         {language === 'en' ? 'EN' : 'বাং'}
       </Button>
     </Dropdown>
-  );
-}
-
-export function PreferencesMenu() {
-  const { t } = useTranslation();
-  const compact = useThemeStore((s) => s.compact);
-  const setCompact = useThemeStore((s) => s.setCompact);
-
-  return (
-    <Popover
-      trigger="click"
-      placement="bottomRight"
-      title={t('shell.preferences')}
-      content={
-        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
-          <Typography.Text>{t('shell.compactMode')}</Typography.Text>
-          <Switch size="small" checked={compact} onChange={setCompact} />
-        </label>
-      }
-    >
-      <Button type="text" aria-label={t('shell.preferences')} icon={<SettingOutlined />} />
-    </Popover>
   );
 }
 

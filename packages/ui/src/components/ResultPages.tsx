@@ -2,12 +2,14 @@ import { Button, Result } from 'antd';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router';
+import { useHomePath } from '../shell/ShellContext';
 
-const HOME = '/dashboard';
+
 
 export function NotFoundResult() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const home = useHomePath();
 
   return (
     <Result
@@ -15,7 +17,7 @@ export function NotFoundResult() {
       title={t('result.notFoundTitle')}
       subTitle={t('result.notFoundText')}
       extra={
-        <Button type="primary" onClick={() => navigate(HOME)}>
+        <Button type="primary" onClick={() => navigate(home)}>
           {t('result.backHome')}
         </Button>
       }
@@ -26,6 +28,7 @@ export function NotFoundResult() {
 export function ForbiddenResult() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const home = useHomePath();
 
   return (
     <Result
@@ -33,7 +36,7 @@ export function ForbiddenResult() {
       title={t('result.forbiddenTitle')}
       subTitle={t('result.forbiddenText')}
       extra={
-        <Button type="primary" onClick={() => navigate(HOME)}>
+        <Button type="primary" onClick={() => navigate(home)}>
           {t('result.backHome')}
         </Button>
       }

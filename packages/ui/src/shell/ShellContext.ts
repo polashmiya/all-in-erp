@@ -12,3 +12,10 @@ export const ShellContext = createContext<ShellContextValue>({ menu: [], trail: 
 export function useShell() {
   return useContext(ShellContext);
 }
+
+/** The app's landing route (brand link, breadcrumb home, "back" buttons). Set via UiProvider. */
+export const HomePathContext = createContext('/dashboard');
+
+export function useHomePath() {
+  return useContext(HomePathContext);
+}

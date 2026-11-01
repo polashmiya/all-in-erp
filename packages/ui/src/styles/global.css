@@ -18,6 +18,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01';
+  transition: background-color 0.2s ease;
 }
 
 /* Bangla script needs a little more line height to keep matras from clipping. */
@@ -25,8 +26,25 @@ html[lang='bn'] body {
   line-height: 1.65;
 }
 
-/* Thin, theme-aware scrollbars. */
+/* Soft elevation for cards (variables are set by UiProvider from the active theme). */
+.ant-card:not(.ant-card-bordered-false):not(.ant-card-borderless),
+.ant-pro-card.ant-pro-card-border {
+  box-shadow: var(--erp-card-shadow, none);
+}
+
+/* Sidebar search on dark / brand sidebars. */
+.erp-sider-search.is-inverse input {
+  color: inherit;
+}
+.erp-sider-search.is-inverse input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+.erp-sider-search.is-inverse .ant-input-clear-icon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Thin scrollbars tinted with the theme. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(127, 127, 127, 0.35) transparent;
+  scrollbar-color: var(--erp-scrollbar, rgba(127, 127, 127, 0.35)) transparent;
 }

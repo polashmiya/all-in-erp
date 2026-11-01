@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { ShellLayout } from '@/layout/ShellLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { GuestOnly, RequireSignedIn } from '@/routes/guards';
+import { HOME_PATH } from '@/routes/redirect';
 
 export const router = createBrowserRouter([
   {
@@ -23,10 +24,14 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorResult />,
     hydrateFallbackElement: <FullPageLoader />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <Navigate to={HOME_PATH} replace /> },
       {
-        path: 'dashboard',
-        lazy: async () => ({ Component: (await import('@/pages/DashboardPage')).DashboardPage }),
+        path: 'accounts',
+        lazy: async () => ({ Component: (await import('@/features/accounts/AccountsPage')).AccountsPage }),
+      },
+      {
+        path: 'accounts/new',
+        lazy: async () => ({ Component: (await import('@/features/accounts/setup/AccountSetupPage')).AccountSetupPage }),
       },
       {
         path: '*',
