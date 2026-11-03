@@ -1,6 +1,6 @@
 import { AppstoreOutlined, ControlOutlined, EyeOutlined } from '@ant-design/icons';
 import { errorStatus, panelLogin, type LoginRequest } from '@erp/api-client';
-import { AuthHeading, LoginLayout, SignInForm } from '@erp/ui';
+import { AuthHeading, LoginLayout, SignInForm, useGreeting } from '@erp/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { appConfig } from '@/common/config/app.config';
@@ -14,6 +14,7 @@ const ERROR_KEYS: Record<number, string> = {
 
 export function LoginPage() {
   const { t } = useTranslation();
+  const greeting = useGreeting();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const signIn = useAuthStore((s) => s.signIn);
@@ -52,7 +53,11 @@ export function LoginPage() {
       ]}
       footerNote={t('login.footer', { year: new Date().getFullYear(), app: appConfig.name })}
     >
-      <AuthHeading title={t('login.welcome')} lead={t('login.lead', { app: appConfig.name })} />
+      <AuthHeading
+        eyebrow={greeting}
+        title={t('login.welcome')}
+        lead={t('login.lead', { app: appConfig.name })}
+      />
       <SignInForm
         onSubmit={submit}
         error={error}

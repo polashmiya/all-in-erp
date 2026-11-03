@@ -5,6 +5,7 @@
 @import '@fontsource/hind-siliguri/700.css';
 @import './shell.css';
 @import './components.css';
+@import './auth.css';
 
 html,
 body,

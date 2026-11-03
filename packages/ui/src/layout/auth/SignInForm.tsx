@@ -1,4 +1,10 @@
-import { ArrowRightOutlined, LockOutlined, MailOutlined, WarningOutlined } from '@ant-design/icons';
+import {
+  ArrowRightOutlined,
+  KeyOutlined,
+  LockOutlined,
+  MailOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
 import { Alert, Button, Form, Input, Typography } from 'antd';
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,11 +22,40 @@ export interface SignInFormProps {
   footer?: ReactNode;
 }
 
-export function AuthHeading({ title, lead }: { title: ReactNode; lead?: ReactNode }) {
+export function AuthHeading({
+  title,
+  lead,
+  eyebrow,
+}: {
+  title: ReactNode;
+  lead?: ReactNode;
+  eyebrow?: ReactNode;
+}) {
   return (
     <div className="erp-auth__heading">
+      {eyebrow && <span className="erp-auth__eyebrow">{eyebrow}</span>}
       <h1>{title}</h1>
       {lead && <p>{lead}</p>}
+    </div>
+  );
+}
+
+function DemoHint({ demo, onUse }: { demo: SignInValues; onUse: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="erp-auth__demo">
+      <span className="erp-auth__demo-icon">
+        <KeyOutlined />
+      </span>
+      <span className="erp-auth__demo-text">
+        <span className="erp-auth__demo-title">{t('auth.demoAccount')}</span>
+        <span className="erp-auth__demo-value">
+          {demo.email} · {demo.password}
+        </span>
+      </span>
+      <Button size="small" type="link" onClick={onUse}>
+        {t('auth.useDemo')}
+      </Button>
     </div>
   );
 }
@@ -50,7 +85,13 @@ export function SignInForm({ onSubmit, error, loading, demo, footer }: SignInFor
           { type: 'email', message: t('auth.emailInvalid') },
         ]}
       >
-        <Input size="large" prefix={<MailOutlined />} autoComplete="username" autoFocus />
+        <Input
+          size="large"
+          prefix={<MailOutlined />}
+          placeholder={t('auth.emailPlaceholder')}
+          autoComplete="username"
+          autoFocus
+        />
       </Form.Item>
       <Form.Item
         name="password"
@@ -67,25 +108,13 @@ export function SignInForm({ onSubmit, error, loading, demo, footer }: SignInFor
         <Input.Password
           size="large"
           prefix={<LockOutlined />}
+          placeholder={t('auth.passwordPlaceholder')}
           autoComplete="current-password"
           onKeyDown={trackCapsLock}
           onKeyUp={trackCapsLock}
         />
       </Form.Item>
-      {demo && (
-        <Alert
-          type="info"
-          showIcon
-          className="erp-auth__alert"
-          message={t('auth.demoAccount')}
-          description={`${demo.email} · ${demo.password}`}
-          action={
-            <Button size="small" onClick={() => form.setFieldsValue(demo)}>
-              {t('auth.useDemo')}
-            </Button>
-          }
-        />
-      )}
+      {demo && <DemoHint demo={demo} onUse={() => form.setFieldsValue(demo)} />}
       <Button
         type="primary"
         htmlType="submit"
@@ -94,7 +123,7 @@ export function SignInForm({ onSubmit, error, loading, demo, footer }: SignInFor
         loading={loading}
         className="erp-auth__submit"
       >
-        {t('auth.signIn')} <ArrowRightOutlined />
+        {t('auth.signIn')} <ArrowRightOutlined className="erp-auth__arrow" />
       </Button>
       {footer && (
         <Typography.Text type="secondary" className="erp-auth__note">

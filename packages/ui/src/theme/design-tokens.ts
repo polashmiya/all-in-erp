@@ -140,6 +140,9 @@ export const onBrand = {
   subtle: 'rgba(255, 255, 255, 0.72)',
   fill: 'rgba(255, 255, 255, 0.12)',
   highlight: '#4ADE80',
+  glass: 'rgba(255, 255, 255, 0.08)',
+  glassBorder: 'rgba(255, 255, 255, 0.16)',
+  dots: 'rgba(255, 255, 255, 0.07)',
 } as const;
 
 export const tones: Record<ThemeMode, Record<Exclude<Tone, 'primary'>, ToneColors>> = {

@@ -11,7 +11,9 @@ export {
   formatPercent,
   initials,
   pageRange,
+  timeOfDay,
 } from './format';
+export type { TimeOfDay } from './format';
 export {
   collectGroupKeys,
   filterMenu,

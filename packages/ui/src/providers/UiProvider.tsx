@@ -42,6 +42,9 @@ function cssVariables(brand: Brand): Record<string, string> {
     '--erp-tint': brand.tintBg,
     '--erp-card-shadow': brand.cardShadow,
     '--erp-deep': brand.deep,
+    '--erp-accent': brand.accent,
+    '--erp-brand-light': brand.palette[3]!,
+    '--erp-brand-mid': brand.palette[5]!,
     '--erp-scrollbar':
       brand.mode === 'light' ? 'rgba(100, 110, 125, 0.35)' : 'rgba(255, 255, 255, 0.18)',
     '--sb-bg': sider.bg,

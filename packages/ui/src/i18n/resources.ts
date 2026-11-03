@@ -163,6 +163,11 @@ export const commonResources: Record<Language, Record<string, string>> = {
     'common.next': 'Next',
     'common.stepOf': 'Step {{current}} of {{total}}',
     'auth.capsOn': 'Caps Lock is on',
+    'auth.greeting.morning': 'Good morning',
+    'auth.greeting.afternoon': 'Good afternoon',
+    'auth.greeting.evening': 'Good evening',
+    'auth.emailPlaceholder': 'you@company.com',
+    'auth.passwordPlaceholder': 'Enter your password',
   },
   bn: {
     'shell.searchMenu': 'মেনু খুঁজুন',
@@ -326,5 +331,10 @@ export const commonResources: Record<Language, Record<string, string>> = {
     'common.next': 'পরবর্তী',
     'common.stepOf': 'ধাপ {{current}} / {{total}}',
     'auth.capsOn': 'ক্যাপস লক চালু আছে',
+    'auth.greeting.morning': 'শুভ সকাল',
+    'auth.greeting.afternoon': 'শুভ অপরাহ্ন',
+    'auth.greeting.evening': 'শুভ সন্ধ্যা',
+    'auth.emailPlaceholder': 'you@company.com',
+    'auth.passwordPlaceholder': 'আপনার পাসওয়ার্ড লিখুন',
   },
 };

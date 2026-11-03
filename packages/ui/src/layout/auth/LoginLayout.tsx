@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { BrandMark } from '../../components/brand/BrandMark';
 import { LanguageSegmented } from '../../components/navigation/LanguageSegmented';
 import { ProductPreview, type ProductPreviewProps } from './ProductPreview';
@@ -21,6 +21,23 @@ export interface LoginLayoutProps {
   children: ReactNode;
 }
 
+function Grain() {
+  const id = useId();
+  return (
+    <svg className="erp-login__grain" aria-hidden="true">
+      <filter id={id}>
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.85"
+          numOctaves="3"
+          stitchTiles="stitch"
+        />
+      </filter>
+      <rect width="100%" height="100%" filter={`url(#${id})`} />
+    </svg>
+  );
+}
+
 export function LoginLayout({
   appName,
   announcement,
@@ -38,7 +55,7 @@ export function LoginLayout({
         <header className="erp-login__head">
           <span className="erp-login__brand">
             <BrandMark size={34} label={appName} />
-            <span>{appName}</span>
+            <span className="erp-login__brandname">{appName}</span>
           </span>
           <LanguageSegmented />
         </header>
@@ -52,6 +69,10 @@ export function LoginLayout({
       </section>
 
       <section className="erp-login__brandpanel" aria-label={headline}>
+        <span className="erp-login__blob is-a" aria-hidden="true" />
+        <span className="erp-login__blob is-b" aria-hidden="true" />
+        <Grain />
+
         <div className="erp-login__copy">
           {announcement && (
             <span className="erp-login__pill">
@@ -62,11 +83,15 @@ export function LoginLayout({
           <h2>{headline}</h2>
           <p>{description}</p>
         </div>
+
         {preview && (
           <div className="erp-login__preview">
-            <ProductPreview {...preview} />
+            <div className="erp-login__frame">
+              <ProductPreview {...preview} />
+            </div>
           </div>
         )}
+
         <div className="erp-login__features">
           {features.map((feature) => (
             <div key={feature.title} className="erp-login__feature">
