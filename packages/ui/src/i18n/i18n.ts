@@ -9,6 +9,12 @@ import { commonResources } from './resources';
 
 export type AppResources = Record<Language, Record<string, string>>;
 
+export function mergeResources(...parts: AppResources[]): AppResources {
+  return Object.fromEntries(
+    languages.map((lng) => [lng, Object.assign({}, ...parts.map((part) => part[lng]))]),
+  ) as AppResources;
+}
+
 interface LanguageState {
   language: Language;
   setLanguage: (language: Language) => void;
@@ -30,10 +36,6 @@ function applyLanguage(language: Language) {
   if (typeof document !== 'undefined') document.documentElement.lang = language;
 }
 
-/**
- * Initialises i18next with the shared shell strings plus the app's own strings
- * (flat keys, single namespace) and keeps it in sync with the persisted language.
- */
 export function initI18n(appResources?: AppResources) {
   const language = useLanguageStore.getState().language;
 

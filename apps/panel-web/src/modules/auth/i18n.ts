@@ -1,0 +1,36 @@
+import type { AppResources } from '@erp/ui';
+
+export const authResources: AppResources = {
+  en: {
+    'shell.panelSubtitle': 'Configuration Panel',
+    'login.announcement': 'New · Visual layout builder',
+    'login.welcome': 'Welcome back',
+    'login.lead': 'Sign in to the myErp configuration panel.',
+    'login.email': 'Email',
+    'login.capsOn': 'Caps Lock is on',
+    'login.internalOnly': 'For the implementation team only. Client users sign in to the ERP.',
+    'login.footer': '© {{year}} myErp',
+    'login.previewPublished': 'Layout v3 published',
+    'login.previewPublishedMeta': 'Item Profile · Dhaka Depot',
+    'login.previewRole': 'Purchase price hidden for Viewer role',
+    'login.point1Text': 'Fields, columns and actions per business unit',
+    'login.point2Text': 'Stored as attributes, live without a deploy',
+    'login.point3Text': 'See every change before clients do',
+  },
+  bn: {
+    'shell.panelSubtitle': 'কনফিগারেশন প্যানেল',
+    'login.announcement': 'নতুন · ভিজ্যুয়াল লেআউট বিল্ডার',
+    'login.welcome': 'আবারও স্বাগতম',
+    'login.lead': 'myErp কনফিগারেশন প্যানেলে সাইন ইন করুন।',
+    'login.email': 'ইমেইল',
+    'login.capsOn': 'ক্যাপস লক চালু আছে',
+    'login.internalOnly': 'শুধু ইমপ্লিমেন্টেশন টিমের জন্য। ক্লায়েন্টরা ERP-তে সাইন ইন করেন।',
+    'login.footer': '© {{year}} myErp',
+    'login.previewPublished': 'লেআউট v3 প্রকাশিত',
+    'login.previewPublishedMeta': 'আইটেম প্রোফাইল · ঢাকা ডিপো',
+    'login.previewRole': 'ভিউয়ার রোলের জন্য ক্রয়মূল্য লুকানো',
+    'login.point1Text': 'প্রতিটি বিজনেস ইউনিটের নিজস্ব ফিল্ড, কলাম ও অ্যাকশন',
+    'login.point2Text': 'অ্যাট্রিবিউট হিসেবে সংরক্ষিত, ডিপ্লয় ছাড়াই চালু',
+    'login.point3Text': 'ক্লায়েন্টের আগে প্রতিটি পরিবর্তন দেখুন',
+  },
+};

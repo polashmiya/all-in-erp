@@ -1,5 +1,3 @@
-/** Small, dependency-free colour helpers for deriving theme surfaces from a brand colour. */
-
 interface Rgb {
   r: number;
   g: number;
@@ -21,7 +19,6 @@ function toHex({ r, g, b }: Rgb): string {
   return `#${[r, g, b].map((c) => Math.round(Math.min(255, Math.max(0, c))).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
 }
 
-/** `amount` (0–1) of `color` laid over `base`, as an opaque hex colour. */
 export function mix(color: string, base: string, amount: number): string {
   const a = parseHex(color);
   const b = parseHex(base);
@@ -37,7 +34,6 @@ export function alpha(color: string, opacity: number): string {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-/** WCAG relative luminance. */
 export function luminance(color: string): number {
   const channel = (c: number) => {
     const s = c / 255;
@@ -47,7 +43,6 @@ export function luminance(color: string): number {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-/** WCAG contrast ratio (1–21). 4.5 is the AA minimum for body text. */
 export function contrast(foreground: string, background: string): number {
   const [light, dark] = [luminance(foreground), luminance(background)].sort((x, y) => y - x) as [number, number];
   return (light + 0.05) / (dark + 0.05);

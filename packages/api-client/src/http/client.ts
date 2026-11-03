@@ -1,7 +1,3 @@
-/**
- * Fetch-based HTTP client used by every orval-generated hook. Apps call `configureApiClient`
- * once at startup; auth token and business unit are read lazily on each request.
- */
 export interface ApiClientConfig {
   baseUrl: string;
   getAccessToken?: () => string | null | undefined;
@@ -9,7 +5,6 @@ export interface ApiClientConfig {
   onUnauthorized?: () => void;
 }
 
-/** RFC 7807 problem details as produced by the ASP.NET Core API. */
 export interface ApiProblemDetails {
   type?: string;
   title?: string;
@@ -30,7 +25,6 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 
-  /** Field-level validation errors keyed by field key. */
   get fieldErrors(): Record<string, string[]> {
     return this.problem?.errors ?? {};
   }
@@ -54,7 +48,6 @@ async function readBody(response: Response): Promise<unknown> {
   return text.length ? text : undefined;
 }
 
-/** orval mutator: returns the parsed body for 2xx, throws ApiError otherwise. */
 export async function customFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
@@ -77,20 +70,16 @@ export async function customFetch<T>(url: string, init: RequestInit = {}): Promi
   return body as T;
 }
 
-/** HTTP status of a failed call; 0 when the server could not be reached at all. */
 export function errorStatus(error: unknown): number {
   return error instanceof ApiError ? error.status : 0;
 }
 
-/** True when an access token exists and its expiry (ISO string) is still in the future. */
 export function isTokenActive(token: string | null | undefined, expiresAt: string | null | undefined, now = Date.now()) {
   return !!token && !!expiresAt && Date.parse(expiresAt) > now;
 }
 
-/** Picked up by orval: every generated hook's error type is ApiError. */
 export type ErrorType<_Error> = ApiError;
 
-/** Picked up by orval for request bodies. */
 export type BodyType<BodyData> = BodyData;
 
 export default customFetch;

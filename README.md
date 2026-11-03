@@ -113,10 +113,10 @@ backend/
   src/Modules/Inventory     Inventory module; features live in Features/<Feature>/ with a *.manifest.json
   tests/Erp.Tests           xUnit + WebApplicationFactory against LocalDB
 apps/
-  panel-web                 Panel (Vite + React 19 + AntD 5 + ProLayout)
+  panel-web                 Panel (Vite + React 19 + AntD 5)
   erp-web                   ERP client
 packages/
-  ui                        Theme tokens (light/dark/compact), i18n (EN/বাংলা), AppShell, shared components
+  ui                        Common library: components, layout (AppShell), theme, i18n (EN/বাংলা), hooks, utils
   api-client                orval-generated TanStack Query hooks + fetch client (token, X-Business-Unit)
   metadata-schema           zod schemas/types for manifests and layouts (Phase 2)
   metadata-engine           Generic recursive screen renderer (Phase 4)
@@ -124,17 +124,45 @@ packages/
 
 Project references: `Api → all`, `Modules → Core, Metadata`, `Infrastructure → Core, Metadata`, `Metadata → Core`.
 
+## Frontend structure
+
+`packages/ui` (`@erp/ui`) is the common library both apps share:
+
+```
+packages/ui/src/
+  components/   fields, dropdown, table, filters, data-display, charts, upload, feedback, navigation, brand, icons
+  layout/       app-shell (sidebar, rail, top bar, Ctrl K search), page (PageContainer, ActionBar), auth (sign-in frame)
+  theme/        presets, brand colours, AntD tokens      i18n/  providers/  hooks/  utils/ (format, menu)
+  styles/       global.css → shell.css + components.css (colours via CSS variables from UiProvider)
+```
+
+Each app follows the same layout:
+
+```
+apps/<app>/src/
+  main.tsx
+  app/          App, router, layouts (ShellLayout)
+  common/       constants, guards, services (api client), store, navigation, i18n, pages, utils
+  modules/      <module>/<sub-module>/<feature>/{pages,components,services,types,i18n.ts,routes.tsx,constants.ts}
+```
+
+Modules never import from `app/`. A module registers its routes in `modules/index.ts` and its translations in
+`common/i18n/resources.ts`. Example: `apps/erp-web/src/modules/system-setup/item-management/item-profile/`.
+
+Item Profile and the dashboard read from in-browser sample data (`services/*.mock.ts`) until their APIs exist;
+swap the bodies of the functions in `services/*.service.ts` for the generated api-client calls.
+
 ## Theme system
 
 Both apps share one theme engine in `packages/ui/src/theme`:
 
-- **Presets** (`presets.ts`) are a primary + accent pair: **Teal & Amber** (default), Ocean, Indigo, Emerald, Violet,
-  Rose, Sunset, Graphite and Royal. Every primary carries white text at WCAG AA contrast.
-- **`buildBrand(preset, mode, sidebarStyle)`** derives every other colour: page background and sidebar tints,
-  borders, table header and hover rows, menu hover and selected states, the hero gradient, and accent shades for
-  icons. Unit tests check text contrast in **every preset × light/dark × sidebar style**.
-- **Appearance panel** (header): the colour preset, Light / Dark / System mode, sidebar style (**Tinted** = light
-  tint of the primary, Light, Dark, Brand) and compact density. Choices are saved per browser.
+- **Presets** (`presets.ts`) follow the design kit: **Teal** `#0F766E` (default), Indigo, Blue, Violet, Emerald, Rose,
+  Orange and Slate, plus a **custom** colour picker. Every preset primary carries white text at WCAG AA contrast.
+- **`buildBrand(preset, mode, sidebarStyle)`** derives every other colour: the app frame and inset panel, borders,
+  table header and hover rows, sidebar states and the deep brand shade. Unit tests check text contrast in
+  **every preset × light/dark × sidebar style**. `UiProvider` publishes the brand as CSS variables (`--erp-*`, `--sb-*`).
+- **Theme popover** (top bar): primary colour, sidebar style (**Light** = shares the app frame, **Dark**, **Brand**),
+  Light / Dark / System mode and compact density. Choices are saved per browser.
 - Components read colours with `useBrand()` (or AntD tokens). To add a preset, append a `{ key, name, primary, accent }`
   entry. The contrast test fails if the primary is too light for white text.
 

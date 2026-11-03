@@ -7,7 +7,6 @@ export const languageNames: Record<Language, string> = {
   bn: 'বাংলা',
 };
 
-/** A label that is either a plain string or a per-language map (the shape metadata uses). */
 export type LocalizedText = string | ({ en: string } & Partial<Record<Language, string>>);
 
 export function localize(text: LocalizedText, language: Language): string {

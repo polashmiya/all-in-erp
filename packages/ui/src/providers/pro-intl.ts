@@ -1,10 +1,6 @@
 import { enUSIntl, type IntlType } from '@ant-design/pro-components';
 import type { Language } from '../i18n/language';
 
-/**
- * pro-components ships no Bangla locale and falls back to Chinese for unknown locales.
- * This intl translates the strings our screens use and falls back to English for the rest.
- */
 const bnMessages: Record<string, string> = {
   moneySymbol: '৳',
   'tableForm.search': 'খুঁজুন',

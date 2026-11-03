@@ -1,0 +1,68 @@
+import type { AppResources } from '@erp/ui';
+
+export const authResources: AppResources = {
+  en: {
+    'login.announcement': 'New · Visual layout builder in Panel',
+    'login.headline': 'One ERP, shaped for every business unit.',
+    'login.description':
+      'Inventory, purchase, sales and accounts on a single system — with screens your team configures, not codes.',
+    'login.featureConfig': 'Config-driven screens',
+    'login.featureConfigText': 'Fields, columns and actions per business unit',
+    'login.featureAccess': 'Branch-wise access',
+    'login.featureAccessText': 'Roles and permissions checked on every call',
+    'login.featureLanguage': 'English + বাংলা',
+    'login.featureLanguageText': 'Switch language any time',
+    'login.previewPublished': 'Layout v3 published',
+    'login.previewPublishedMeta': 'Item Profile · Dhaka Depot',
+    'login.previewRole': 'Purchase price hidden for Viewer role',
+    'login.welcome': 'Welcome back',
+    'login.lead': 'Sign in to your myErp workspace.',
+    'login.email': 'Email',
+    'login.capsOn': 'Caps Lock is on',
+    'login.newToTeam': 'New to the team?',
+    'login.askAdmin': 'Ask your admin for access.',
+    'login.footer': '© {{year}} myErp',
+    'login.statusOk': 'All systems normal',
+    'login.statusDown': 'Server unreachable',
+    'selectUnit.back': 'Back',
+    'selectUnit.title': 'Choose a business unit',
+    'selectUnit.lead_one':
+      'Hi {{name}} — you have access to {{count}} unit. You can switch any time from the top bar.',
+    'selectUnit.lead_other':
+      'Hi {{name}} — you have access to {{count}} units. You can switch any time from the top bar.',
+    'selectUnit.continue': 'Continue to {{name}}',
+    'selectUnit.lastVisited': 'last visited',
+  },
+  bn: {
+    'login.announcement': 'নতুন · প্যানেলে ভিজ্যুয়াল লেআউট বিল্ডার',
+    'login.headline': 'একটি ERP, প্রতিটি বিজনেস ইউনিটের মতো করে সাজানো।',
+    'login.description':
+      'ইনভেন্টরি, ক্রয়, বিক্রয় ও হিসাব এক সিস্টেমে — স্ক্রিনগুলো আপনার টিম কনফিগার করে, কোড লিখে নয়।',
+    'login.featureConfig': 'কনফিগারেশন-চালিত স্ক্রিন',
+    'login.featureConfigText': 'প্রতিটি বিজনেস ইউনিটের নিজস্ব ফিল্ড, কলাম ও অ্যাকশন',
+    'login.featureAccess': 'শাখাভিত্তিক অনুমতি',
+    'login.featureAccessText': 'প্রতিটি অনুরোধে রোল ও অনুমতি যাচাই',
+    'login.featureLanguage': 'English + বাংলা',
+    'login.featureLanguageText': 'যেকোনো সময় ভাষা বদলান',
+    'login.previewPublished': 'লেআউট v3 প্রকাশিত',
+    'login.previewPublishedMeta': 'আইটেম প্রোফাইল · ঢাকা ডিপো',
+    'login.previewRole': 'ভিউয়ার রোলের জন্য ক্রয়মূল্য লুকানো',
+    'login.welcome': 'আবারও স্বাগতম',
+    'login.lead': 'আপনার myErp ওয়ার্কস্পেসে সাইন ইন করুন।',
+    'login.email': 'ইমেইল',
+    'login.capsOn': 'ক্যাপস লক চালু আছে',
+    'login.newToTeam': 'টিমে নতুন?',
+    'login.askAdmin': 'অ্যাক্সেসের জন্য আপনার অ্যাডমিনকে বলুন।',
+    'login.footer': '© {{year}} myErp',
+    'login.statusOk': 'সব সিস্টেম স্বাভাবিক',
+    'login.statusDown': 'সার্ভারে সংযোগ নেই',
+    'selectUnit.back': 'ফিরে যান',
+    'selectUnit.title': 'বিজনেস ইউনিট নির্বাচন করুন',
+    'selectUnit.lead_one':
+      'হাই {{name}} — আপনার {{count}}টি ইউনিটে অ্যাক্সেস আছে। উপরের বার থেকে যেকোনো সময় বদলাতে পারবেন।',
+    'selectUnit.lead_other':
+      'হাই {{name}} — আপনার {{count}}টি ইউনিটে অ্যাক্সেস আছে। উপরের বার থেকে যেকোনো সময় বদলাতে পারবেন।',
+    'selectUnit.continue': '{{name}}-এ যান',
+    'selectUnit.lastVisited': 'সর্বশেষ ব্যবহৃত',
+  },
+};

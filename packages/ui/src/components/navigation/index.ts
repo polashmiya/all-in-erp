@@ -1,0 +1,1 @@
+export { LanguageSegmented } from './LanguageSegmented';
