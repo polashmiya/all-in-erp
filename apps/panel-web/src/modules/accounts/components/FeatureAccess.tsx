@@ -1,19 +1,35 @@
 import { AppstoreOutlined, FileTextOutlined } from '@ant-design/icons';
 import type { LocalizedLabel } from '@erp/api-client';
 import { localize, resolveIcon, useLanguageStore } from '@erp/ui';
-import { Button, Empty, Flex, Skeleton, Space, Tag, Tree, Typography, theme, type TreeDataNode } from 'antd';
+import {
+  Button,
+  Empty,
+  Flex,
+  Skeleton,
+  Space,
+  Tag,
+  Tree,
+  Typography,
+  type TreeDataNode,
+} from 'antd';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFeatureCatalog } from './feature-catalog';
 
 function useLabel() {
   const language = useLanguageStore((s) => s.language);
-  return (label: LocalizedLabel) => localize({ en: label.en, ...(label.bn ? { bn: label.bn } : {}) }, language);
+  return (label: LocalizedLabel) =>
+    localize({ en: label.en, ...(label.bn ? { bn: label.bn } : {}) }, language);
 }
 
-export function FeatureAccessTree({ value, onChange }: { value?: string[]; onChange?: (codes: string[]) => void }) {
+export function FeatureAccessTree({
+  value,
+  onChange,
+}: {
+  value?: string[];
+  onChange?: (codes: string[]) => void;
+}) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
   const label = useLabel();
   const { modules, allCodes, loading } = useFeatureCatalog();
   const selected = useMemo(() => value ?? [], [value]);
@@ -29,7 +45,7 @@ export function FeatureAccessTree({ value, onChange }: { value?: string[]; onCha
           title: (
             <Space size={8}>
               <Typography.Text strong>{label(module.label)}</Typography.Text>
-              <Tag bordered={false} color={chosen ? 'processing' : 'default'} style={{ marginInlineEnd: 0 }}>
+              <Tag bordered={false} color={chosen ? 'processing' : 'default'} className="erp-flush">
                 {chosen}/{codes.length}
               </Tag>
             </Space>
@@ -41,11 +57,11 @@ export function FeatureAccessTree({ value, onChange }: { value?: string[]; onCha
             children: subModule.features.map((feature) => ({
               key: feature.code,
               isLeaf: true,
-              icon: <FileTextOutlined style={{ color: token.colorTextTertiary }} />,
+              icon: <FileTextOutlined className="erp-fg--muted" />,
               title: (
                 <Space size={8}>
                   {label(feature.label)}
-                  <Typography.Text type="secondary" style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>
+                  <Typography.Text className="acc-feature-code erp-code">
                     {feature.code}
                   </Typography.Text>
                 </Space>
@@ -54,13 +70,15 @@ export function FeatureAccessTree({ value, onChange }: { value?: string[]; onCha
           })),
         };
       }),
-    [modules, selected, label, token.colorTextTertiary],
+    [modules, selected, label],
   );
 
   return (
     <div>
-      <Flex justify="space-between" align="center" gap={12} wrap style={{ marginBottom: 12 }}>
-        <Typography.Text type="secondary">{t('menus.selected', { count: selected.length, total: allCodes.length })}</Typography.Text>
+      <Flex justify="space-between" align="center" gap={12} wrap className="acc-toolbar">
+        <Typography.Text type="secondary">
+          {t('menus.selected', { count: selected.length, total: allCodes.length })}
+        </Typography.Text>
         <Space>
           <Button size="small" onClick={() => onChange?.(allCodes)} disabled={loading}>
             {t('menus.selectAll')}
@@ -70,7 +88,7 @@ export function FeatureAccessTree({ value, onChange }: { value?: string[]; onCha
           </Button>
         </Space>
       </Flex>
-      <div style={{ border: `1px solid ${token.colorBorderSecondary}`, borderRadius: token.borderRadiusLG, padding: '10px 8px' }}>
+      <div className="erp-boxed">
         {loading ? (
           <Skeleton active paragraph={{ rows: 5 }} title={false} />
         ) : modules.length === 0 ? (
@@ -112,18 +130,17 @@ export function FeatureAccessSummary({ codes }: { codes: string[] }) {
       .filter((group) => group.features.length > 0),
   );
 
-  if (groups.length === 0) return <Typography.Text type="secondary">{t('menus.none')}</Typography.Text>;
+  if (groups.length === 0)
+    return <Typography.Text type="secondary">{t('menus.none')}</Typography.Text>;
 
   return (
     <Flex vertical gap={10}>
       {groups.map((group) => (
-        <div key={group.key}>
-          <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>
-            {group.title}
-          </Typography.Text>
+        <div key={group.key} className="acc-group">
+          <Typography.Text className="acc-group__title">{group.title}</Typography.Text>
           <div>
             {group.features.map((feature) => (
-              <Tag key={feature.code} bordered={false} color="processing" style={{ marginBottom: 6 }}>
+              <Tag key={feature.code} bordered={false} color="processing">
                 {label(feature.label)}
               </Tag>
             ))}

@@ -2,297 +2,225 @@ import {
   ApartmentOutlined,
   AppstoreOutlined,
   BankOutlined,
+  EyeOutlined,
   InboxOutlined,
-  MailOutlined,
-  PhoneOutlined,
   PlusOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
-import { ProTable, type ActionType, type ProColumns } from '@ant-design/pro-components';
-import { listAccounts, type AccountListItem, type AccountSummary } from '@erp/api-client';
-import { mix, PageContainer, useBrand, useLanguageStore } from '@erp/ui';
-import { Avatar, Badge, Button, Card, Col, Empty, Flex, Row, Space, Statistic, Tooltip, Typography, theme } from 'antd';
-import dayjs from 'dayjs';
-import { useRef, useState, type ReactNode } from 'react';
+import { useListAccounts, type AccountListItem } from '@erp/api-client';
+import {
+  ActionGroup,
+  DotValue,
+  formatDate,
+  formatNumber,
+  InitialsTile,
+  ListPageLayout,
+  StatGrid,
+  StatusTag,
+  TitleCell,
+  useLanguageStore,
+  useListState,
+} from '@erp/ui';
+import { keepPreviousData } from '@tanstack/react-query';
+import type { TableColumnsType } from 'antd';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { appConfig } from '@/common/config/app.config';
+import { ACCOUNT_PATHS } from '../../constants';
+import { countryName } from '../../utils/format';
 import { AccountDetailDrawer } from '../components/AccountDetailDrawer';
-import { useStructureColors } from '../../components/structure-colors';
-import { countryName, initials } from '../../utils/format';
 
-type StatusFilter = 'all' | 'active' | 'inactive';
-
-const SORT_FIELDS: Record<string, string> = { name: 'name', createdAt: 'createdAt' };
-
-function StatCard({
-  icon,
-  title,
-  value,
-  hint,
-  loading,
-  color,
-}: {
-  icon: ReactNode;
-  title: string;
-  value?: number;
-  hint?: string;
-  loading: boolean;
-  color: string;
-}) {
-  const brand = useBrand();
-  return (
-    <Card style={{ height: '100%', overflow: 'hidden' }} styles={{ body: { padding: 20, position: 'relative' } }}>
-      <span
-        aria-hidden
-        style={{
-          position: 'absolute',
-          insetInlineEnd: -28,
-          top: -28,
-          width: 96,
-          height: 96,
-          borderRadius: '50%',
-          background: mix(color, brand.containerBg, 0.08),
-        }}
-      />
-      <Flex align="center" gap={16} style={{ position: 'relative' }}>
-        <Avatar
-          shape="square"
-          size={48}
-          icon={icon}
-          style={{ background: mix(color, brand.containerBg, 0.14), color, flexShrink: 0, borderRadius: 12 }}
-        />
-        <div>
-          <Statistic title={title} value={value ?? 0} loading={loading} valueStyle={{ fontSize: 24, fontWeight: 600 }} />
-          {hint && (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {hint}
-            </Typography.Text>
-          )}
-        </div>
-      </Flex>
-    </Card>
-  );
-}
+type View = 'all' | 'active' | 'inactive';
+type SortField = 'name' | 'createdAt';
 
 export function AccountsPage() {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
-  const navigate = useNavigate();
   const language = useLanguageStore((s) => s.language);
-  const colors = useStructureColors();
-  const actionRef = useRef<ActionType>(undefined);
-  const [status, setStatus] = useState<StatusFilter>('all');
-  const [search, setSearch] = useState('');
-  const [summary, setSummary] = useState<AccountSummary>();
   const [selectedId, setSelectedId] = useState<string>();
+  const list = useListState<Record<string, never>, View, SortField>({
+    filters: {},
+    view: 'all',
+    pageSize: appConfig.defaultPageSize,
+  });
 
-  const startSetup = () => navigate('/accounts/new');
-  const filtered = search !== '' || status !== 'all';
-
-  const columns: ProColumns<AccountListItem>[] = [
+  const { sort } = list.query;
+  const query = useListAccounts(
     {
+      search: list.query.search || undefined,
+      status: list.query.view,
+      sort: sort ? `${sort.order === 'desc' ? '-' : ''}${sort.field}` : undefined,
+      page: list.query.page,
+      pageSize: list.query.pageSize,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
+  const result = query.data;
+  const summary = result?.summary;
+
+  const columns: TableColumnsType<AccountListItem> = [
+    {
+      key: 'name',
       title: t('accounts.col.account'),
-      dataIndex: 'name',
       sorter: true,
-      fixed: 'left',
-      width: 250,
-      render: (_, account) => (
-        <Flex align="center" gap={12}>
-          <Avatar shape="square" size={40} style={{ background: token.colorPrimaryBg, color: token.colorPrimary, fontWeight: 600, flexShrink: 0 }}>
-            {initials(account.name)}
-          </Avatar>
-          <div style={{ minWidth: 0 }}>
-            <Button type="link" onClick={() => setSelectedId(account.id)} style={{ padding: 0, height: 'auto', fontWeight: 600, maxWidth: '100%' }}>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{account.name}</span>
-            </Button>
-            <Flex align="center" gap={8}>
-              <Typography.Text type="secondary" style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>
-                {account.code}
-              </Typography.Text>
-              <Badge
-                status={account.isActive ? 'success' : 'default'}
-                text={
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    {account.isActive ? t('accounts.status.active') : t('accounts.status.inactive')}
-                  </Typography.Text>
-                }
-              />
-            </Flex>
-          </div>
-        </Flex>
+      render: (_, account, index) => (
+        <TitleCell
+          leading={<InitialsTile name={account.name} index={index} />}
+          title={account.name}
+          subtitle={
+            <span className="erp-inline-stats">
+              <span>{account.code}</span>
+              <StatusTag tone={account.isActive ? 'success' : 'neutral'} dot>
+                {account.isActive ? t('accounts.status.active') : t('accounts.status.inactive')}
+              </StatusTag>
+            </span>
+          }
+        />
       ),
     },
     {
+      key: 'contact',
       title: t('accounts.col.contact'),
-      dataIndex: 'email',
-      width: 220,
       render: (_, account) => (
-        <Space direction="vertical" size={0}>
-          <Typography.Text ellipsis style={{ maxWidth: 200 }}>
-            <MailOutlined style={{ color: token.colorTextTertiary, marginInlineEnd: 6 }} />
-            {account.email ?? '—'}
-          </Typography.Text>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            <PhoneOutlined style={{ marginInlineEnd: 6 }} />
-            {account.phone ?? '—'}
-          </Typography.Text>
-        </Space>
+        <TitleCell title={account.email ?? '—'} subtitle={account.phone ?? '—'} />
       ),
     },
     {
+      key: 'location',
       title: t('accounts.col.location'),
-      dataIndex: 'city',
-      width: 130,
       render: (_, account) => (
-        <Space direction="vertical" size={0}>
-          <Typography.Text>{account.city ?? '—'}</Typography.Text>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            {countryName(account.country, language)}
-          </Typography.Text>
-        </Space>
+        <TitleCell title={account.city ?? '—'} subtitle={countryName(account.country, language)} />
       ),
     },
     {
+      key: 'structure',
       title: t('accounts.col.structure'),
-      dataIndex: 'businessUnits',
-      width: 175,
       render: (_, account) => (
-        <Space size={10}>
-          <Tooltip title={t('accounts.stat.businessUnits')}>
-            <span>
-              <ApartmentOutlined style={{ color: colors.unit }} /> {account.businessUnits}
-            </span>
-          </Tooltip>
-          <Tooltip title={t('accounts.stat.offices')}>
-            <span>
-              <ShopOutlined style={{ color: colors.office }} /> {account.offices}
-            </span>
-          </Tooltip>
-          <Tooltip title={t('accounts.stat.warehouses')}>
-            <span>
-              <InboxOutlined style={{ color: colors.warehouse }} /> {account.warehouses}
-            </span>
-          </Tooltip>
-          <Tooltip title={t('menus.title')}>
-            <span>
-              <AppstoreOutlined style={{ color: token.colorTextTertiary }} /> {account.features}
-            </span>
-          </Tooltip>
-        </Space>
+        <span className="erp-inline-stats">
+          <DotValue tone="primary" label={t('accounts.stat.businessUnits')}>
+            <ApartmentOutlined /> {account.businessUnits}
+          </DotValue>
+          <DotValue tone="info" label={t('accounts.stat.offices')}>
+            <ShopOutlined /> {account.offices}
+          </DotValue>
+          <DotValue tone="warning" label={t('accounts.stat.warehouses')}>
+            <InboxOutlined /> {account.warehouses}
+          </DotValue>
+          <DotValue label={t('menus.title')}>
+            <AppstoreOutlined /> {account.features}
+          </DotValue>
+        </span>
       ),
     },
     {
+      key: 'admin',
       title: t('accounts.col.admin'),
-      dataIndex: 'adminEmail',
       ellipsis: true,
       render: (_, account) => account.adminEmail ?? '—',
     },
     {
+      key: 'createdAt',
       title: t('accounts.col.created'),
-      dataIndex: 'createdAt',
       sorter: true,
-      width: 125,
-      render: (_, account) => dayjs(account.createdAt).format('DD MMM YYYY'),
+      render: (_, account) => formatDate(account.createdAt),
     },
     {
-      title: '',
-      valueType: 'option',
+      key: 'actions',
+      title: t('accounts.col.actions'),
       fixed: 'right',
-      width: 70,
-      render: (_, account) => [
-        <Button key="view" type="link" size="small" style={{ padding: 0 }} onClick={() => setSelectedId(account.id)}>
-          {t('accounts.view')}
-        </Button>,
-      ],
+      render: (_, account) => (
+        <ActionGroup
+          size="small"
+          actions={[
+            {
+              key: 'view',
+              label: t('accounts.view'),
+              icon: <EyeOutlined />,
+              variant: 'text',
+              iconOnly: true,
+              onClick: () => setSelectedId(account.id),
+            },
+          ]}
+        />
+      ),
     },
   ];
 
   return (
-    <PageContainer
-      subTitle={t('accounts.subtitle')}
-      extra={
-        <Button type="primary" icon={<PlusOutlined />} onClick={startSetup}>
-          {t('accounts.new')}
-        </Button>
-      }
-    >
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard
-            icon={<BankOutlined />}
-            color={colors.account}
-            title={t('accounts.stat.accounts')}
-            value={summary?.accounts}
-            hint={summary ? t('accounts.stat.active', { count: summary.activeAccounts }) : undefined}
-            loading={!summary}
+    <>
+      <ListPageLayout<AccountListItem, Record<string, never>, View, SortField>
+        subtitle={t('accounts.subtitle')}
+        actions={[
+          {
+            key: 'new',
+            label: t('accounts.new'),
+            icon: <PlusOutlined />,
+            variant: 'primary',
+            to: ACCOUNT_PATHS.create,
+          },
+        ]}
+        summary={
+          <StatGrid
+            items={[
+              {
+                key: 'accounts',
+                icon: <BankOutlined />,
+                label: t('accounts.stat.accounts'),
+                value: formatNumber(summary?.accounts),
+                caption: summary
+                  ? t('accounts.stat.active', { count: summary.activeAccounts })
+                  : undefined,
+              },
+              {
+                key: 'units',
+                icon: <ApartmentOutlined />,
+                tint: 'blue',
+                label: t('accounts.stat.businessUnits'),
+                value: formatNumber(summary?.businessUnits),
+              },
+              {
+                key: 'offices',
+                icon: <ShopOutlined />,
+                tint: 'violet',
+                label: t('accounts.stat.offices'),
+                value: formatNumber(summary?.offices),
+              },
+              {
+                key: 'warehouses',
+                icon: <InboxOutlined />,
+                tint: 'amber',
+                label: t('accounts.stat.warehouses'),
+                value: formatNumber(summary?.warehouses),
+              },
+            ]}
           />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard icon={<ApartmentOutlined />} color={colors.unit} title={t('accounts.stat.businessUnits')} value={summary?.businessUnits} loading={!summary} />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard icon={<ShopOutlined />} color={colors.office} title={t('accounts.stat.offices')} value={summary?.offices} loading={!summary} />
-        </Col>
-        <Col xs={24} sm={12} xl={6}>
-          <StatCard icon={<InboxOutlined />} color={colors.warehouse} title={t('accounts.stat.warehouses')} value={summary?.warehouses} loading={!summary} />
-        </Col>
-      </Row>
-
-      <ProTable<AccountListItem, { search: string; status: StatusFilter }>
-        rowKey="id"
-        actionRef={actionRef}
+        }
+        state={list}
+        search={{ label: t('accounts.search'), placeholder: t('accounts.search') }}
+        views={(['all', 'active', 'inactive'] as const).map((key) => ({
+          key,
+          label: t(`accounts.tab.${key}`),
+        }))}
         columns={columns}
-        params={{ search, status }}
-        request={async (params, sort) => {
-          const [field, order] = Object.entries(sort ?? {}).find(([, value]) => value) ?? [];
-          const sortKey = field && SORT_FIELDS[field] ? `${order === 'descend' ? '-' : ''}${SORT_FIELDS[field]}` : undefined;
-          const result = await listAccounts({
-            search: params.search || undefined,
-            status: params.status,
-            sort: sortKey,
-            page: params.current,
-            pageSize: params.pageSize,
-          });
-          setSummary(result.summary);
-          return { data: result.items, total: result.total, success: true };
-        }}
-        search={false}
-        cardBordered
-        scroll={{ x: 1095 }}
-        pagination={{ defaultPageSize: 10, showSizeChanger: true }}
-        options={{ reload: true, density: true, setting: true }}
-        toolbar={{
-          menu: {
-            type: 'tab',
-            activeKey: status,
-            items: (['all', 'active', 'inactive'] as const).map((key) => ({ key, label: t(`accounts.tab.${key}`) })),
-            onChange: (key) => setStatus((key as StatusFilter) ?? 'all'),
-          },
-          search: {
-            placeholder: t('accounts.search'),
-            allowClear: true,
-            style: { width: 320 },
-            onSearch: (value: string) => setSearch(value.trim()),
-          },
-        }}
-        locale={{
-          emptyText: (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={filtered ? t('accounts.noMatch') : t('accounts.empty')}
-              style={{ paddingBlock: 24 }}
-            >
-              {!filtered && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={startSetup}>
-                  {t('accounts.setupFirst')}
-                </Button>
-              )}
-            </Empty>
-          ),
+        rows={result?.items}
+        rowKey="id"
+        total={result?.total}
+        loading={query.isFetching && !result}
+        onRefresh={() => void query.refetch()}
+        onRowClick={(account) => setSelectedId(account.id)}
+        empty={{
+          title: t('accounts.empty'),
+          actions: [
+            {
+              key: 'new',
+              label: t('accounts.setupFirst'),
+              icon: <PlusOutlined />,
+              variant: 'primary',
+              to: ACCOUNT_PATHS.create,
+            },
+          ],
         }}
       />
-
       <AccountDetailDrawer accountId={selectedId} onClose={() => setSelectedId(undefined)} />
-    </PageContainer>
+    </>
   );
 }

@@ -1,12 +1,10 @@
 import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
-import { PageContainer } from '@erp/ui';
-import { Button, Flex, Segmented, Skeleton, Tooltip } from 'antd';
+import { CardGrid, downloadCsv, PageContainer, PageState } from '@erp/ui';
+import { Segmented } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
-import { downloadCsv } from '@/common/utils/download';
 import { itemPaths } from '@/modules/system-setup/item-management/item-profile/constants';
 import {
   KpiGrid,
@@ -17,6 +15,9 @@ import {
 } from '../components/DashboardCards';
 import { useDashboard } from '../services/dashboard.service';
 import type { DashboardRange, SalesRange } from '../services/dashboard.types';
+
+const RANGES: DashboardRange[] = ['today', '7d', '30d', 'qtr'];
+const LONG_DATE = 'dddd, D MMMM YYYY';
 
 function greetingKey(hour: number) {
   if (hour < 12) return 'dashboard.greetingMorning';
@@ -32,70 +33,59 @@ export function DashboardPage() {
   const [salesRange, setSalesRange] = useState<SalesRange>('12m');
   const { data, isPending } = useDashboard(range, salesRange);
   const now = dayjs();
-  const firstName = user?.fullName.split(' ')[0] ?? '';
 
   const exportReorder = () =>
     data &&
     downloadCsv(t('dashboard.exportFile'), data.reorder, [
       { header: t('dashboard.colItem'), value: (r) => r.name },
-      { header: 'Code', value: (r) => r.id },
-      { header: 'On hand', value: (r) => r.onHand },
-      { header: 'Reorder level', value: (r) => r.reorderLevel },
+      { header: t('dashboard.colCode'), value: (r) => r.id },
+      { header: t('dashboard.colOnHandOnly'), value: (r) => r.onHand },
+      { header: t('dashboard.colReorderLevel'), value: (r) => r.reorderLevel },
     ]);
 
   return (
-    <PageContainer
-      title={t(greetingKey(now.hour()), { name: firstName })}
-      subTitle={
-        <Tooltip title={t('dashboard.sampleData')} placement="bottomLeft">
-          <span>
-            {t('dashboard.context', {
-              unit: unit?.name ?? '—',
-              date: now.format('dddd, D MMMM YYYY'),
-            })}
-          </span>
-        </Tooltip>
-      }
-      extra={
-        <>
+    <PageState loading={isPending || !data}>
+      <PageContainer
+        title={t(greetingKey(now.hour()), { name: user?.fullName.split(' ')[0] ?? '' })}
+        subTitle={t('dashboard.context', { unit: unit?.name ?? '—', date: now.format(LONG_DATE) })}
+        extra={
           <Segmented<DashboardRange>
             aria-label={t('dashboard.range')}
             value={range}
             onChange={setRange}
-            options={(['today', '7d', '30d', 'qtr'] as const).map((value) => ({
-              value,
-              label: t(`dashboard.${value}`),
-            }))}
+            options={RANGES.map((value) => ({ value, label: t(`dashboard.${value}`) }))}
           />
-          <Button icon={<DownloadOutlined />} onClick={exportReorder} disabled={!data}>
-            {t('dashboard.export')}
-          </Button>
-          <Link to={itemPaths.create}>
-            <Button type="primary" icon={<PlusOutlined />}>
-              {t('dashboard.newItem')}
-            </Button>
-          </Link>
-        </>
-      }
-    >
-      {isPending || !data ? (
-        <Flex vertical gap={16}>
-          <Skeleton active paragraph={{ rows: 2 }} />
-          <Skeleton active paragraph={{ rows: 8 }} />
-        </Flex>
-      ) : (
-        <>
-          <KpiGrid kpis={data.kpis} />
-          <div className="erp-grid erp-grid--2-1">
-            <SalesChartCard data={data.sales} range={salesRange} onRangeChange={setSalesRange} />
-            <StockByCategoryCard rows={data.stockByCategory} />
-          </div>
-          <div className="erp-grid erp-grid--2-1">
-            <ReorderCard rows={data.reorder} total={data.kpis.lowStock.value} />
-            <RecentActivityCard events={data.activity} />
-          </div>
-        </>
-      )}
-    </PageContainer>
+        }
+        actions={[
+          {
+            key: 'export',
+            label: t('dashboard.export'),
+            icon: <DownloadOutlined />,
+            onClick: exportReorder,
+          },
+          {
+            key: 'new',
+            label: t('dashboard.newItem'),
+            icon: <PlusOutlined />,
+            variant: 'primary',
+            to: itemPaths.create,
+          },
+        ]}
+      >
+        {data && (
+          <>
+            <KpiGrid kpis={data.kpis} />
+            <CardGrid columns="2-1">
+              <SalesChartCard data={data.sales} range={salesRange} onRangeChange={setSalesRange} />
+              <StockByCategoryCard rows={data.stockByCategory} />
+            </CardGrid>
+            <CardGrid columns="2-1">
+              <ReorderCard rows={data.reorder} total={data.kpis.lowStock.value} />
+              <RecentActivityCard events={data.activity} />
+            </CardGrid>
+          </>
+        )}
+      </PageContainer>
+    </PageState>
   );
 }

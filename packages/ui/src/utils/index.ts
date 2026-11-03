@@ -20,3 +20,5 @@ export {
   flattenLeavesWithTrail,
 } from './menu';
 export type { LeafWithTrail, MenuNode } from './menu';
+export { downloadCsv, toCsv } from './download';
+export type { CsvColumn } from './download';

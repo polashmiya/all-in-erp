@@ -1,5 +1,5 @@
-import { formatDate, ImageDrop, SectionCard } from '@erp/ui';
-import { Form, Switch } from 'antd';
+import { formatDate, ImageDrop, SectionCard, SwitchList } from '@erp/ui';
+import { Form } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '../../types/item.types';
 
@@ -15,7 +15,7 @@ export function ItemFormAside({
   const { t } = useTranslation();
 
   return (
-    <aside className="erp-split__side">
+    <>
       <SectionCard title={t('item.side.image')}>
         <Form.Item name="image" valuePropName="value" noStyle>
           <ImageDrop hint={t('item.side.imageHint')} />
@@ -23,28 +23,19 @@ export function ItemFormAside({
       </SectionCard>
 
       <SectionCard title={t('item.side.status')}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {(
-            [
-              ['isActive', 'item.active'],
-              ['availableForSale', 'item.side.availableSale'],
-              ['availableForPurchase', 'item.side.availablePurchase'],
-            ] as const
-          ).map(([name, label]) => (
-            <label key={name} className="erp-toggle-row">
-              <span>{t(label)}</span>
-              <Form.Item name={name} valuePropName="checked">
-                <Switch aria-label={t(label)} />
-              </Form.Item>
-            </label>
-          ))}
-        </div>
+        <SwitchList
+          options={[
+            { name: 'isActive', label: t('item.active') },
+            { name: 'availableForSale', label: t('item.side.availableSale') },
+            { name: 'availableForPurchase', label: t('item.side.availablePurchase') },
+          ]}
+        />
       </SectionCard>
 
       <SectionCard title={t('item.side.recordInfo')}>
         <dl className="erp-dl-inline">
           <dt>{t('item.side.businessUnit')}</dt>
-          <dd style={{ fontWeight: 500 }}>{businessUnit}</dd>
+          <dd>{businessUnit}</dd>
           <dt>{t('item.side.createdBy')}</dt>
           <dd>{item?.createdBy ?? actor}</dd>
           {item && (
@@ -57,6 +48,6 @@ export function ItemFormAside({
           <dd>{t('item.side.layoutValue')}</dd>
         </dl>
       </SectionCard>
-    </aside>
+    </>
   );
 }

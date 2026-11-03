@@ -18,11 +18,11 @@ export function MenuAccessStep() {
   return (
     <>
       <Typography.Paragraph type="secondary">{t('setup.menusIntro')}</Typography.Paragraph>
-      <Alert type="info" showIcon message={t('menus.adminNote')} style={{ marginBottom: 16 }} />
+      <Alert type="info" showIcon message={t('menus.adminNote')} className="acc-alert" />
       <Form.Item name="featureCodes" noStyle>
         <FeatureAccessTree />
       </Form.Item>
-      {selected?.length === 0 && <Alert type="warning" showIcon message={t('menus.noneWarning')} style={{ marginTop: 12 }} />}
+      {selected?.length === 0 && <Alert type="warning" showIcon message={t('menus.noneWarning')} className="acc-alert is-after" />}
     </>
   );
 }

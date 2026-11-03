@@ -3,6 +3,7 @@ import { useSystemStatus } from '@erp/api-client';
 import { LoginLayout } from '@erp/ui';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { appConfig } from '@/common/config/app.config';
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -11,12 +12,12 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
   return (
     <LoginLayout
-      appName="myErp"
+      appName={appConfig.name}
       announcement={t('login.announcement')}
       headline={t('login.headline')}
       description={t('login.description')}
       preview={{
-        stats: ['1,248', '৳ 4.8 Cr', '37'],
+        stats: [t('login.previewStat1'), t('login.previewStat2'), t('login.previewStat3')],
         publishedTitle: t('login.previewPublished'),
         publishedMeta: t('login.previewPublishedMeta'),
         roleNote: t('login.previewRole'),
@@ -38,17 +39,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
           description: t('login.featureLanguageText'),
         },
       ]}
-      footerNote={t('login.footer', { year: new Date().getFullYear() })}
+      footerNote={t('login.footer', { year: new Date().getFullYear(), app: appConfig.name })}
       footerExtra={
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: online ? '#22C55E' : '#F59E0B',
-            }}
-          />
+        <span className={`erp-status-dot erp-status-dot--${online ? 'success' : 'warning'}`}>
           {online ? t('login.statusOk') : t('login.statusDown')}
         </span>
       }

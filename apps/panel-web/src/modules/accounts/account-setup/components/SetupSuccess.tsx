@@ -3,7 +3,15 @@ import type { AccountSetupResult } from '@erp/api-client';
 import { Alert, Button, Card, Descriptions, Result, Space, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-export function SetupSuccess({ result, onDone, onAnother }: { result: AccountSetupResult; onDone: () => void; onAnother: () => void }) {
+export function SetupSuccess({
+  result,
+  onDone,
+  onAnother,
+}: {
+  result: AccountSetupResult;
+  onDone: () => void;
+  onAnother: () => void;
+}) {
   const { t } = useTranslation();
   const password = result.admin.generatedPassword;
 
@@ -36,19 +44,23 @@ export function SetupSuccess({ result, onDone, onAnother }: { result: AccountSet
               {t('success.credentials')}
             </Space>
           }
-          style={{ maxWidth: 560, margin: '0 auto', textAlign: 'start' }}
+          className="acc-credentials"
         >
           <Descriptions
             column={1}
             size="small"
             items={[
               { key: 'name', label: t('field.fullName'), children: result.admin.fullName },
-              { key: 'email', label: t('field.loginEmail'), children: <Typography.Text copyable>{result.admin.email}</Typography.Text> },
+              {
+                key: 'email',
+                label: t('field.loginEmail'),
+                children: <Typography.Text copyable>{result.admin.email}</Typography.Text>,
+              },
               {
                 key: 'password',
                 label: t('field.password'),
                 children: password ? (
-                  <Typography.Text copyable code strong style={{ fontSize: 15 }}>
+                  <Typography.Text copyable code strong className="acc-password">
                     {password}
                   </Typography.Text>
                 ) : (
@@ -57,7 +69,14 @@ export function SetupSuccess({ result, onDone, onAnother }: { result: AccountSet
               },
             ]}
           />
-          {password && <Alert type="warning" showIcon message={t('success.passwordOnce')} style={{ marginTop: 12 }} />}
+          {password && (
+            <Alert
+              type="warning"
+              showIcon
+              message={t('success.passwordOnce')}
+              className="acc-alert is-after"
+            />
+          )}
         </Card>
       </Result>
     </Card>

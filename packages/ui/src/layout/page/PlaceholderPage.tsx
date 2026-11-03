@@ -32,7 +32,7 @@ export function PlaceholderPage({
 
   return (
     <PageContainer tags={tag ? <StatusTag tone="info">{tag}</StatusTag> : undefined}>
-      <section className="erp-card" style={{ padding: '40px 24px' }}>
+      <section className="erp-card erp-card--hero">
         <EmptyState
           icon={icon ?? leaf.icon}
           title={title}
@@ -42,7 +42,7 @@ export function PlaceholderPage({
               column={1}
               size="small"
               bordered
-              style={{ width: 'min(520px, 100%)', textAlign: 'start' }}
+              className="erp-placeholder-details"
               items={[
                 ...details.map((row) => ({
                   key: row.label,

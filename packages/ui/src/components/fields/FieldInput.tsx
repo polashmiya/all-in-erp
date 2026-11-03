@@ -79,13 +79,13 @@ export function FieldInput({
           onChange={change}
           precision={2}
           controls={false}
-          style={{ width: '100%' }}
+          className="erp-w-full"
         />
       );
     case 'money':
-      return <MoneyInput {...common} value={v} onChange={change} style={{ width: '100%' }} />;
+      return <MoneyInput {...common} value={v} onChange={change} className="erp-w-full" />;
     case 'percent':
-      return <PercentInput {...common} value={v} onChange={change} style={{ width: '100%' }} />;
+      return <PercentInput {...common} value={v} onChange={change} className="erp-w-full" />;
     case 'date':
       return (
         <DatePicker
@@ -93,7 +93,7 @@ export function FieldInput({
           value={v}
           onChange={change}
           format={DATE_FORMAT}
-          style={{ width: '100%' }}
+          className="erp-w-full"
         />
       );
     case 'datetime':
@@ -104,7 +104,7 @@ export function FieldInput({
           onChange={change}
           showTime={{ format: 'HH:mm' }}
           format={DATE_TIME_FORMAT}
-          style={{ width: '100%' }}
+          className="erp-w-full"
         />
       );
     case 'dateRange':
@@ -115,7 +115,7 @@ export function FieldInput({
           value={v}
           onChange={change}
           format={DATE_FORMAT}
-          style={{ width: '100%' }}
+          className="erp-w-full"
         />
       );
     case 'boolean':

@@ -1,5 +1,6 @@
 import { generate } from '@ant-design/colors';
 import { alpha, mix } from './color';
+import { shadows, sidebarPalettes, surfaces, tones } from './design-tokens';
 import type { ThemePreset } from './presets';
 
 export type ThemeMode = 'light' | 'dark';
@@ -104,16 +105,17 @@ function siderColors(
   }
 
   if (style === 'dark' || mode === 'dark') {
-    const bg = style === 'dark' ? '#0B0F17' : '#0E1218';
+    const dark = sidebarPalettes.dark;
+    const bg = style === 'dark' ? dark.bg : sidebarPalettes.darkMode.bg;
     return {
       bg,
       divider: alpha(WHITE, 0.07),
-      text: '#C9CED6',
+      text: dark.text,
       strong: WHITE,
-      muted: '#8B93A1',
-      icon: '#8B93A1',
+      muted: dark.muted,
+      icon: dark.muted,
       hoverBg: alpha(WHITE, 0.06),
-      guide: '#252B36',
+      guide: dark.guide,
       inputBg: alpha(WHITE, 0.06),
       inputShadow: `inset 0 0 0 1px ${alpha(WHITE, 0.06)}`,
       kbd: alpha(WHITE, 0.14),
@@ -123,32 +125,33 @@ function siderColors(
       activeShadow: `inset 0 0 0 1px ${alpha(WHITE, 0.06)}`,
       bar: mode === 'dark' ? palette[4]! : primary,
       badgeBg: alpha(WHITE, 0.12),
-      badgeText: '#F3F4F6',
+      badgeText: surfaces.dark.textStrong!,
       panelBorder: 'transparent',
       inverse: true,
     };
   }
 
+  const light = sidebarPalettes.light;
   return {
-    bg: '#F2F3F5',
-    divider: '#E3E5E9',
-    text: '#3D4452',
-    strong: '#0E1320',
-    muted: '#626A77',
-    icon: '#6B7280',
-    hoverBg: 'rgba(15, 23, 42, 0.05)',
-    guide: '#D7DAE0',
-    inputBg: WHITE,
-    inputShadow: '0 0 0 1px #E3E5E9, 0 1px 2px rgba(15, 23, 42, 0.04)',
-    kbd: '#E3E5E9',
-    activeBg: WHITE,
-    activeText: '#0E1320',
+    bg: light.bg,
+    divider: light.divider,
+    text: light.text,
+    strong: light.strong,
+    muted: light.muted,
+    icon: light.icon,
+    hoverBg: surfaces.light.rowHoverOverlay!,
+    guide: light.guide,
+    inputBg: light.activeBg,
+    inputShadow: `0 0 0 1px ${light.divider}, ${shadows.light.card}`,
+    kbd: light.kbd,
+    activeBg: light.activeBg,
+    activeText: light.strong,
     activeIcon: primary,
-    activeShadow: '0 0 0 1px #E3E5E9, 0 1px 2px rgba(15, 23, 42, 0.06)',
+    activeShadow: `0 0 0 1px ${light.divider}, ${shadows.light.card}`,
     bar: primary,
-    badgeBg: '#E6E8EC',
-    badgeText: '#3D4452',
-    panelBorder: '#E3E5E9',
+    badgeBg: light.badgeBg,
+    badgeText: light.text,
+    panelBorder: light.divider,
     inverse: false,
   };
 }
@@ -160,7 +163,8 @@ export function buildBrand(preset: ThemePreset, mode: ThemeMode, siderStyle: Sid
   const light = mode === 'light';
   const sider = siderColors(siderStyle, mode, primary, palette);
 
-  const containerBg = light ? WHITE : '#161B22';
+  const tone = surfaces[mode];
+  const containerBg = tone.surface!;
 
   return {
     key: preset.key,
@@ -172,25 +176,25 @@ export function buildBrand(preset: ThemePreset, mode: ThemeMode, siderStyle: Sid
     palette,
     accentPalette,
     accentIcon: light ? accentPalette[6]! : accent,
-    info: light ? '#1D4ED8' : '#60A5FA',
+    info: tones[mode].info.fg,
     frameBg: sider.bg,
-    layoutBg: light ? '#F7F8FA' : '#10141A',
+    layoutBg: tone.panel!,
     containerBg,
     headerBg: containerBg,
-    headerBorder: light ? '#ECEEF1' : alpha(WHITE, 0.08),
-    border: light ? '#D5DAE3' : '#3A414D',
-    borderSecondary: light ? '#E8EAEE' : alpha(WHITE, 0.08),
-    divider: light ? '#F0F1F4' : alpha(WHITE, 0.06),
-    tableHeaderBg: light ? '#FAFAFB' : '#1B212A',
-    rowHoverBg: light ? '#F8FAFF' : alpha(WHITE, 0.03),
+    headerBorder: tone.headerBorder!,
+    border: tone.border!,
+    borderSecondary: tone.borderSecondary!,
+    divider: tone.divider!,
+    tableHeaderBg: tone.tableHead!,
+    rowHoverBg: tone.rowHover!,
     tintBg: light ? mix(primary, WHITE, 0.12) : mix(primary, containerBg, 0.24),
-    textStrong: light ? '#0E1320' : '#F3F4F6',
-    text: light ? '#1F2937' : '#D1D5DB',
-    textSecondary: light ? '#4B5563' : '#A3AAB6',
-    textMuted: light ? '#5F6B7A' : '#8B93A1',
-    trackBg: light ? '#EEF0F4' : alpha(WHITE, 0.06),
+    textStrong: tone.textStrong!,
+    text: tone.text!,
+    textSecondary: tone.textSecondary!,
+    textMuted: tone.textMuted!,
+    trackBg: tone.track!,
     sider,
     deep: shade(primary, 0.6),
-    cardShadow: light ? '0 1px 2px rgba(15, 23, 42, 0.04)' : 'none',
+    cardShadow: shadows[mode].card,
   };
 }

@@ -89,7 +89,7 @@ export function Topbar({
         </button>
       )}
       <Breadcrumbs crumbs={crumbs} />
-      <span style={{ flex: 1 }} />
+      <span className="erp-spacer" />
       {businessUnit}
       {businessUnit && <span className="erp-tdiv" />}
       <ThemePopover open={themeOpen} onOpenChange={onThemeOpenChange} />
@@ -102,7 +102,7 @@ export function Topbar({
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={t('shell.noNotifications')}
-            style={{ width: 280, margin: '8px 0' }}
+            className="erp-notifications-empty"
           />
         }
       >

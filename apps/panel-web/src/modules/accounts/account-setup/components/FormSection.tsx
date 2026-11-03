@@ -1,21 +1,23 @@
-import { Typography } from 'antd';
 import type { ReactNode } from 'react';
 
-export function FormSection({ title, description, extra, children }: { title: ReactNode; description?: ReactNode; extra?: ReactNode; children: ReactNode }) {
+export function FormSection({
+  title,
+  description,
+  extra,
+  children,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  extra?: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <section style={{ marginBottom: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-        <Typography.Title level={5} style={{ margin: 0 }}>
-          {title}
-        </Typography.Title>
+    <section className="acc-section">
+      <div className="acc-section__head">
+        <h3 className="acc-section__title">{title}</h3>
         {extra}
       </div>
-      {description && (
-        <Typography.Paragraph type="secondary" style={{ margin: '4px 0 16px' }}>
-          {description}
-        </Typography.Paragraph>
-      )}
-      {!description && <div style={{ height: 12 }} />}
+      {description && <p className="acc-section__desc">{description}</p>}
       {children}
     </section>
   );

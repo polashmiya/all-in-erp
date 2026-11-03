@@ -74,8 +74,7 @@ export function CommandPalette({
       footer={null}
       closable={false}
       width={560}
-      style={{ top: 80 }}
-      styles={{ content: { padding: 0, overflow: 'hidden' } }}
+      className="erp-cmd"
       destroyOnHidden
     >
       <div className="erp-cmd__input">
@@ -114,7 +113,7 @@ export function CommandPalette({
               onClick={() => go(index)}
             >
               <span className="erp-cmd__tile">{r.icon}</span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <span className="erp-stack is-tight">
                 <span className="erp-cmd__label">{r.label}</span>
                 {r.path && <span className="erp-cmd__path">{r.path}</span>}
               </span>
@@ -150,7 +149,7 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
     <Modal open={open} onCancel={onClose} footer={null} title={t('shell.shortcuts')} width={420}>
       <dl className="erp-shortcuts">
         {rows.map(([keys, label]) => (
-          <div key={label} style={{ display: 'contents' }}>
+          <div key={label} className="erp-contents">
             <dt>{label}</dt>
             <dd>
               {keys.map((key) => (

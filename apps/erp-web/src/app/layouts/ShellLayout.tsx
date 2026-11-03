@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router';
 import { useShallow } from 'zustand/react/shallow';
+import { appConfig } from '@/common/config/app.config';
 import { footerMenu } from '@/common/navigation/footer-menu';
 import { useErpNavigation } from '@/common/navigation/useErpNavigation';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
@@ -25,7 +26,7 @@ export function ShellLayout() {
     })),
   );
   const { status } = useSystemStatus();
-  const session = useGetErpSession({ query: { staleTime: 5 * 60_000 } });
+  const session = useGetErpSession({ query: { staleTime: appConfig.sessionStaleMs } });
   const select = useSelectBusinessUnit();
   const navigation = useErpNavigation();
 
@@ -53,7 +54,7 @@ export function ShellLayout() {
 
   return (
     <AppShell
-      workspace={{ name: user?.accountName ?? 'myErp', subtitle: t('shell.productName') }}
+      workspace={{ name: user?.accountName ?? appConfig.name, subtitle: t('shell.productName') }}
       menu={navigation.menu}
       footerMenu={footerMenu}
       menuLoading={navigation.loading}

@@ -15,6 +15,7 @@ import { Link } from 'react-router';
 import { BrandMark } from '../../components/brand/BrandMark';
 import { useLanguageStore } from '../../i18n/i18n';
 import { localize } from '../../i18n/language';
+import { tintOrder } from '../../theme/design-tokens';
 import { flattenLeaves, type MenuNode } from '../../utils/menu';
 import { useFavoritesStore } from './favorites-store';
 import { useHomePath, useShell } from './ShellContext';
@@ -37,7 +38,7 @@ export interface SidebarProps {
   onNavigate?: () => void;
 }
 
-const FAVORITE_DOTS = ['var(--erp-primary)', '#D97706', '#1D4ED8', '#7C3AED', '#DB2777'];
+const FAVORITE_TINTS = tintOrder.filter((tint) => tint !== 'slate');
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
@@ -132,11 +133,10 @@ function Flyout({
         <button
           type="button"
           className="erp-menu-item"
-          style={{ width: 26, height: 26, padding: 0, justifyContent: 'center' }}
           aria-label={t('shell.close')}
           onClick={onClose}
         >
-          <CloseOutlined style={{ fontSize: 12 }} />
+          <CloseOutlined />
         </button>
       </div>
       {(module.children ?? []).map((sub) =>
@@ -242,7 +242,7 @@ export function Sidebar({
               aria-label={t('shell.expand')}
               onClick={onToggleRail}
             >
-              <DoubleRightOutlined style={{ fontSize: 13 }} />
+              <DoubleRightOutlined />
             </button>
           </Tooltip>
           <Tooltip title={`${t('shell.search')} · Ctrl K`} placement="right">
@@ -339,7 +339,7 @@ export function Sidebar({
               aria-label={t('shell.collapse')}
               onClick={onToggleRail}
             >
-              <DoubleLeftOutlined style={{ fontSize: 12 }} />
+              <DoubleLeftOutlined />
             </button>
           </Tooltip>
         )}
@@ -379,13 +379,12 @@ export function Sidebar({
                 <Link
                   to={node.path!}
                   className="erp-sb-row"
-                  style={{ background: 'transparent', boxShadow: 'none' }}
                   aria-current={node.key === activeLeaf ? 'page' : undefined}
                   onClick={onNavigate}
                 >
                   <span
                     className="erp-sb-dot"
-                    style={{ ['--dot' as string]: FAVORITE_DOTS[index % FAVORITE_DOTS.length] }}
+                    data-tint={FAVORITE_TINTS[index % FAVORITE_TINTS.length]}
                   />
                   <span className="erp-sb-text">{label(node)}</span>
                 </Link>
@@ -486,7 +485,7 @@ export function Sidebar({
             </Link>
           ))}
           {footerMenu.length === 0 && version && (
-            <span className="erp-sb-row" style={{ cursor: 'default' }}>
+            <span className="erp-sb-row is-static">
               <span className="erp-sb-version">v{version}</span>
             </span>
           )}

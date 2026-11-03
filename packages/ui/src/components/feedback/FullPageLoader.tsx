@@ -2,7 +2,7 @@ import { Spin } from 'antd';
 
 export function FullPageLoader() {
   return (
-    <div style={{ display: 'grid', placeItems: 'center', minHeight: '50vh' }}>
+    <div className="erp-page-loader">
       <Spin size="large" />
     </div>
   );

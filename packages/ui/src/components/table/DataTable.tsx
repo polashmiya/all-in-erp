@@ -2,6 +2,7 @@ import { ColumnHeightOutlined, ReloadOutlined, SettingOutlined } from '@ant-desi
 import {
   Button,
   Checkbox,
+  Grid,
   Pagination,
   Popover,
   Select,
@@ -12,7 +13,13 @@ import {
 import type { ColumnType } from 'antd/es/table';
 import { useMemo, useRef, useState, type Key, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ListSort } from '../../hooks/useListState';
 import { formatNumber, pageRange } from '../../utils/format';
+import { ActionGroup } from '../actions/ActionGroup';
+import type { ActionItem } from '../actions/types';
+import { EmptyState } from '../feedback/EmptyState';
+
+import { PAGE_SIZE_OPTIONS } from './constants';
 
 export interface DataTablePagination {
   page: number;
@@ -22,15 +29,24 @@ export interface DataTablePagination {
   pageSizeOptions?: number[];
 }
 
+export interface DataTableEmpty {
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ActionItem[];
+}
+
 export interface DataTableProps<T> extends Omit<
   TableProps<T>,
   'pagination' | 'title' | 'footer' | 'rowSelection' | 'size'
 > {
   toolbar?: ReactNode;
   selection?: { selectedKeys: Key[]; onChange: (keys: Key[]) => void };
-  bulkActions?: (selectedKeys: Key[]) => ReactNode;
+  bulkActions?: (selectedKeys: Key[]) => ActionItem[];
+  sort?: ListSort;
+  onSortChange?: (sort: ListSort | undefined) => void;
   pagination?: DataTablePagination;
   onRefresh?: () => void;
+  empty?: DataTableEmpty;
   fill?: boolean;
 }
 
@@ -43,13 +59,18 @@ export function DataTable<T extends object>({
   toolbar,
   selection,
   bulkActions,
+  sort,
+  onSortChange,
   pagination,
   onRefresh,
+  empty,
   fill = false,
   columns = [],
+  locale,
   ...tableProps
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const screens = Grid.useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [density, setDensity] = useState<Density>('middle');
   const [hidden, setHidden] = useState<string[]>([]);
@@ -58,10 +79,39 @@ export function DataTable<T extends object>({
   const hideable = (columns as ColumnType<T>[])
     .map((c, i) => ({ key: columnKey(c, i), title: c.title, fixed: !!c.fixed }))
     .filter((c) => !c.fixed && typeof c.title === 'string');
+
   const visibleColumns = useMemo(
-    () => (columns as ColumnType<T>[]).filter((c, i) => !hidden.includes(columnKey(c, i))),
-    [columns, hidden],
+    () =>
+      (columns as ColumnType<T>[])
+        .filter((c, i) => !hidden.includes(columnKey(c, i)))
+        .map((c, i) =>
+          c.sorter
+            ? {
+                ...c,
+                sortOrder:
+                  sort?.field === columnKey(c, i)
+                    ? sort.order === 'asc'
+                      ? ('ascend' as const)
+                      : ('descend' as const)
+                    : null,
+              }
+            : c,
+        )
+        .map((c) => (c.fixed && screens.md === false ? { ...c, fixed: undefined } : c)),
+    [columns, hidden, sort, screens.md],
   );
+
+  const onChange: TableProps<T>['onChange'] = (pag, filters, sorter, extra) => {
+    if (extra.action === 'sort' && onSortChange) {
+      const s = Array.isArray(sorter) ? sorter[0] : sorter;
+      onSortChange(
+        s?.order && s.columnKey
+          ? { field: String(s.columnKey), order: s.order === 'ascend' ? 'asc' : 'desc' }
+          : undefined,
+      );
+    }
+    tableProps.onChange?.(pag, filters, sorter, extra);
+  };
 
   const range = pagination
     ? pageRange(pagination.page, pagination.pageSize, pagination.total)
@@ -76,7 +126,7 @@ export function DataTable<T extends object>({
               {t('table.selected', { count: selected.length })}
             </span>
             <span className="erp-table__sep" />
-            {bulkActions?.(selected)}
+            {bulkActions && <ActionGroup actions={bulkActions(selected)} size="small" />}
             <button
               type="button"
               className="erp-linkbtn is-muted"
@@ -88,7 +138,7 @@ export function DataTable<T extends object>({
         ) : (
           <span className="erp-table__hint">{toolbar}</span>
         )}
-        <span style={{ flex: 1 }} />
+        <span className="erp-spacer" />
         <Tooltip title={t('table.density')}>
           <Button
             type="text"
@@ -106,7 +156,7 @@ export function DataTable<T extends object>({
             title={t('table.columns')}
             content={
               <Checkbox.Group
-                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                className="erp-stack"
                 value={hideable.map((c) => c.key).filter((k) => !hidden.includes(k))}
                 onChange={(keys) =>
                   setHidden(hideable.map((c) => c.key).filter((k) => !keys.includes(k)))
@@ -155,7 +205,22 @@ export function DataTable<T extends object>({
                 }
               : undefined
           }
+          locale={{
+            ...locale,
+            emptyText: empty ? (
+              <EmptyState
+                title={empty.title}
+                description={empty.description}
+                actions={
+                  empty.actions?.length ? <ActionGroup actions={empty.actions} /> : undefined
+                }
+              />
+            ) : (
+              locale?.emptyText
+            ),
+          }}
           {...tableProps}
+          onChange={onChange}
         />
       </div>
 
@@ -174,18 +239,19 @@ export function DataTable<T extends object>({
             <span className="erp-table__rows">{t('table.rows')}</span>
             <Select<number>
               size="small"
+              className="erp-table__size"
               aria-label={t('table.rowsPerPage')}
               value={pagination.pageSize}
               onChange={(size) => pagination.onChange(1, size)}
-              options={(pagination.pageSizeOptions ?? [10, 25, 50, 100]).map((n) => ({
+              options={(pagination.pageSizeOptions ?? PAGE_SIZE_OPTIONS).map((n) => ({
                 value: n,
                 label: String(n),
               }))}
-              style={{ width: 76 }}
             />
             <Pagination
               className="erp-pagination"
               size="small"
+              simple={screens.sm === false}
               showSizeChanger={false}
               current={pagination.page}
               pageSize={pagination.pageSize}

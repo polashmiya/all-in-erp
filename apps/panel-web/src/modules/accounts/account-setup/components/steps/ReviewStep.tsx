@@ -28,7 +28,7 @@ export function ReviewStep({ onEdit }: { onEdit: (step: number) => void }) {
   return (
     <>
       <FormSection title={t('setup.section.admin')}>
-        <Alert type="info" showIcon icon={<SafetyCertificateOutlined />} message={t('setup.adminIntro')} style={{ marginBottom: 20 }} />
+        <Alert type="info" showIcon icon={<SafetyCertificateOutlined />} message={t('setup.adminIntro')} className="acc-alert" />
         <Row gutter={16}>
           <Col xs={24} md={12}>
             <Form.Item name={['admin', 'fullName']} label={t('field.fullName')} rules={[rules.required, { max: 200 }]}>
@@ -112,10 +112,10 @@ export function ReviewStep({ onEdit }: { onEdit: (step: number) => void }) {
             { key: 'regional', label: t('setup.section.regional'), children: `${account.baseCurrency ?? '—'} · ${account.timeZone ?? '—'}` },
           ]}
         />
-        <Card size="small" title={t('detail.structure')} extra={edit(1)} style={{ marginTop: 16 }}>
+        <Card size="small" title={t('detail.structure')} extra={edit(1)} className="acc-card-gap">
           <StructureTree units={structureFromForm(values.businessUnits)} />
         </Card>
-        <Card size="small" title={t('menus.title')} extra={edit(4)} style={{ marginTop: 16 }}>
+        <Card size="small" title={t('menus.title')} extra={edit(4)} className="acc-card-gap">
           <FeatureAccessSummary codes={values.featureCodes ?? []} />
         </Card>
       </FormSection>

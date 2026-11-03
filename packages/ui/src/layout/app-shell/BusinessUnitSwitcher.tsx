@@ -1,5 +1,5 @@
 import { CheckOutlined, DownOutlined } from '@ant-design/icons';
-import { Dropdown, Input, Typography, theme } from 'antd';
+import { Dropdown, Input, Typography } from 'antd';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,6 @@ const SEARCH_THRESHOLD = 8;
 
 export function BusinessUnitSwitcher({ units, currentId, onChange }: BusinessUnitSwitcherProps) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
   const [search, setSearch] = useState('');
   const current = units.find((u) => u.id === currentId);
   const switchable = units.length > 1;
@@ -60,9 +59,9 @@ export function BusinessUnitSwitcher({ units, currentId, onChange }: BusinessUni
       placement="bottomRight"
       onOpenChange={(open) => !open && setSearch('')}
       popupRender={(menu) => (
-        <div className="erp-popover" style={{ minWidth: 280, padding: 6 }}>
-          <div style={{ padding: '8px 10px 4px' }}>
-            <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>
+        <div className="erp-popover erp-bu-menu">
+          <div className="erp-bu-menu__head">
+            <Typography.Text type="secondary" className="erp-text-sm erp-text-strongish">
               {t('shell.switchBusinessUnit')}
             </Typography.Text>
             {units.length > SEARCH_THRESHOLD && (
@@ -73,7 +72,7 @@ export function BusinessUnitSwitcher({ units, currentId, onChange }: BusinessUni
                 placeholder={t('shell.searchBusinessUnit')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ marginTop: 8 }}
+                className="erp-bu-menu__search"
               />
             )}
           </div>
@@ -85,24 +84,14 @@ export function BusinessUnitSwitcher({ units, currentId, onChange }: BusinessUni
         items: visible.map((unit) => ({
           key: unit.id,
           label: (
-            <span
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                lineHeight: 1.35,
-                paddingBlock: 2,
-              }}
-            >
+            <span className="erp-option">
               <Typography.Text strong={unit.id === currentId}>{unit.name}</Typography.Text>
-              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              <Typography.Text type="secondary" className="erp-text-sm">
                 {[unit.code, unit.description].filter(Boolean).join(' · ')}
               </Typography.Text>
             </span>
           ),
-          extra:
-            unit.id === currentId ? (
-              <CheckOutlined style={{ color: token.colorPrimary }} />
-            ) : undefined,
+          extra: unit.id === currentId ? <CheckOutlined className="erp-text-primary" /> : undefined,
         })),
         onClick: ({ key }) => key !== currentId && onChange(key),
       }}

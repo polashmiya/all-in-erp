@@ -1,0 +1,129 @@
+.acc-section {
+  margin-bottom: var(--erp-space-sm);
+}
+
+.acc-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--erp-space-md);
+  margin-bottom: var(--erp-space-md);
+}
+
+.acc-section__title {
+  margin: 0;
+  font-size: var(--erp-font-lg);
+  font-weight: 600;
+  color: var(--erp-text-strong);
+}
+
+.acc-section__desc {
+  margin: calc(var(--erp-space-md) * -1 + var(--erp-space-xs)) 0 var(--erp-space-lg);
+  font-size: var(--erp-font-base);
+  color: var(--erp-text-muted);
+}
+
+.acc-summary__head {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-md);
+}
+
+.acc-summary__counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--erp-space-sm);
+  margin-top: var(--erp-space-xl);
+}
+
+.acc-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--erp-space-xxs);
+  text-align: center;
+}
+
+.acc-count__icon {
+  font-size: var(--erp-font-lg);
+}
+
+.acc-count__value {
+  font-size: var(--erp-font-h2);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--erp-text-strong);
+}
+
+.acc-count__label {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.acc-summary__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: var(--erp-font-md);
+  color: var(--erp-text-muted);
+}
+
+.acc-divider {
+  margin: var(--erp-space-lg) 0 var(--erp-space-md);
+  border-top: 1px solid var(--erp-divider);
+}
+
+.acc-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.acc-itemcard .ant-card-head {
+  background: var(--erp-table-head);
+}
+
+.acc-feature-code {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.acc-group__title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.acc-group .ant-tag {
+  margin-bottom: 6px;
+}
+
+.acc-toolbar {
+  margin-bottom: var(--erp-space-md);
+}
+
+.acc-credentials {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: start;
+}
+
+.acc-password {
+  font-size: var(--erp-font-lg);
+}
+
+.acc-alert {
+  margin-bottom: var(--erp-space-lg);
+}
+
+.acc-alert.is-after {
+  margin: var(--erp-space-md) 0 0;
+}
+
+.acc-card-gap {
+  margin-top: var(--erp-space-lg);
+}

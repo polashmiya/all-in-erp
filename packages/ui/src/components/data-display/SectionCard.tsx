@@ -1,14 +1,17 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { ActionGroup } from '../actions/ActionGroup';
+import type { ActionItem } from '../actions/types';
+
+export type CardPadding = 'none' | 'md' | 'lg';
 
 export interface SectionCardProps {
   title?: ReactNode;
   subtitle?: ReactNode;
   extra?: ReactNode;
-  padding?: number | string;
+  actions?: ActionItem[];
+  padding?: CardPadding;
   fill?: boolean;
   className?: string;
-  style?: CSSProperties;
-  bodyStyle?: CSSProperties;
   children?: ReactNode;
 }
 
@@ -16,30 +19,30 @@ export function SectionCard({
   title,
   subtitle,
   extra,
-  padding = 16,
+  actions,
+  padding = 'md',
   fill = false,
   className,
-  style,
-  bodyStyle,
   children,
 }: SectionCardProps) {
+  const hasExtra = !!extra || !!actions?.length;
   return (
-    <section
-      className={['erp-card', fill && 'is-fill', className].filter(Boolean).join(' ')}
-      style={style}
-    >
-      {(title || extra) && (
+    <section className={['erp-card', fill && 'is-fill', className].filter(Boolean).join(' ')}>
+      {(title || hasExtra) && (
         <header className="erp-card__head">
           <div className="erp-card__titles">
             {title && <h2 className="erp-card__title">{title}</h2>}
             {subtitle && <span className="erp-card__sub">{subtitle}</span>}
           </div>
-          {extra && <div className="erp-card__extra">{extra}</div>}
+          {hasExtra && (
+            <div className="erp-card__extra">
+              {extra}
+              {actions && <ActionGroup actions={actions} size="small" />}
+            </div>
+          )}
         </header>
       )}
-      <div className="erp-card__body erp-scroll" style={{ padding, ...bodyStyle }}>
-        {children}
-      </div>
+      <div className={`erp-card__body erp-card__body--${padding} erp-scroll`}>{children}</div>
     </section>
   );
 }

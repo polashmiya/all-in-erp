@@ -1,4 +1,10 @@
-import { DownOutlined, LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  DownOutlined,
+  KeyOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import { Dropdown, Flex, Typography } from 'antd';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -80,22 +86,22 @@ export function ProfileMenu({
   };
 
   const panel = (
-    <div className="erp-popover" style={{ width: 272, padding: 6 }}>
-      <Flex gap={12} align="center" style={{ padding: 10 }}>
+    <div className="erp-popover erp-profile-menu">
+      <Flex gap={12} align="center" className="erp-profile-menu__head">
         <UserAvatar user={user} large />
-        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="erp-stack is-tight">
           <Typography.Text strong ellipsis>
             {user.name}
           </Typography.Text>
           {user.email && (
-            <Typography.Text type="secondary" ellipsis style={{ fontSize: 12 }}>
+            <Typography.Text type="secondary" ellipsis className="erp-text-sm">
               {user.email}
             </Typography.Text>
           )}
         </div>
       </Flex>
       {user.tags && user.tags.length > 0 && (
-        <Flex gap={6} wrap style={{ padding: '0 10px 10px' }}>
+        <Flex gap={6} wrap className="erp-profile-menu__tags">
           {user.tags.map((tag, index) => (
             <StatusTag key={tag} tone={index === 0 ? 'primary' : 'neutral'}>
               {tag}
@@ -113,18 +119,12 @@ export function ProfileMenu({
         onClick={run(onPreferences)}
       />
       <MenuButton
-        icon={
-          <span style={{ fontSize: 13, fontWeight: 600, width: 14, textAlign: 'center' }}>⌨</span>
-        }
+        icon={<KeyOutlined />}
         label={t('shell.shortcuts')}
         hint="?"
         onClick={run(onShortcuts)}
       />
-      <Flex
-        align="center"
-        justify="space-between"
-        style={{ height: 40, padding: '0 10px', fontSize: 13 }}
-      >
+      <Flex align="center" justify="space-between" className="erp-profile-menu__row">
         <span>{t('shell.language')}</span>
         <LanguageSegmented size="small" />
       </Flex>

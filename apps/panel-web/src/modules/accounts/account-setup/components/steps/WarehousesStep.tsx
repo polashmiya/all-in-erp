@@ -6,8 +6,6 @@ import { normalizeCode, UNIT_LEVEL, type BusinessUnitForm } from '../../model/se
 import { ItemCard } from './ItemCard';
 import { UnitTabs } from './UnitTabs';
 
-const mono = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
-
 function WarehouseList({ unitIndex, unit }: { unitIndex: number; unit: BusinessUnitForm }) {
   const { t } = useTranslation();
   const form = Form.useFormInstance();
@@ -41,7 +39,7 @@ function WarehouseList({ unitIndex, unit }: { unitIndex: number; unit: BusinessU
     <Form.List name={listPath}>
       {(fields, { add, remove }) => (
         <Flex vertical gap={12}>
-          {fields.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('setup.noWarehouses')} style={{ marginBlock: 8 }} />}
+          {fields.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('setup.noWarehouses')} />}
           {fields.map((field, index) => {
             const path = [...listPath, field.name];
             return (
@@ -55,7 +53,7 @@ function WarehouseList({ unitIndex, unit }: { unitIndex: number; unit: BusinessU
                 <Row gutter={16}>
                   <Col xs={24} md={8}>
                     <Form.Item name={[field.name, 'code']} label={t('field.unitCode')} normalize={normalizeCode} rules={[...rules.code, rules.uniqueIn(listPath, field.name)]}>
-                      <Input placeholder="CWH" style={mono} maxLength={32} />
+                      <Input placeholder="CWH" className="erp-code" maxLength={32} />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={16}>
@@ -80,7 +78,7 @@ function WarehouseList({ unitIndex, unit }: { unitIndex: number; unit: BusinessU
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} style={{ marginBottom: 4 }}>
+                    <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} className="erp-flush">
                       <Input />
                     </Form.Item>
                   </Col>

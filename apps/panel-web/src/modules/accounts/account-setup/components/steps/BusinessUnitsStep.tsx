@@ -5,8 +5,6 @@ import { setupRules, suggestCodeOnBlur } from '../../model/rules';
 import { newBusinessUnit, normalizeCode } from '../../model/setup-model';
 import { ItemCard } from './ItemCard';
 
-const mono = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
-
 export function BusinessUnitsStep() {
   const { t } = useTranslation();
   const form = Form.useFormInstance();
@@ -47,7 +45,7 @@ export function BusinessUnitsStep() {
                         normalize={normalizeCode}
                         rules={[...rules.code, rules.uniqueIn(['businessUnits'], field.name)]}
                       >
-                        <Input placeholder="DHK" style={mono} maxLength={32} />
+                        <Input placeholder="DHK" className="erp-code" maxLength={32} />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={16}>
@@ -66,7 +64,7 @@ export function BusinessUnitsStep() {
                       </Form.Item>
                     </Col>
                     <Col xs={24}>
-                      <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} style={{ marginBottom: 4 }}>
+                      <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} className="erp-flush">
                         <Input.TextArea autoSize={{ minRows: 1, maxRows: 3 }} />
                       </Form.Item>
                     </Col>

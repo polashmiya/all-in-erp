@@ -9,8 +9,6 @@ import { FormSection } from '../FormSection';
 import { setupRules } from '../../model/rules';
 import { normalizeCode } from '../../model/setup-model';
 
-const mono = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
-
 export function AccountStep() {
   const { t } = useTranslation();
   const language = useLanguageStore((s) => s.language);
@@ -43,7 +41,7 @@ export function AccountStep() {
               hasFeedback
               rules={[...rules.code, { min: 2 }, rules.accountCodeAvailable]}
             >
-              <Input placeholder="DEMO-PHARMA" style={mono} maxLength={32} />
+              <Input placeholder="DEMO-PHARMA" className="erp-code" maxLength={32} />
             </Form.Item>
           </Col>
           <Col xs={24} md={8}>

@@ -2,6 +2,7 @@ import { DashboardOutlined } from '@ant-design/icons';
 import { useGetErpNavigation, type ErpMenuModule, type LocalizedLabel } from '@erp/api-client';
 import { resolveIcon, type LocalizedText, type MenuNode } from '@erp/ui';
 import { useMemo } from 'react';
+import { appConfig } from '@/common/config/app.config';
 
 const dashboard: MenuNode = {
   key: 'dashboard',
@@ -33,7 +34,7 @@ export function toMenuNodes(modules: ErpMenuModule[]): MenuNode[] {
 }
 
 export function useErpNavigation() {
-  const query = useGetErpNavigation({ query: { staleTime: 5 * 60_000 } });
+  const query = useGetErpNavigation({ query: { staleTime: appConfig.sessionStaleMs } });
   const modules = useMemo(() => toMenuNodes(query.data ?? []), [query.data]);
   const menu = useMemo(() => [dashboard, ...modules], [modules]);
 

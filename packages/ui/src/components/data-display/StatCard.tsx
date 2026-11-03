@@ -1,8 +1,9 @@
+import type { Tint } from '../../theme/design-tokens';
 import type { ReactNode } from 'react';
 import { Sparkline } from '../charts/Sparkline';
 import { StatusTag, type StatusTone } from './StatusTag';
 
-export type StatTint = 'primary' | 'blue' | 'amber' | 'violet' | 'green' | 'slate';
+export type StatTint = Tint;
 
 export interface StatCardProps {
   icon: ReactNode;
@@ -38,7 +39,7 @@ export function StatCard({
         {trend && (
           <Sparkline
             values={trend}
-            color={tint === 'primary' ? 'var(--erp-primary)' : `var(--erp-tile-${tint})`}
+            color={tint === 'primary' ? 'var(--erp-primary)' : `var(--erp-tint-${tint}-fg)`}
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 import { BgColorsOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { Flex, Popover, Segmented, Switch, Typography } from 'antd';
-import type { ReactNode } from 'react';
+import { Popover, Segmented, Switch } from 'antd';
+import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { useLanguageStore } from '../../i18n/i18n';
@@ -10,12 +10,12 @@ import { useBrand } from '../../theme/brand-context';
 import { CUSTOM_PRESET, themePresets } from '../../theme/presets';
 import { useThemeStore, type ModePreference } from '../../theme/theme-store';
 
+const vars = (values: Record<string, string>) => values as CSSProperties;
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <Typography.Text style={{ fontSize: 12, fontWeight: 600 }} type="secondary">
-        {title}
-      </Typography.Text>
+    <div className="erp-themepanel__section">
+      <span className="erp-themepanel__label">{title}</span>
       {children}
     </div>
   );
@@ -58,25 +58,24 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div style={{ width: 300, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Flex align="center" justify="space-between">
-        <Typography.Text strong>{t('shell.theme')}</Typography.Text>
+    <div className="erp-themepanel">
+      <div className="erp-themepanel__head">
+        <strong>{t('shell.theme')}</strong>
         <button
           type="button"
-          className="erp-menu-item"
-          style={{ width: 28, height: 28, padding: 0, justifyContent: 'center' }}
+          className="erp-iconbtn"
           aria-label={t('shell.close')}
           onClick={onClose}
         >
-          <CloseOutlined style={{ fontSize: 12 }} />
+          <CloseOutlined />
         </button>
-      </Flex>
+      </div>
 
       <Section title={t('shell.primaryColor')}>
         <div
           role="radiogroup"
           aria-label={t('shell.primaryColor')}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}
+          className="erp-themepanel__swatches"
         >
           {themePresets.map((p) => {
             const selected = preset === p.key;
@@ -89,62 +88,30 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
                 aria-checked={selected}
                 aria-label={name}
                 className="erp-swatch"
+                style={vars({ '--swatch': p.primary })}
                 onClick={() => setPreset(p.key)}
               >
-                <span
-                  className="erp-swatch__dot"
-                  style={{
-                    background: p.primary,
-                    boxShadow: selected
-                      ? `0 0 0 2px var(--erp-surface), 0 0 0 4px ${p.primary}`
-                      : 'none',
-                  }}
-                >
-                  {selected && <CheckOutlined />}
-                </span>
+                <span className="erp-swatch__dot">{selected && <CheckOutlined />}</span>
                 {name}
               </button>
             );
           })}
         </div>
         <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            height: 40,
-            padding: '0 6px 0 10px',
-            border: '1px solid var(--erp-border)',
-            borderRadius: 8,
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
+          className={`erp-themepanel__custom${preset === CUSTOM_PRESET ? ' is-selected' : ''}`}
         >
-          <span style={{ flex: 1, fontWeight: preset === CUSTOM_PRESET ? 600 : 400 }}>
-            {t('shell.custom')}
-          </span>
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: 12, fontFamily: 'ui-monospace, Menlo, monospace' }}
-          >
+          <span className="erp-themepanel__customlabel">{t('shell.custom')}</span>
+          <span className="erp-mono">
             {(preset === CUSTOM_PRESET && customPrimary
               ? customPrimary
               : brand.primary
             ).toUpperCase()}
-          </Typography.Text>
+          </span>
           <input
             type="color"
             aria-label={t('shell.customColor')}
             value={brand.primary.toLowerCase()}
             onChange={(e) => setCustomPrimary(e.target.value)}
-            style={{
-              width: 32,
-              height: 28,
-              padding: 0,
-              border: 0,
-              background: 'transparent',
-              cursor: 'pointer',
-            }}
           />
         </label>
       </Section>
@@ -153,7 +120,7 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
         <div
           role="radiogroup"
           aria-label={t('shell.sidebarStyle')}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}
+          className="erp-themepanel__sidestyles"
         >
           {siderStyles.map((style) => {
             const preview = buildBrand(
@@ -169,13 +136,14 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
                 role="radio"
                 aria-checked={selected}
                 className={`erp-sidestyle${selected ? ' is-selected' : ''}`}
+                style={vars({ '--preview-bg': preview.bg, '--preview-line': preview.guide })}
                 onClick={() => setSider(style)}
               >
                 <span className="erp-sidestyle__preview">
-                  <span className="erp-sidestyle__bar" style={{ background: preview.bg }}>
-                    <span style={{ background: preview.guide }} />
-                    <span style={{ background: brand.primary }} />
-                    <span style={{ background: preview.guide }} />
+                  <span className="erp-sidestyle__bar">
+                    <span />
+                    <span className="is-active" />
+                    <span />
                   </span>
                   <span className="erp-sidestyle__body" />
                 </span>
@@ -197,20 +165,18 @@ function ThemePanel({ onClose }: { onClose: () => void }) {
             { value: 'system', label: t('theme.system') },
           ]}
         />
-        <Flex align="center" justify="space-between">
-          <Typography.Text style={{ fontSize: 13 }}>{t('theme.density')}</Typography.Text>
+        <div className="erp-toggle-row">
+          <span>{t('theme.density')}</span>
           <Switch
             size="small"
             checked={compact}
             onChange={setCompact}
             aria-label={t('theme.density')}
           />
-        </Flex>
+        </div>
       </Section>
 
-      <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-        {t('shell.themeSaved')}
-      </Typography.Text>
+      <span className="erp-themepanel__note">{t('shell.themeSaved')}</span>
     </div>
   );
 }
@@ -231,7 +197,7 @@ export function ThemePopover({
       arrow={false}
       open={open}
       onOpenChange={onOpenChange}
-      styles={{ body: { padding: 16 } }}
+      classNames={{ body: 'erp-popover-body' }}
       content={<ThemePanel onClose={() => onOpenChange(false)} />}
     >
       <button type="button" className="erp-tbtn" aria-label={t('shell.theme')} aria-expanded={open}>

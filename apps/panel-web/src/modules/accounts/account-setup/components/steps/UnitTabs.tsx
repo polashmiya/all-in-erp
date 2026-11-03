@@ -1,5 +1,5 @@
 import { ApartmentOutlined } from '@ant-design/icons';
-import { Badge, Form, Space, Tabs, theme } from 'antd';
+import { Badge, Form, Space, Tabs } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BusinessUnitForm } from '../../model/setup-model';
@@ -16,7 +16,6 @@ export function UnitTabs({
   renderUnit: (unitIndex: number, unit: BusinessUnitForm) => ReactNode;
 }) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
   const form = Form.useFormInstance();
   const units = (Form.useWatch('businessUnits', { form, preserve: true }) as BusinessUnitForm[] | undefined) ?? [];
 
@@ -31,7 +30,7 @@ export function UnitTabs({
           <Space size={8}>
             <ApartmentOutlined />
             {unit?.name?.trim() || t('setup.unitN', { n: index + 1 })}
-            <Badge count={count(unit ?? {})} showZero size="small" color={count(unit ?? {}) ? token.colorPrimary : token.colorTextQuaternary} />
+            <Badge count={count(unit ?? {})} showZero size="small" className={count(unit ?? {}) ? 'erp-badge--active' : 'erp-badge--idle'} />
           </Space>
         ),
         children: renderUnit(index, unit ?? {}),

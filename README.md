@@ -126,14 +126,20 @@ Project references: `Api → all`, `Modules → Core, Metadata`, `Infrastructure
 
 ## Frontend structure
 
-`packages/ui` (`@erp/ui`) is the common library both apps share:
+`packages/ui` (`@erp/ui`) is the common library both apps share. Build screens from it; avoid one-off styling.
 
 ```
 packages/ui/src/
-  components/   fields, dropdown, table, filters, data-display, charts, upload, feedback, navigation, brand, icons
-  layout/       app-shell (sidebar, rail, top bar, Ctrl K search), page (PageContainer, ActionBar), auth (sign-in frame)
-  theme/        presets, brand colours, AntD tokens      i18n/  providers/  hooks/  utils/ (format, menu)
-  styles/       global.css → shell.css + components.css (colours via CSS variables from UiProvider)
+  theme/design-tokens.ts  every colour, size, radius and spacing (the only place to change the look)
+  layout/templates/       ListPageLayout, FormPageLayout, DetailsPageLayout, WizardLayout
+  layout/app-shell/       sidebar, rail, top bar, Ctrl K search      layout/page/  PageContainer, CardGrid
+  layout/auth/            LoginLayout, SignInForm
+  components/actions/     ActionItem config + ActionButton / ActionGroup (buttons, menus, confirm, links)
+  components/overlays/    AppModal, FormModal, AppDrawer, useConfirm
+  components/             fields, table, filters, dropdown, data-display, charts, upload, feedback
+  hooks/                  useListState, useDisclosure, useUnsavedGuard, useHotkey
+  utils/                  format (৳, lakh/crore, dates), CSV export, menu helpers
+  styles/                 shell.css + components.css, using CSS variables only
 ```
 
 Each app follows the same layout:
@@ -142,12 +148,21 @@ Each app follows the same layout:
 apps/<app>/src/
   main.tsx
   app/          App, router, layouts (ShellLayout)
-  common/       constants, guards, services (api client), store, navigation, i18n, pages, utils
+  common/       config (app.config.ts, .env values), constants, guards, services, store, navigation, i18n, pages
   modules/      <module>/<sub-module>/<feature>/{pages,components,services,types,i18n.ts,routes.tsx,constants.ts}
 ```
 
-Modules never import from `app/`. A module registers its routes in `modules/index.ts` and its translations in
-`common/i18n/resources.ts`. Example: `apps/erp-web/src/modules/system-setup/item-management/item-profile/`.
+How to build a feature:
+
+- **Landing page** — `useListState` + `ListPageLayout` (filters, quick views, columns, bulk actions as config).
+- **Create / edit** — `FormPageLayout` (tabs with their field names, submit actions, aside). Errors per tab, dirty state and the
+  leave-page guard are built in. Multi-step creation uses `WizardLayout`.
+- **View / details** — `DetailsPageLayout` (record header, stats, tabs, aside, loading and not-found states).
+- **Buttons** — pass `ActionItem` objects (`label`, `icon`, `variant`, `to`, `onClick`, `confirm`, `menu`) instead of hand-made buttons.
+- **Modals** — `AppModal` / `FormModal` with `useDisclosure()`; confirmations with `useConfirm()`.
+
+Modules never import from `app/`. Register routes in `modules/index.ts` and translations in `common/i18n/resources.ts`.
+Example feature: `apps/erp-web/src/modules/system-setup/item-management/item-profile/`.
 
 Item Profile and the dashboard read from in-browser sample data (`services/*.mock.ts`) until their APIs exist;
 swap the bodies of the functions in `services/*.service.ts` for the generated api-client calls.

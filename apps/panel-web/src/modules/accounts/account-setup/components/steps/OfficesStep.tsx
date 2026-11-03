@@ -6,8 +6,6 @@ import { normalizeCode } from '../../model/setup-model';
 import { ItemCard } from './ItemCard';
 import { UnitTabs } from './UnitTabs';
 
-const mono = { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' };
-
 function OfficeList({ unitIndex }: { unitIndex: number }) {
   const { t } = useTranslation();
   const form = Form.useFormInstance();
@@ -18,7 +16,7 @@ function OfficeList({ unitIndex }: { unitIndex: number }) {
     <Form.List name={listPath}>
       {(fields, { add, remove }) => (
         <Flex vertical gap={12}>
-          {fields.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('setup.noOffices')} style={{ marginBlock: 8 }} />}
+          {fields.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('setup.noOffices')} />}
           {fields.map((field, index) => {
             const path = [...listPath, field.name];
             return (
@@ -32,7 +30,7 @@ function OfficeList({ unitIndex }: { unitIndex: number }) {
                 <Row gutter={16}>
                   <Col xs={24} md={8}>
                     <Form.Item name={[field.name, 'code']} label={t('field.unitCode')} normalize={normalizeCode} rules={[...rules.code, rules.uniqueIn(listPath, field.name)]}>
-                      <Input placeholder="HO" style={mono} maxLength={32} />
+                      <Input placeholder="HO" className="erp-code" maxLength={32} />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={16}>
@@ -51,7 +49,7 @@ function OfficeList({ unitIndex }: { unitIndex: number }) {
                     </Form.Item>
                   </Col>
                   <Col xs={24}>
-                    <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} style={{ marginBottom: 4 }}>
+                    <Form.Item name={[field.name, 'address']} label={t('field.address')} rules={[{ max: 500 }]} className="erp-flush">
                       <Input.TextArea autoSize={{ minRows: 1, maxRows: 3 }} />
                     </Form.Item>
                   </Col>

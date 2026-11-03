@@ -1,10 +1,11 @@
 import { configureApiClient } from '@erp/api-client';
 import { QueryClient } from '@tanstack/react-query';
+import { appConfig } from '@/common/config/app.config';
 import { useAuthStore } from '@/common/store/auth-store';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
+    queries: { staleTime: appConfig.queryStaleMs, retry: 1, refetchOnWindowFocus: false },
   },
 });
 

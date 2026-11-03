@@ -1,14 +1,14 @@
 import { ArrowLeftOutlined, ArrowRightOutlined, ShopOutlined } from '@ant-design/icons';
 import { useSelectBusinessUnit } from '@erp/api-client';
-import { StatusTag } from '@erp/ui';
+import { AuthHeading, ChoiceCards, StatusTag } from '@erp/ui';
 import { App, Button } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 import { useShallow } from 'zustand/react/shallow';
-import { AuthLayout } from '../components/AuthLayout';
 import { redirectTarget } from '@/common/guards/redirect';
 import { useAuthStore } from '@/common/store/auth-store';
+import { AuthLayout } from '../components/AuthLayout';
 
 export function SelectUnitPage() {
   const { t } = useTranslation();
@@ -25,16 +25,15 @@ export function SelectUnitPage() {
     })),
   );
   const select = useSelectBusinessUnit();
-  const [chosen, setChosen] = useState<string | undefined>(
+  const [chosen, setChosen] = useState(
     () => businessUnits.find((u) => u.id === lastBusinessUnitId)?.id ?? businessUnits[0]?.id,
   );
   const chosenUnit = businessUnits.find((u) => u.id === chosen);
-  const firstName = user?.fullName.split(' ')[0] ?? '';
 
-  const proceed = async () => {
-    if (!chosen || select.isPending) return;
+  const proceed = async (unitId = chosen) => {
+    if (!unitId || select.isPending) return;
     try {
-      selectUnit(await select.mutateAsync({ data: { businessUnitId: chosen } }));
+      selectUnit(await select.mutateAsync({ data: { businessUnitId: unitId } }));
       navigate(redirectTarget(location.state), { replace: true });
     } catch {
       void message.error(t('auth.switchFailed'));
@@ -43,67 +42,43 @@ export function SelectUnitPage() {
 
   return (
     <AuthLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <button
-          type="button"
-          className="erp-linkbtn is-muted"
-          style={{ alignSelf: 'flex-start', paddingInline: 0, display: 'inline-flex', gap: 6 }}
-          onClick={signOut}
-        >
-          <ArrowLeftOutlined /> {t('selectUnit.back')}
-        </button>
-
-        <div>
-          <h1>{t('selectUnit.title')}</h1>
-          <p className="erp-login__lead">
-            {t('selectUnit.lead', { name: firstName, count: businessUnits.length })}
-          </p>
-        </div>
-
-        <div
-          role="radiogroup"
-          aria-label={t('shell.businessUnit')}
-          style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-        >
-          {businessUnits.map((unit) => (
-            <button
-              key={unit.id}
-              type="button"
-              role="radio"
-              aria-checked={unit.id === chosen}
-              className="erp-bucard"
-              onClick={() => setChosen(unit.id)}
-              onDoubleClick={() => void proceed()}
-            >
-              <span className="erp-bucard__tile">
-                <ShopOutlined />
-              </span>
-              <span className="erp-bucard__text">
-                <span className="erp-bucard__name">{unit.name}</span>
-                <span className="erp-bucard__meta">
-                  {unit.code} · {unit.roleName}
-                </span>
-              </span>
-              {unit.id === lastBusinessUnitId && (
-                <StatusTag tone="info">{t('auth.lastUsed')}</StatusTag>
-              )}
-              <span className="erp-bucard__radio" aria-hidden="true" />
-            </button>
-          ))}
-        </div>
-
-        <Button
-          type="primary"
-          size="large"
-          block
-          disabled={!chosenUnit}
-          loading={select.isPending}
-          onClick={() => void proceed()}
-          style={{ height: 48, fontSize: 15, fontWeight: 600, borderRadius: 10 }}
-        >
-          {t('selectUnit.continue', { name: chosenUnit?.name ?? '' })} <ArrowRightOutlined />
-        </Button>
-      </div>
+      <button type="button" className="erp-linkbtn is-muted erp-auth__back" onClick={signOut}>
+        <ArrowLeftOutlined /> {t('selectUnit.back')}
+      </button>
+      <AuthHeading
+        title={t('selectUnit.title')}
+        lead={t('selectUnit.lead', {
+          name: user?.fullName.split(' ')[0] ?? '',
+          count: businessUnits.length,
+        })}
+      />
+      <ChoiceCards
+        label={t('shell.businessUnit')}
+        value={chosen}
+        onChange={setChosen}
+        onConfirm={(id) => void proceed(id)}
+        options={businessUnits.map((unit) => ({
+          value: unit.id,
+          title: unit.name,
+          description: `${unit.code} · ${unit.roleName}`,
+          icon: <ShopOutlined />,
+          badge:
+            unit.id === lastBusinessUnitId ? (
+              <StatusTag tone="info">{t('auth.lastUsed')}</StatusTag>
+            ) : undefined,
+        }))}
+      />
+      <Button
+        type="primary"
+        size="large"
+        block
+        className="erp-auth__submit"
+        disabled={!chosenUnit}
+        loading={select.isPending}
+        onClick={() => void proceed()}
+      >
+        {t('selectUnit.continue', { name: chosenUnit?.name ?? '' })} <ArrowRightOutlined />
+      </Button>
     </AuthLayout>
   );
 }

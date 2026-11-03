@@ -6,3 +6,5 @@ export { MoneyInput, NumberStepper, PercentInput, UnitInput, YesNoSwitch } from 
 export { LookupSelect } from './LookupSelect';
 export type { LookupOption, LookupSelectProps } from './LookupSelect';
 export { requiredMark } from './required-mark';
+export { CheckboxList, ChoiceCards, FieldSection, SwitchList } from './groups';
+export type { BooleanFieldOption, ChoiceOption } from './groups';

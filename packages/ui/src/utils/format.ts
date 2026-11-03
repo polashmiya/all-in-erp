@@ -65,7 +65,9 @@ export function formatDateTime(value: ConfigType): string {
 }
 
 export function initials(name: string | null | undefined, max = 2): string {
-  const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  const all = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  const lettered = all.filter((w) => /^\p{L}/u.test(w));
+  const words = lettered.length ? lettered : all;
   if (words.length === 0) return '?';
   if (words.length === 1) return words[0]!.slice(0, max).toUpperCase();
   return words

@@ -1,5 +1,5 @@
 import { DeleteOutlined } from '@ant-design/icons';
-import { Avatar, Button, Card, Flex, Form, Popconfirm, Tag, Typography, theme } from 'antd';
+import { Button, Card, Flex, Form, Popconfirm, Tag, Typography } from 'antd';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { FieldPath } from '../../model/setup-model';
@@ -22,27 +22,33 @@ export function ItemCard({
   children: ReactNode;
 }) {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
   const form = Form.useFormInstance();
   const name = Form.useWatch([...path, 'name'], form) as string | undefined;
   const code = Form.useWatch([...path, 'code'], form) as string | undefined;
 
   const removeButton = (
-    <Button type="text" danger icon={<DeleteOutlined />} disabled={removeDisabled} aria-label={t('setup.remove')} onClick={confirmRemove ? undefined : onRemove} />
+    <Button
+      type="text"
+      danger
+      icon={<DeleteOutlined />}
+      disabled={removeDisabled}
+      aria-label={t('setup.remove')}
+      onClick={confirmRemove ? undefined : onRemove}
+    />
   );
 
   return (
     <Card
       size="small"
-      styles={{ header: { background: token.colorFillQuaternary } }}
+      className="acc-itemcard"
       title={
-        <Flex align="center" gap={10} style={{ minWidth: 0 }}>
-          <Avatar size="small" shape="square" icon={icon} style={{ background: token.colorPrimaryBg, color: token.colorPrimary, flexShrink: 0 }} />
+        <Flex align="center" gap={10} className="acc-node">
+          <span className="erp-tile erp-tile--primary is-sm">{icon}</span>
           <Typography.Text strong ellipsis>
             {name?.trim() || fallbackTitle}
           </Typography.Text>
           {code && (
-            <Tag bordered={false} style={{ fontFamily: 'ui-monospace, monospace', marginInlineEnd: 0 }}>
+            <Tag bordered={false} className="erp-code erp-flush">
               {code}
             </Tag>
           )}
@@ -50,7 +56,13 @@ export function ItemCard({
       }
       extra={
         confirmRemove && !removeDisabled ? (
-          <Popconfirm title={confirmRemove} okText={t('setup.remove')} okButtonProps={{ danger: true }} cancelText={t('setup.keep')} onConfirm={onRemove}>
+          <Popconfirm
+            title={confirmRemove}
+            okText={t('setup.remove')}
+            okButtonProps={{ danger: true }}
+            cancelText={t('setup.keep')}
+            onConfirm={onRemove}
+          >
             {removeButton}
           </Popconfirm>
         ) : (

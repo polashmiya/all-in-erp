@@ -36,7 +36,8 @@ export function Sparkline({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}
-      style={{ flex: '0 0 auto', color }}
+      className="erp-sparkline"
+      style={{ color }}
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

@@ -10,6 +10,7 @@ import { useLanguageStore } from '../i18n/i18n';
 import { HomePathContext } from '../layout/app-shell/ShellContext';
 import { buildBrand, type Brand } from '../theme/brand';
 import { BrandContext } from '../theme/brand-context';
+import { tokenVariables } from '../theme/design-tokens';
 import { resolvePreset } from '../theme/presets';
 import { buildTheme } from '../theme/tokens';
 import { useResolvedMode, useThemeStore } from '../theme/theme-store';
@@ -20,6 +21,7 @@ const antdLocales = { en: enUS, bn: bnBD } as const;
 function cssVariables(brand: Brand): Record<string, string> {
   const { sider } = brand;
   return {
+    ...tokenVariables(brand.mode),
     '--erp-primary': brand.primary,
     '--erp-primary-hover': brand.primaryHover,
     '--erp-primary-soft': brand.primarySoft,

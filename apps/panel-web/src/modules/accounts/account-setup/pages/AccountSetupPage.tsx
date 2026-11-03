@@ -1,20 +1,18 @@
 import {
   ApartmentOutlined,
   AppstoreOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
   BankOutlined,
-  CheckOutlined,
   InboxOutlined,
   SafetyCertificateOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
 import { ApiError, useSetupAccount, type AccountSetupResult } from '@erp/api-client';
-import { PageContainer } from '@erp/ui';
-import { App, Button, Card, Col, Flex, Form, Row, Steps, Typography, theme } from 'antd';
+import { PageContainer, useUnsavedGuard, WizardLayout } from '@erp/ui';
+import { App, Form } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useBlocker, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
+import { ACCOUNT_PATHS } from '../../constants';
 import { SetupSuccess } from '../components/SetupSuccess';
 import { SetupSummary } from '../components/SetupSummary';
 import {
@@ -43,8 +41,7 @@ interface ServerFieldError {
 
 export function AccountSetupPage() {
   const { t } = useTranslation();
-  const { token } = theme.useToken();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [form] = Form.useForm<SetupFormValues>();
   const values = Form.useWatch([], { form, preserve: true }) as SetupFormValues | undefined;
@@ -57,38 +54,13 @@ export function AccountSetupPage() {
   const [result, setResult] = useState<AccountSetupResult>();
   const codeEdited = useRef(false);
   const pendingErrors = useRef<ServerFieldError[]>([]);
-  const confirmingLeave = useRef(false);
 
   const showErrors = useCallback(
     (fields: ServerFieldError[]) => form.setFields(fields as Parameters<typeof form.setFields>[0]),
     [form],
   );
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => dirty && !result && currentLocation.pathname !== nextLocation.pathname,
-  );
-
-  useEffect(() => {
-    if (blocker.state !== 'blocked' || confirmingLeave.current) return;
-    confirmingLeave.current = true;
-    modal.confirm({
-      title: t('setup.leaveTitle'),
-      content: t('setup.leaveText'),
-      okText: t('setup.leaveOk'),
-      okButtonProps: { danger: true },
-      cancelText: t('setup.stay'),
-      onOk: () => blocker.proceed(),
-      onCancel: () => blocker.reset(),
-      afterClose: () => (confirmingLeave.current = false),
-    });
-  }, [blocker, modal, t]);
-
-  useEffect(() => {
-    if (!dirty || result) return;
-    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty, result]);
+  useUnsavedGuard(dirty && !result);
 
   useEffect(() => {
     const forStep = pendingErrors.current.filter((e) => stepOfField(e.name) === step);
@@ -99,9 +71,13 @@ export function AccountSetupPage() {
 
     if (step === LAST_STEP) {
       const all = form.getFieldsValue(true) as SetupFormValues;
-      if (!all.admin?.email && all.account?.email) form.setFieldValue(['admin', 'email'], all.account.email.trim().toLowerCase());
+      if (!all.admin?.email && all.account?.email)
+        form.setFieldValue(['admin', 'email'], all.account.email.trim().toLowerCase());
       if (!all.admin?.fullName && all.account?.name) {
-        form.setFieldValue(['admin', 'fullName'], t('setup.defaultAdminName', { account: all.account.name.trim() }));
+        form.setFieldValue(
+          ['admin', 'fullName'],
+          t('setup.defaultAdminName', { account: all.account.name.trim() }),
+        );
       }
     }
   }, [step, form, t, showErrors]);
@@ -112,7 +88,12 @@ export function AccountSetupPage() {
       return true;
     } catch (error) {
       const first = (error as { errorFields?: { name: FieldPath }[] }).errorFields?.[0]?.name;
-      if (first?.[0] === 'businessUnits' && typeof first[1] === 'number' && (step === 2 || step === 3)) setActiveUnit(first[1]);
+      if (
+        first?.[0] === 'businessUnits' &&
+        typeof first[1] === 'number' &&
+        (step === 2 || step === 3)
+      )
+        setActiveUnit(first[1]);
       void message.error(t('setup.fixErrors'));
       return false;
     }
@@ -130,16 +111,26 @@ export function AccountSetupPage() {
     if (!(await validateCurrentStep())) return;
 
     try {
-      const created = await setup.mutateAsync({ data: toSetupRequest(form.getFieldsValue(true) as SetupFormValues) });
+      const created = await setup.mutateAsync({
+        data: toSetupRequest(form.getFieldsValue(true) as SetupFormValues),
+      });
       setDirty(false);
       setResult(created);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      if (error instanceof ApiError && error.status === 400 && Object.keys(error.fieldErrors).length) {
-        const fields = Object.entries(error.fieldErrors).map(([key, errors]) => ({ name: toFieldPath(key), errors }));
+      if (
+        error instanceof ApiError &&
+        error.status === 400 &&
+        Object.keys(error.fieldErrors).length
+      ) {
+        const fields = Object.entries(error.fieldErrors).map(([key, errors]) => ({
+          name: toFieldPath(key),
+          errors,
+        }));
         const firstStep = Math.min(...fields.map((f) => stepOfField(f.name)));
         const first = fields.find((f) => stepOfField(f.name) === firstStep)!;
-        if (first.name[0] === 'businessUnits' && typeof first.name[1] === 'number') setActiveUnit(first.name[1]);
+        if (first.name[0] === 'businessUnits' && typeof first.name[1] === 'number')
+          setActiveUnit(first.name[1]);
 
         if (firstStep === step) showErrors(fields.filter((f) => stepOfField(f.name) === step));
         pendingErrors.current = fields.filter((f) => stepOfField(f.name) !== step);
@@ -158,7 +149,8 @@ export function AccountSetupPage() {
     const account = changed.account;
     if (!account) return;
     if ('code' in account) codeEdited.current = !!account.code;
-    if ('name' in account && !codeEdited.current) form.setFieldValue(['account', 'code'], suggestCode(account.name));
+    if ('name' in account && !codeEdited.current)
+      form.setFieldValue(['account', 'code'], suggestCode(account.name));
   };
 
   const startAnother = () => {
@@ -177,90 +169,83 @@ export function AccountSetupPage() {
   if (result) {
     return (
       <PageContainer title={t('setup.title')} crumbs={crumbs}>
-        <SetupSuccess result={result} onDone={() => navigate('/accounts')} onAnother={startAnother} />
+        <SetupSuccess
+          result={result}
+          onDone={() => navigate(ACCOUNT_PATHS.list)}
+          onAnother={startAnother}
+        />
       </PageContainer>
     );
   }
 
   const stepItems = [
-    { icon: <BankOutlined />, title: t('setup.step.account'), description: t('setup.step.accountDesc') },
-    { icon: <ApartmentOutlined />, title: t('setup.step.units'), description: t('setup.step.unitsDesc') },
-    { icon: <ShopOutlined />, title: t('setup.step.offices'), description: t('setup.step.optional') },
-    { icon: <InboxOutlined />, title: t('setup.step.warehouses'), description: t('setup.step.optional') },
-    { icon: <AppstoreOutlined />, title: t('setup.step.menus'), description: t('setup.step.menusDesc') },
-    { icon: <SafetyCertificateOutlined />, title: t('setup.step.review'), description: t('setup.step.reviewDesc') },
-  ].map((item, index) => ({ ...item, disabled: index > reached }));
+    {
+      icon: <BankOutlined />,
+      title: t('setup.step.account'),
+      description: t('setup.step.accountDesc'),
+    },
+    {
+      icon: <ApartmentOutlined />,
+      title: t('setup.step.units'),
+      description: t('setup.step.unitsDesc'),
+    },
+    {
+      icon: <ShopOutlined />,
+      title: t('setup.step.offices'),
+      description: t('setup.step.optional'),
+    },
+    {
+      icon: <InboxOutlined />,
+      title: t('setup.step.warehouses'),
+      description: t('setup.step.optional'),
+    },
+    {
+      icon: <AppstoreOutlined />,
+      title: t('setup.step.menus'),
+      description: t('setup.step.menusDesc'),
+    },
+    {
+      icon: <SafetyCertificateOutlined />,
+      title: t('setup.step.review'),
+      description: t('setup.step.reviewDesc'),
+    },
+  ].map((item, index) => ({ ...item, key: STEP_KEYS[index] ?? String(index) }));
 
   return (
-    <PageContainer
+    <WizardLayout
       title={t('setup.title')}
       subTitle={t('setup.subtitle')}
       crumbs={crumbs}
-      extra={<Button onClick={() => navigate('/accounts')}>{t('setup.cancel')}</Button>}
+      cancelTo={ACCOUNT_PATHS.list}
+      steps={stepItems}
+      current={step}
+      reached={reached}
+      onStepChange={(target) => void goTo(target)}
+      finishLabel={t('setup.create')}
+      finishing={setup.isPending}
+      onFinish={() => void submit()}
+      aside={
+        <div className="erp-sticky">
+          <SetupSummary values={values} />
+        </div>
+      }
     >
-      <Row gutter={[16, 16]} align="top">
-        <Col xs={24} xl={17}>
-          <Card styles={{ body: { padding: 0 } }}>
-            <div style={{ padding: '20px 24px', borderBottom: `1px solid ${token.colorSplit}` }}>
-              <Steps current={step} items={stepItems} onChange={(target) => void goTo(target)} size="small" labelPlacement="vertical" />
-            </div>
-
-            <div style={{ padding: 24 }}>
-              <Form
-                form={form}
-                layout="vertical"
-                initialValues={initialValues}
-                onValuesChange={onValuesChange}
-                onFinish={() => void (step === LAST_STEP ? submit() : goTo(step + 1))}
-                scrollToFirstError={{ block: 'center', behavior: 'smooth' }}
-              >
-                {step === 0 && <AccountStep />}
-                {step === 1 && <BusinessUnitsStep />}
-                {step === 2 && <OfficesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
-                {step === 3 && <WarehousesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
-                {step === 4 && <MenuAccessStep />}
-                {step === 5 && <ReviewStep onEdit={(target) => void goTo(target)} />}
-              </Form>
-            </div>
-
-            <Flex
-              justify="space-between"
-              align="center"
-              gap={12}
-              style={{
-                position: 'sticky',
-                bottom: 0,
-                zIndex: 2,
-                padding: '14px 24px',
-                borderTop: `1px solid ${token.colorSplit}`,
-                background: token.colorBgContainer,
-                borderEndStartRadius: token.borderRadiusLG,
-                borderEndEndRadius: token.borderRadiusLG,
-              }}
-            >
-              <Button icon={<ArrowLeftOutlined />} disabled={step === 0} onClick={() => void goTo(step - 1)}>
-                {t('setup.back')}
-              </Button>
-              <Typography.Text type="secondary">{t('setup.stepOf', { current: step + 1, total: STEP_KEYS.length })}</Typography.Text>
-              {step < LAST_STEP ? (
-                <Button type="primary" onClick={() => void goTo(step + 1)}>
-                  {t('setup.next')} <ArrowRightOutlined />
-                </Button>
-              ) : (
-                <Button type="primary" icon={<CheckOutlined />} loading={setup.isPending} onClick={() => void submit()}>
-                  {t('setup.create')}
-                </Button>
-              )}
-            </Flex>
-          </Card>
-        </Col>
-
-        <Col xs={24} xl={7}>
-          <div style={{ position: 'sticky', top: 72 }}>
-            <SetupSummary values={values} />
-          </div>
-        </Col>
-      </Row>
-    </PageContainer>
+      <Form
+        form={form}
+        layout="vertical"
+        className="erp-form"
+        initialValues={initialValues}
+        onValuesChange={onValuesChange}
+        onFinish={() => void (step === LAST_STEP ? submit() : goTo(step + 1))}
+        scrollToFirstError={{ block: 'center', behavior: 'smooth' }}
+      >
+        {step === 0 && <AccountStep />}
+        {step === 1 && <BusinessUnitsStep />}
+        {step === 2 && <OfficesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
+        {step === 3 && <WarehousesStep activeUnit={activeUnit} onUnitChange={setActiveUnit} />}
+        {step === 4 && <MenuAccessStep />}
+        {step === 5 && <ReviewStep onEdit={(target) => void goTo(target)} />}
+      </Form>
+    </WizardLayout>
   );
 }

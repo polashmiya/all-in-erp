@@ -40,7 +40,7 @@ export function Dropzone({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="erp-stack">
       <Upload.Dragger {...props} className="erp-dropzone">
         <span className="erp-dropzone__icon">
           <CloudUploadOutlined />
@@ -148,7 +148,7 @@ export function ImageDrop({
           <img src={preview} alt={file?.name ?? ''} className="erp-imagedrop__img" />
         ) : (
           <span className="erp-imagedrop__empty">
-            <PictureOutlined style={{ fontSize: 22 }} />
+            <PictureOutlined className="erp-imagedrop__icon" />
             <span className="erp-imagedrop__title">{t('upload.dropImage')}</span>
             {hint && <span className="erp-imagedrop__hint">{hint}</span>}
           </span>
@@ -159,7 +159,7 @@ export function ImageDrop({
           type="link"
           size="small"
           onClick={() => onChange?.([])}
-          style={{ paddingInline: 0 }}
+          className="erp-linkbtn-plain"
         >
           {t('upload.removeImage')}
         </Button>

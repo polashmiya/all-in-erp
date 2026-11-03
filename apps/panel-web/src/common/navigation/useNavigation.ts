@@ -1,6 +1,7 @@
 import { useGetPanelNavigation, type PanelMenuItemDto } from '@erp/api-client';
 import { resolveIcon, type MenuNode } from '@erp/ui';
 import { useMemo } from 'react';
+import { appConfig } from '@/common/config/app.config';
 
 function toMenuNodes(items: PanelMenuItemDto[]): MenuNode[] {
   return items.map((item) => ({
@@ -13,7 +14,7 @@ function toMenuNodes(items: PanelMenuItemDto[]): MenuNode[] {
 }
 
 export function useNavigation() {
-  const query = useGetPanelNavigation({ query: { staleTime: 10 * 60_000 } });
+  const query = useGetPanelNavigation({ query: { staleTime: appConfig.navigationStaleMs } });
   const menu = useMemo(() => toMenuNodes(query.data ?? []), [query.data]);
 
   return { menu, loading: query.isPending };

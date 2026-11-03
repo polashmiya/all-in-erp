@@ -55,10 +55,10 @@ export function LookupSelect({
       placeholder={placeholder ?? t('field.searchPlaceholder')}
       notFoundContent={loading ? <Spin size="small" /> : t('field.noMatches')}
       optionRender={(option) => (
-        <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.35 }}>
+        <span className="erp-option">
           <span>{option.data.label}</span>
           {option.data.description && (
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            <Typography.Text type="secondary" className="erp-text-sm">
               {option.data.description}
             </Typography.Text>
           )}
@@ -70,8 +70,7 @@ export function LookupSelect({
           {onCreate && query.trim() && (
             <button
               type="button"
-              className="erp-menu-item"
-              style={{ marginTop: 4, color: 'var(--erp-primary)' }}
+              className="erp-menu-item erp-menu-item--create"
               onClick={() => onCreate(query.trim())}
             >
               <PlusOutlined />

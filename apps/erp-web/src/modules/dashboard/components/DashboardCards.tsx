@@ -2,7 +2,6 @@ import {
   CheckCircleOutlined,
   ImportOutlined,
   InboxOutlined,
-  MoreOutlined,
   ShoppingCartOutlined,
   SwapOutlined,
   TagOutlined,
@@ -11,20 +10,24 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import {
+  ActionButton,
   ActivityList,
   BarLineChart,
   BarList,
   ChartLegend,
+  DotValue,
   formatDelta,
   formatMoneyCompact,
   formatNumber,
   SectionCard,
-  StatCard,
+  StatGrid,
   StatusTag,
+  TitleCell,
   type ActivityItem,
-  type StatTint,
+  type ActionItem,
+  type Tint,
 } from '@erp/ui';
-import { App, Button, Segmented, Table, type TableColumnsType } from 'antd';
+import { App, Segmented, Table, type TableColumnsType } from 'antd';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -36,47 +39,56 @@ import type {
   SalesRange,
 } from '../services/dashboard.types';
 
+const SALES_RANGES: SalesRange[] = ['12m', '6m', '30d'];
+const CHART_HEIGHT = 250;
+
 export function KpiGrid({ kpis }: { kpis: DashboardSummary['kpis'] }) {
   const { t } = useTranslation();
 
   return (
-    <div className="erp-grid erp-grid--4">
-      <StatCard
-        icon={<InboxOutlined />}
-        label={t('dashboard.totalItems')}
-        value={formatNumber(kpis.totalItems.value)}
-        caption={t('dashboard.vsLastMonth')}
-        delta={{ text: formatDelta(kpis.totalItems.delta ?? 0), tone: 'success' }}
-        trend={kpis.totalItems.trend}
-      />
-      <StatCard
-        icon={<WalletOutlined />}
-        tint="blue"
-        label={t('dashboard.stockValue')}
-        value={formatMoneyCompact(kpis.stockValue.value)}
-        caption={t('dashboard.atPurchasePrice')}
-        delta={{ text: formatDelta(kpis.stockValue.delta ?? 0), tone: 'success' }}
-        trend={kpis.stockValue.trend}
-      />
-      <StatCard
-        icon={<WarningOutlined />}
-        tint="amber"
-        label={t('dashboard.lowStock')}
-        value={formatNumber(kpis.lowStock.value)}
-        caption={t('dashboard.belowReorder')}
-        delta={{ text: formatDelta(kpis.lowStock.delta ?? 0, ''), tone: 'warning' }}
-        trend={kpis.lowStock.trend}
-      />
-      <StatCard
-        icon={<ShoppingCartOutlined />}
-        tint="violet"
-        label={t('dashboard.pendingPos')}
-        value={formatNumber(kpis.pendingPurchaseOrders.value)}
-        caption={t('dashboard.awaitingReceipt')}
-        delta={{ text: formatMoneyCompact(kpis.pendingPurchaseOrders.amount), tone: 'neutral' }}
-        trend={kpis.pendingPurchaseOrders.trend}
-      />
-    </div>
+    <StatGrid
+      items={[
+        {
+          key: 'items',
+          icon: <InboxOutlined />,
+          label: t('dashboard.totalItems'),
+          value: formatNumber(kpis.totalItems.value),
+          caption: t('dashboard.vsLastMonth'),
+          delta: { text: formatDelta(kpis.totalItems.delta ?? 0), tone: 'success' },
+          trend: kpis.totalItems.trend,
+        },
+        {
+          key: 'value',
+          icon: <WalletOutlined />,
+          tint: 'blue',
+          label: t('dashboard.stockValue'),
+          value: formatMoneyCompact(kpis.stockValue.value),
+          caption: t('dashboard.atPurchasePrice'),
+          delta: { text: formatDelta(kpis.stockValue.delta ?? 0), tone: 'success' },
+          trend: kpis.stockValue.trend,
+        },
+        {
+          key: 'low',
+          icon: <WarningOutlined />,
+          tint: 'amber',
+          label: t('dashboard.lowStock'),
+          value: formatNumber(kpis.lowStock.value),
+          caption: t('dashboard.belowReorder'),
+          delta: { text: formatDelta(kpis.lowStock.delta ?? 0, ''), tone: 'warning' },
+          trend: kpis.lowStock.trend,
+        },
+        {
+          key: 'po',
+          icon: <ShoppingCartOutlined />,
+          tint: 'violet',
+          label: t('dashboard.pendingPos'),
+          value: formatNumber(kpis.pendingPurchaseOrders.value),
+          caption: t('dashboard.awaitingReceipt'),
+          delta: { text: formatMoneyCompact(kpis.pendingPurchaseOrders.amount), tone: 'neutral' },
+          trend: kpis.pendingPurchaseOrders.trend,
+        },
+      ]}
+    />
   );
 }
 
@@ -90,16 +102,11 @@ export function SalesChartCard({
   onRangeChange: (range: SalesRange) => void;
 }) {
   const { t } = useTranslation();
-  const period = {
-    '12m': t('dashboard.period12m'),
-    '6m': t('dashboard.period6m'),
-    '30d': t('dashboard.period30d'),
-  }[range];
 
   return (
     <SectionCard
       title={t('dashboard.salesVsPurchases')}
-      subtitle={t('dashboard.salesSubtitle', { period })}
+      subtitle={t('dashboard.salesSubtitle', { period: t(`dashboard.period${range}`) })}
       extra={
         <>
           <ChartLegend lineName={t('dashboard.sales')} barName={t('dashboard.purchases')} />
@@ -107,11 +114,7 @@ export function SalesChartCard({
             size="small"
             value={range}
             onChange={onRangeChange}
-            options={[
-              { value: '12m', label: '12M' },
-              { value: '6m', label: '6M' },
-              { value: '30d', label: '30D' },
-            ]}
+            options={SALES_RANGES.map((value) => ({ value, label: t(`dashboard.range${value}`) }))}
           />
         </>
       }
@@ -120,8 +123,8 @@ export function SalesChartCard({
         data={data}
         lineName={t('dashboard.sales')}
         barName={t('dashboard.purchases')}
-        format={(v) => `${Math.round(v)}`}
-        height={250}
+        format={(v) => formatNumber(v)}
+        height={CHART_HEIGHT}
       />
     </SectionCard>
   );
@@ -153,62 +156,44 @@ export function ReorderCard({ rows, total }: { rows: ReorderRow[]; total: number
   const { t } = useTranslation();
   const { message } = App.useApp();
 
+  const reorderAction: ActionItem = {
+    key: 'reorder',
+    label: t('dashboard.reorder'),
+    variant: 'soft',
+    onClick: () => void message.info(t('dashboard.reorderUnavailable')),
+  };
+
   const columns: TableColumnsType<ReorderRow> = [
     {
       key: 'item',
       title: t('dashboard.colItem'),
       render: (_, row) => (
-        <span style={{ display: 'flex', flexDirection: 'column' }}>
-          <Link
-            to={itemPaths.view(row.id)}
-            style={{ color: 'var(--erp-text-strong)', fontWeight: 500 }}
-          >
-            {row.name}
-          </Link>
-          <span style={{ fontSize: 12, color: 'var(--erp-text-muted)' }}>{row.id}</span>
-        </span>
+        <TitleCell title={<Link to={itemPaths.view(row.id)}>{row.name}</Link>} subtitle={row.id} />
       ),
     },
     {
       key: 'onHand',
       title: t('dashboard.colOnHand'),
       render: (_, row) => (
-        <span style={{ fontWeight: 600 }}>
-          {formatNumber(row.onHand)}{' '}
-          <span style={{ color: 'var(--erp-text-muted)', fontWeight: 400 }}>
-            / {formatNumber(row.reorderLevel)}
-          </span>
-        </span>
+        <DotValue tone={row.onHand === 0 ? 'danger' : 'warning'}>
+          {formatNumber(row.onHand)} / {formatNumber(row.reorderLevel)}
+        </DotValue>
       ),
     },
     {
       key: 'status',
       title: t('dashboard.colStatus'),
-      render: (_, row) =>
-        row.onHand === 0 ? (
-          <StatusTag tone="danger" dot>
-            {t('dashboard.out')}
-          </StatusTag>
-        ) : (
-          <StatusTag tone="warning" dot>
-            {t('dashboard.low')}
-          </StatusTag>
-        ),
+      render: (_, row) => (
+        <StatusTag tone={row.onHand === 0 ? 'danger' : 'warning'} dot>
+          {row.onHand === 0 ? t('dashboard.out') : t('dashboard.low')}
+        </StatusTag>
+      ),
     },
     {
       key: 'action',
       title: <span className="sr-only">{t('dashboard.colAction')}</span>,
       align: 'end',
-      render: () => (
-        <Button
-          size="small"
-          color="primary"
-          variant="filled"
-          onClick={() => void message.info(t('dashboard.reorderUnavailable'))}
-        >
-          {t('dashboard.reorder')}
-        </Button>
-      ),
+      render: () => <ActionButton action={reorderAction} size="small" />,
     },
   ];
 
@@ -216,12 +201,8 @@ export function ReorderCard({ rows, total }: { rows: ReorderRow[]; total: number
     <SectionCard
       title={t('dashboard.needsReordering')}
       subtitle={t('dashboard.itemsBelowReorder', { count: total })}
-      padding={0}
-      extra={
-        <Link to={itemPaths.list}>
-          <Button size="small">{t('dashboard.viewAll')}</Button>
-        </Link>
-      }
+      padding="none"
+      actions={[{ key: 'all', label: t('dashboard.viewAll'), to: itemPaths.list }]}
     >
       <Table<ReorderRow>
         className="erp-table"
@@ -236,7 +217,7 @@ export function ReorderCard({ rows, total }: { rows: ReorderRow[]; total: number
   );
 }
 
-const ACTIVITY_LOOK: Record<ActivityKind, { icon: ReactNode; tint: StatTint }> = {
+const ACTIVITY_LOOK: Record<ActivityKind, { icon: ReactNode; tint: Tint }> = {
   approved: { icon: <CheckCircleOutlined />, tint: 'green' },
   imported: { icon: <ImportOutlined />, tint: 'primary' },
   price: { icon: <TagOutlined />, tint: 'violet' },
@@ -261,17 +242,7 @@ export function RecentActivityCard({ events }: { events: DashboardSummary['activ
   }));
 
   return (
-    <SectionCard
-      title={t('dashboard.recentActivity')}
-      extra={
-        <Button
-          type="text"
-          size="small"
-          icon={<MoreOutlined />}
-          aria-label={t('table.moreActions')}
-        />
-      }
-    >
+    <SectionCard title={t('dashboard.recentActivity')}>
       <ActivityList items={items} />
     </SectionCard>
   );

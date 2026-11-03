@@ -40,7 +40,7 @@ describe('number and money formatting', () => {
 describe('text helpers', () => {
   it('builds initials', () => {
     expect(initials('Rahim Ahmed')).toBe('RA');
-    expect(initials('Paracetamol 500mg Tablet')).toBe('P5');
+    expect(initials('Paracetamol 500mg Tablet')).toBe('PT');
     expect(initials('Omeprazole')).toBe('OM');
     expect(initials('')).toBe('?');
   });

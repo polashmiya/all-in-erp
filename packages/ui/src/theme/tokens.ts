@@ -1,5 +1,14 @@
 import { theme, type ThemeConfig } from 'antd';
 import type { Brand, ThemeMode } from './brand';
+import {
+  controlHeight,
+  fontFamily,
+  fontSize,
+  radius,
+  shadows,
+  surfaces,
+  tones,
+} from './design-tokens';
 
 export type { ThemeMode } from './brand';
 
@@ -9,8 +18,7 @@ export interface ThemeOptions {
   brand: Brand;
 }
 
-export const fontFamily =
-  "'Inter Variable', 'Inter', 'Hind Siliguri', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+export { fontFamily };
 
 export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig {
   const light = mode === 'light';
@@ -22,9 +30,9 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
     token: {
       colorPrimary: brand.primary,
       colorInfo: brand.info,
-      colorSuccess: light ? '#16A34A' : '#22C55E',
-      colorWarning: light ? '#D97706' : '#F59E0B',
-      colorError: light ? '#DC2626' : '#F87171',
+      colorSuccess: tones[mode].success.dot,
+      colorWarning: tones[mode].warning.dot,
+      colorError: surfaces[mode].required,
       colorLink: light ? brand.primary : brand.palette[4],
       colorLinkHover: brand.primaryHover,
       colorBgLayout: brand.layoutBg,
@@ -37,28 +45,26 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
       colorTextSecondary: brand.textSecondary,
       colorTextTertiary: brand.textMuted,
       colorTextDescription: brand.textMuted,
-      colorTextPlaceholder: light ? '#8A94A3' : '#6B7280',
+      colorTextPlaceholder: surfaces[mode].placeholder,
       colorFillAlter: brand.tableHeaderBg,
       controlOutline: brand.primarySoft,
       controlOutlineWidth: 3,
-      borderRadius: 8,
-      borderRadiusLG: 12,
-      borderRadiusSM: 6,
-      controlHeight: 38,
-      controlHeightSM: 30,
-      controlHeightLG: 46,
+      borderRadius: radius.md,
+      borderRadiusLG: radius.lg,
+      borderRadiusSM: radius.sm,
+      controlHeight: controlHeight.input,
+      controlHeightSM: controlHeight.sm,
+      controlHeightLG: controlHeight.lg,
       fontFamily,
-      fontSize: 14,
-      boxShadowSecondary: light
-        ? '0 16px 40px rgba(15, 23, 42, 0.16), 0 0 0 1px #E5E8EF'
-        : '0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+      fontSize: fontSize.base,
+      boxShadowSecondary: `${shadows[mode].popover}, 0 0 0 1px ${brand.borderSecondary}`,
       wireframe: false,
     },
     components: {
       Button: {
-        controlHeight: 34,
-        controlHeightSM: 30,
-        controlHeightLG: 46,
+        controlHeight: controlHeight.md,
+        controlHeightSM: controlHeight.sm,
+        controlHeightLG: controlHeight.lg,
         paddingInline: 14,
         primaryShadow: 'none',
         defaultShadow: 'none',
@@ -66,10 +72,10 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
         fontWeight: 500,
         defaultBorderColor: brand.border,
       },
-      Card: { headerFontSize: 15, headerHeight: 52, paddingLG: 20 },
+      Card: { headerFontSize: fontSize.lg, headerHeight: 52, paddingLG: 20 },
       Menu: {
-        itemBorderRadius: 8,
-        subMenuItemBorderRadius: 8,
+        itemBorderRadius: radius.md,
+        subMenuItemBorderRadius: radius.md,
         itemMarginInline: 6,
         itemHeight: 36,
       },
@@ -85,14 +91,14 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
         rowSelectedHoverBg: brand.tintBg,
         cellPaddingBlock: 10,
         cellPaddingInline: 12,
-        cellFontSize: 13,
+        cellFontSize: fontSize.md,
       },
       Tabs: {
         horizontalMargin: '0',
         horizontalItemPadding: '13px 12px',
         horizontalItemGutter: 4,
         itemColor: brand.textSecondary,
-        titleFontSize: 14,
+        titleFontSize: fontSize.base,
       },
       Segmented: {
         trackBg: brand.trackBg,
@@ -100,19 +106,20 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
         itemColor: brand.textSecondary,
         itemSelectedColor: brand.textStrong,
         itemSelectedBg: brand.containerBg,
-        borderRadius: 8,
-        borderRadiusSM: 6,
+        borderRadius: radius.md,
+        borderRadiusSM: radius.sm,
       },
       Tag: {
-        defaultBg: light ? '#F1F5F9' : 'rgba(255, 255, 255, 0.06)',
+        defaultBg: tones[mode].neutral.bg,
         defaultColor: brand.textSecondary,
       },
       Switch: { trackHeight: 24, trackMinWidth: 40, handleSize: 20 },
-      Checkbox: { borderRadiusSM: 5 },
+      Checkbox: { borderRadiusSM: radius.xs },
       Steps: { iconSize: 30 },
-      Modal: { borderRadiusLG: 14 },
-      Popover: { borderRadiusLG: 14 },
-      Pagination: { itemSize: 30, itemActiveBg: brand.textStrong },
+      Modal: { borderRadiusLG: radius.xl },
+      Popover: { borderRadiusLG: radius.xl },
+      Drawer: { colorBgElevated: brand.containerBg },
+      Pagination: { itemSize: controlHeight.sm, itemActiveBg: brand.textStrong },
     },
   };
 }

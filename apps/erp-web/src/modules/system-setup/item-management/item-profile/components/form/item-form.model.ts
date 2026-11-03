@@ -3,43 +3,58 @@ import type { Item, ItemFormValues } from '../../types/item.types';
 
 export type ItemFormTab = 'general' | 'pricing' | 'stock' | 'attachments';
 
-export const ITEM_FORM_TABS: ItemFormTab[] = ['general', 'pricing', 'stock', 'attachments'];
-
-const FIELD_TAB: Record<string, ItemFormTab> = {
-  name: 'general',
-  genericName: 'general',
-  categoryId: 'general',
-  subCategoryId: 'general',
-  brandId: 'general',
-  uomId: 'general',
-  barcode: 'general',
-  itemType: 'general',
-  dosageForm: 'general',
-  tags: 'general',
-  countryCode: 'general',
-  description: 'general',
-  purchasePrice: 'pricing',
-  salePrice: 'pricing',
-  mrp: 'pricing',
-  vatPercent: 'pricing',
-  priceEffectiveFrom: 'pricing',
-  priceListId: 'pricing',
-  discountAllowed: 'pricing',
-  maxDiscountPercent: 'pricing',
-  discountValidTill: 'pricing',
-  reorderLevel: 'stock',
-  maxStock: 'stock',
-  openingStock: 'stock',
-  defaultWarehouseId: 'stock',
-  shelfLifeMonths: 'stock',
-  storage: 'stock',
-  warehouseLevels: 'stock',
-  attachments: 'attachments',
+export const ITEM_TAB_FIELDS: Record<ItemFormTab, string[]> = {
+  general: [
+    'name',
+    'genericName',
+    'categoryId',
+    'subCategoryId',
+    'brandId',
+    'uomId',
+    'barcode',
+    'itemType',
+    'dosageForm',
+    'tags',
+    'countryCode',
+    'description',
+  ],
+  pricing: [
+    'purchasePrice',
+    'salePrice',
+    'mrp',
+    'vatPercent',
+    'priceEffectiveFrom',
+    'priceListId',
+    'discountAllowed',
+    'maxDiscountPercent',
+    'discountValidTill',
+  ],
+  stock: [
+    'reorderLevel',
+    'maxStock',
+    'openingStock',
+    'defaultWarehouseId',
+    'shelfLifeMonths',
+    'storage',
+    'warehouseLevels',
+  ],
+  attachments: ['attachments'],
 };
 
-export function tabOfField(name: (string | number)[]): ItemFormTab {
-  return FIELD_TAB[String(name[0])] ?? 'general';
-}
+export const ITEM_LIMITS = { name: 160, description: 500, bin: 20, shelfLifeMonths: 240 } as const;
+
+export const STEP = { reorder: 10, maxStock: 100 } as const;
+
+export const BARCODE_PATTERN = /^\d{8}$|^\d{12,14}$/;
+
+export const ATTACHMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png';
+
+export const DEFAULTS = {
+  vatPercent: 7.5,
+  countryCode: 'BD',
+  priceListId: 'retail',
+  warehouseId: 'WH-DHK',
+} as const;
 
 export const emptyItemValues = (): ItemFormValues => ({
   name: '',
@@ -48,20 +63,20 @@ export const emptyItemValues = (): ItemFormValues => ({
   itemType: 'stock',
   dosageForm: 'solid',
   tags: [],
-  countryCode: 'BD',
+  countryCode: DEFAULTS.countryCode,
   trackExpiry: true,
   trackBatch: true,
   prescriptionOnly: false,
   allowNegativeStock: false,
   purchasePrice: undefined as unknown as number,
   salePrice: undefined as unknown as number,
-  vatPercent: 7.5,
+  vatPercent: DEFAULTS.vatPercent,
   priceEffectiveFrom: dayjs(),
-  priceListId: 'retail',
+  priceListId: DEFAULTS.priceListId,
   discountAllowed: false,
   reorderLevel: 0,
   openingStock: 0,
-  defaultWarehouseId: 'WH-DHK',
+  defaultWarehouseId: DEFAULTS.warehouseId,
   storage: 'room',
   warehouseLevels: [],
   attachments: [],
@@ -73,7 +88,7 @@ export const emptyItemValues = (): ItemFormValues => ({
 
 export function toFormValues(
   item: Item,
-  { copy = false }: { copy?: boolean } = {},
+  { copy = false, copyName }: { copy?: boolean; copyName?: (name: string) => string } = {},
 ): ItemFormValues {
   const {
     id: _id,
@@ -92,7 +107,7 @@ export function toFormValues(
   } = item;
   return {
     ...rest,
-    name: copy ? `${item.name} (copy)` : item.name,
+    name: copy && copyName ? copyName(item.name) : item.name,
     barcode: copy ? undefined : item.barcode,
     openingStock: copy ? 0 : item.openingStock,
     priceEffectiveFrom: priceEffectiveFrom ? dayjs(priceEffectiveFrom) : null,
