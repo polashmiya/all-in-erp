@@ -1,0 +1,32 @@
+.erp-record-avatar {
+  object-fit: cover;
+  background: var(--erp-table-head);
+  border: 1px solid var(--erp-border);
+}
+
+.erp-master-name {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.erp-master-name:hover,
+.erp-master-name:focus-visible {
+  color: var(--erp-primary);
+  text-decoration: underline;
+}
+
+.erp-master-name:disabled {
+  cursor: default;
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-master-image .erp-imagedrop .ant-upload-drag {
+  height: 132px;
+}

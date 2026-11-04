@@ -1,7 +1,13 @@
 import { mergeResources, type AppResources } from '@erp/ui';
 import { authResources } from '@/modules/auth/i18n';
 import { dashboardResources } from '@/modules/dashboard/i18n';
+import { masterDataResources } from '@/modules/system-setup/item-management/common/i18n';
+import { itemCategoryResources } from '@/modules/system-setup/item-management/item-category/i18n';
+import { itemDepartmentResources } from '@/modules/system-setup/item-management/item-department/i18n';
+import { itemMinorCategoryResources } from '@/modules/system-setup/item-management/item-minor-category/i18n';
 import { itemProfileResources } from '@/modules/system-setup/item-management/item-profile/i18n';
+import { itemSubCategoryResources } from '@/modules/system-setup/item-management/item-sub-category/i18n';
+import { uomResources } from '@/modules/system-setup/item-management/uom/i18n';
 
 const commonErpResources: AppResources = {
   en: {
@@ -40,4 +46,10 @@ export const erpResources = mergeResources(
   authResources,
   dashboardResources,
   itemProfileResources,
+  masterDataResources,
+  itemDepartmentResources,
+  itemCategoryResources,
+  itemSubCategoryResources,
+  itemMinorCategoryResources,
+  uomResources,
 );

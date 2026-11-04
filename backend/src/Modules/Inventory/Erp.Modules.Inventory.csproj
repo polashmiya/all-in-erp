@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Erp.Core\Erp.Core.csproj" />
     <ProjectReference Include="..\..\Erp.Metadata\Erp.Metadata.csproj" />
+    <ProjectReference Include="..\..\Erp.Infrastructure\Erp.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

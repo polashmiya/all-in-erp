@@ -1,4 +1,4 @@
-using Erp.Api.Hosting;
+using Erp.Core.Validation;
 using Erp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.SqlClient;

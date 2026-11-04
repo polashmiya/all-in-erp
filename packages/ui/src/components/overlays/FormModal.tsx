@@ -64,7 +64,12 @@ export function FormModal<T extends object>({
       danger={danger}
       onOk={() => submit().catch(() => undefined)}
     >
-      <Form<T> form={form} layout="vertical" className="erp-form" onFinish={() => void submit()}>
+      <Form<T>
+        form={form}
+        layout="vertical"
+        className="erp-form"
+        onFinish={() => submit().catch(() => undefined)}
+      >
         {children}
       </Form>
     </AppModal>

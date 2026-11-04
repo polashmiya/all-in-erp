@@ -1,5 +1,6 @@
 using Erp.Core.Authorization;
 using Erp.Core.Domain.Identity;
+using Erp.Core.Domain.Inventory;
 using Erp.Core.Domain.Tenancy;
 using Erp.Core.Security;
 using Erp.Infrastructure.Tenancy;
@@ -53,8 +54,87 @@ public sealed class DemoDataSeeder(
         await EnsureRoleAsync(account, ViewerRole, () => SystemRoles.CreateViewer(account.Id, catalog), SystemRoles.ViewerPermissions(catalog), cancellationToken);
         await EnsureErpAdminAsync(seed.ErpAdmin, account, units, administrator, cancellationToken);
         await EnsureFeaturesAsync(account, cancellationToken);
+        await EnsureItemMasterDataAsync(account, units, cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task EnsureItemMasterDataAsync(Account account, List<BusinessUnit> units, CancellationToken ct)
+    {
+        foreach (var unit in units)
+        {
+            if (!ItemMasterDemoData.ByUnit.TryGetValue(unit.Code, out var departments)) continue;
+            if (await db.ItemDepartments.AcrossTenants().AnyAsync(d => d.BusinessUnitId == unit.Id, ct)) continue;
+
+            var serial = 0;
+            foreach (var demo in departments)
+            {
+                var department = new ItemDepartment
+                {
+                    AccountId = account.Id,
+                    BusinessUnitId = unit.Id,
+                    Code = demo.Code,
+                    Name = demo.Name,
+                    Serial = ++serial,
+                    IsActive = demo.IsActive,
+                };
+                db.ItemDepartments.Add(department);
+
+                foreach (var demoCategory in demo.Categories)
+                {
+                    var category = new ItemCategory
+                    {
+                        AccountId = account.Id,
+                        BusinessUnitId = unit.Id,
+                        Department = department,
+                        Code = demoCategory.Code,
+                        Name = demoCategory.Name,
+                        IsActive = demo.IsActive,
+                    };
+                    db.ItemCategories.Add(category);
+
+                    foreach (var demoSub in demoCategory.SubCategories)
+                    {
+                        var subCategory = new ItemSubCategory
+                        {
+                            AccountId = account.Id,
+                            BusinessUnitId = unit.Id,
+                            Department = department,
+                            Category = category,
+                            Name = demoSub.Name,
+                            IsActive = demo.IsActive && demoSub.IsActive,
+                        };
+                        db.ItemSubCategories.Add(subCategory);
+
+                        db.ItemMinorCategories.AddRange(demoSub.MinorCategories.Select(name => new ItemMinorCategory
+                        {
+                            AccountId = account.Id,
+                            BusinessUnitId = unit.Id,
+                            Category = category,
+                            SubCategory = subCategory,
+                            Name = name,
+                            IsActive = subCategory.IsActive,
+                        }));
+                    }
+                }
+            }
+
+            logger.LogInformation("Seeded item departments, categories, sub and minor categories for {Unit}", unit.Name);
+        }
+
+        if (await db.UnitsOfMeasure.AcrossTenants().AnyAsync(u => u.AccountId == account.Id, ct)) return;
+
+        db.UnitsOfMeasure.AddRange(ItemMasterDemoData.Uoms.Select(u => new UnitOfMeasure
+        {
+            AccountId = account.Id,
+            Code = u.Code,
+            Name = u.Name,
+            Description = u.Description,
+            IsDecimalAllowed = u.Decimals is not null,
+            RoundingLength = u.Decimals ?? 0,
+            IsActive = u.IsActive,
+        }));
+        logger.LogInformation("Seeded {Count} units of measure for {Account}", ItemMasterDemoData.Uoms.Length, account.Name);
     }
 
     /// <summary>The demo account gets every ERP feature, but only the first time (later Panel changes are kept).</summary>

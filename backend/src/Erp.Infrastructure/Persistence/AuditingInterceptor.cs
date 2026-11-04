@@ -42,5 +42,22 @@ public sealed class AuditingInterceptor(ICurrentContext current, TimeProvider cl
                     break;
             }
         }
+
+        var utcNow = now.UtcDateTime;
+        foreach (var entry in context.ChangeTracker.Entries<IAuditedRecord>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.CreatedAt = utcNow;
+                    entry.Entity.CreatedById ??= userId;
+                    entry.Entity.TransactionDate ??= utcNow;
+                    break;
+                case EntityState.Modified:
+                    entry.Entity.ModifiedAt = utcNow;
+                    entry.Entity.ModifiedById = userId;
+                    break;
+            }
+        }
     }
 }

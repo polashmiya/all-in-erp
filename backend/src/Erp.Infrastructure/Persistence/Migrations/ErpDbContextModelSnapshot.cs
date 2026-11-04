@@ -290,6 +290,424 @@ namespace Erp.Infrastructure.Persistence.Migrations
                     b.ToTable("UserBusinessUnits", (string)null);
                 });
 
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ItemCategoryID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(4);
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BusinessUnitID")
+                        .HasColumnOrder(5);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)")
+                        .HasColumnName("ItemCategoryCode")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(9);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(10);
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemDepartmentID")
+                        .HasColumnOrder(3);
+
+                    b.Property<string>("ImageSource")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(6);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(7);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(12);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(11);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ItemCategoryName")
+                        .HasColumnOrder(2);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(8);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BusinessUnitId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("DepartmentId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ItemCategory", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemDepartment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("DepartmentID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(5);
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BusinessUnitID")
+                        .HasColumnOrder(6);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("DepartmentCode")
+                        .HasColumnOrder(2);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(9);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(10);
+
+                    b.Property<string>("ImageSource")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(4);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(7);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(12);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(11);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("DepartmentName")
+                        .HasColumnOrder(1);
+
+                    b.Property<int?>("Serial")
+                        .HasColumnType("int")
+                        .HasColumnOrder(3);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(8);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BusinessUnitId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessUnitId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ItemDepartment", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemMinorCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ItemMinorCategoryID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(4);
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BusinessUnitID")
+                        .HasColumnOrder(5);
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemCategoryID")
+                        .HasColumnOrder(2);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(9);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(10);
+
+                    b.Property<string>("ImageSource")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(6);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(7);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(12);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(11);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ItemMinorCategoryName")
+                        .HasColumnOrder(1);
+
+                    b.Property<int>("SubCategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemSubCategoryID")
+                        .HasColumnOrder(3);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(8);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BusinessUnitId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SubCategoryId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ItemMinorCategory", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemSubCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ItemSubCategoryID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(4);
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BusinessUnitID")
+                        .HasColumnOrder(5);
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemCategoryID")
+                        .HasColumnOrder(3);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(9);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(10);
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("DepartmentID")
+                        .HasColumnOrder(2);
+
+                    b.Property<string>("ImageSource")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(6);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(7);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(12);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(11);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ItemSubCategoryName")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(8);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BusinessUnitId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("CategoryId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ItemSubCategory", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.UnitOfMeasure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("UomID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(6);
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BranchID")
+                        .HasColumnOrder(7);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("UomCode")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(10);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(11);
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("UomDescription")
+                        .HasColumnOrder(3);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(8);
+
+                    b.Property<bool>("IsDecimalAllowed")
+                        .HasColumnType("bit")
+                        .HasColumnName("isDecimalAllowed")
+                        .HasColumnOrder(5);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(13);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(12);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("UomName")
+                        .HasColumnOrder(2);
+
+                    b.Property<int?>("RoundingLength")
+                        .HasColumnType("int")
+                        .HasColumnName("RoundingLen")
+                        .HasColumnOrder(4);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(9);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("AccountId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("UnitOfMeasure", (string)null);
+                });
+
             modelBuilder.Entity("Erp.Core.Domain.Navigation.ErpFeature", b =>
                 {
                     b.Property<Guid>("Id")
@@ -927,6 +1345,114 @@ namespace Erp.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemCategory", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Tenancy.BusinessUnit", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemDepartment", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemDepartment", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Tenancy.BusinessUnit", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemMinorCategory", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Tenancy.BusinessUnit", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemSubCategory", "SubCategory")
+                        .WithMany()
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("SubCategory");
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemSubCategory", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Tenancy.BusinessUnit", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemDepartment", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.UnitOfMeasure", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Erp.Core.Domain.Navigation.ErpFeature", b =>

@@ -17,6 +17,9 @@ public sealed class ItemManagementMenu : IErpMenuProvider
     public const string ItemMinorCategory = "system-setup.item-minor-category";
     public const string Uom = "system-setup.uom";
 
+    public static readonly string[] LookupReaders =
+        [.. new[] { ItemProfile, ItemDepartment, ItemCategory, ItemSubCategory, ItemMinorCategory, Uom }.Select(f => $"{f}.{FeatureActions.View}")];
+
     public IEnumerable<MenuModule> GetModules() =>
     [
         new(Module, new("System Setup", "সিস্টেম সেটআপ"), "setting", 10,

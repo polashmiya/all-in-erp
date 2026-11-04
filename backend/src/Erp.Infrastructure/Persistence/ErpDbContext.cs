@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Erp.Core.Domain;
 using Erp.Core.Domain.Identity;
+using Erp.Core.Domain.Inventory;
 using Erp.Core.Domain.Navigation;
 using Erp.Core.Domain.Tenancy;
 using Erp.Core.Tenancy;
@@ -59,6 +60,16 @@ public class ErpDbContext : DbContext
     public DbSet<ErpFeature> ErpFeatures => Set<ErpFeature>();
 
     public DbSet<AccountFeature> AccountFeatures => Set<AccountFeature>();
+
+    public DbSet<ItemDepartment> ItemDepartments => Set<ItemDepartment>();
+
+    public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
+
+    public DbSet<ItemSubCategory> ItemSubCategories => Set<ItemSubCategory>();
+
+    public DbSet<ItemMinorCategory> ItemMinorCategories => Set<ItemMinorCategory>();
+
+    public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
 
     /// <summary>Codes of the active features an account has been given (e.g. "system-setup.item-profile").</summary>
     public async Task<HashSet<string>> AccountFeatureCodesAsync(Guid accountId, CancellationToken cancellationToken = default)

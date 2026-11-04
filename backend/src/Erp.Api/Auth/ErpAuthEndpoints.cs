@@ -4,6 +4,7 @@ using Erp.Core.Authorization;
 using Erp.Core.Domain.Identity;
 using Erp.Core.Security;
 using Erp.Core.Tenancy;
+using Erp.Core.Validation;
 using Erp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
