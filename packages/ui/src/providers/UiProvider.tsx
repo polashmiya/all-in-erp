@@ -38,6 +38,7 @@ function cssVariables(brand: Brand): Record<string, string> {
     '--erp-text-muted': brand.textMuted,
     '--erp-track': brand.trackBg,
     '--erp-table-head': brand.tableHeaderBg,
+    '--erp-table-head-tint': brand.tableHeadTint,
     '--erp-row-hover': brand.rowHoverBg,
     '--erp-tint': brand.tintBg,
     '--erp-card-shadow': brand.cardShadow,

@@ -1,5 +1,5 @@
 import type { TableColumnsType } from 'antd';
-import type { Key, ReactNode } from 'react';
+import { useState, type Key, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { ActionItem } from '../../components/actions/types';
 import { FilterSelect, type FilterOption } from '../../components/dropdown/FilterSelect';
@@ -90,6 +90,8 @@ export function ListPageLayout<
   onRowClick,
 }: ListPageLayoutProps<T, F, V, S>) {
   const { t } = useTranslation();
+  const [toolsEl, setToolsEl] = useState<HTMLDivElement | null>(null);
+  const hasFilterBar = !!search || filters.length > 0 || !!views;
   const filteredEmpty: DataTableEmpty = {
     title: t('common.noMatchTitle'),
     description: t('common.noMatchText'),
@@ -99,8 +101,9 @@ export function ListPageLayout<
   return (
     <PageContainer fill title={title} subTitle={subtitle} actions={actions}>
       {summary}
-      {(search || filters.length > 0 || views) && (
+      {hasFilterBar && (
         <FilterBar
+          toolsRef={setToolsEl}
           extra={
             views &&
             state.view !== undefined && (
@@ -139,6 +142,7 @@ export function ListPageLayout<
       )}
       <DataTable<T>
         fill
+        toolsContainer={hasFilterBar ? toolsEl : undefined}
         rowKey={rowKey}
         columns={columns}
         dataSource={rows}

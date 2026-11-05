@@ -1331,6 +1331,25 @@
   min-width: 0;
 }
 
+.erp-filterbar__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-inline-start: auto;
+}
+
+.erp-filterbar__tools:empty {
+  display: none;
+}
+
+.erp-filterbar__tools .erp-table__hint {
+  margin-inline-end: var(--erp-space-sm);
+}
+
+.erp-filterbar__tools .erp-table__hint:empty {
+  display: none;
+}
+
 .erp-search.ant-input-affix-wrapper {
   width: var(--erp-search-w);
   max-width: 100%;
@@ -1447,6 +1466,10 @@
   min-width: 0;
 }
 
+.erp-table__scroll:first-child {
+  border-radius: calc(var(--erp-radius-lg) - 1px) calc(var(--erp-radius-lg) - 1px) 0 0;
+}
+
 .erp-table.is-fill .erp-table__scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -1456,20 +1479,24 @@
 .erp-table .ant-table-thead > tr > th {
   font-size: var(--erp-font-sm);
   font-weight: 600;
-  height: 40px;
+  height: 36px;
   padding-block: 0 !important;
   border-bottom-color: var(--erp-header-border) !important;
   white-space: nowrap;
 }
 
 .erp-table .ant-table-tbody > tr > td {
-  height: 52px;
-  padding-block: 6px !important;
+  height: 40px;
+  padding-block: 4px !important;
+}
+
+.erp-table .ant-table-small .ant-table-thead > tr > th {
+  height: 32px;
 }
 
 .erp-table .ant-table-small .ant-table-tbody > tr > td {
-  height: 40px;
-  padding-block: var(--erp-space-xs) !important;
+  height: 32px;
+  padding-block: 2px !important;
 }
 
 .erp-table .ant-table-cell-fix-right {
@@ -1538,8 +1565,8 @@
 }
 
 .erp-subtable th {
-  padding: 10px var(--erp-space-md);
-  background: var(--erp-table-head);
+  padding: 8px var(--erp-space-md);
+  background: var(--erp-table-head-tint);
   color: var(--erp-text-2);
   font-size: var(--erp-font-sm);
   font-weight: 600;

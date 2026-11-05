@@ -52,6 +52,8 @@ export interface Brand {
   borderSecondary: string;
   divider: string;
   tableHeaderBg: string;
+  tableHeadTint: string;
+  tableHeadTintStrong: string;
   rowHoverBg: string;
   tintBg: string;
   textStrong: string;
@@ -186,6 +188,8 @@ export function buildBrand(preset: ThemePreset, mode: ThemeMode, siderStyle: Sid
     borderSecondary: tone.borderSecondary!,
     divider: tone.divider!,
     tableHeaderBg: tone.tableHead!,
+    tableHeadTint: light ? mix(primary, WHITE, 0.08) : mix(primary, containerBg, 0.16),
+    tableHeadTintStrong: light ? mix(primary, WHITE, 0.14) : mix(primary, containerBg, 0.24),
     rowHoverBg: tone.rowHover!,
     tintBg: light ? mix(primary, WHITE, 0.12) : mix(primary, containerBg, 0.24),
     textStrong: tone.textStrong!,

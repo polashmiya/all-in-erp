@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useMemo, useRef, useState, type Key, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { ListSort } from '../../hooks/useListState';
 import { formatNumber, pageRange } from '../../utils/format';
@@ -48,6 +49,7 @@ export interface DataTableProps<T> extends Omit<
   onRefresh?: () => void;
   empty?: DataTableEmpty;
   fill?: boolean;
+  toolsContainer?: HTMLElement | null;
 }
 
 type Density = 'middle' | 'small';
@@ -65,6 +67,7 @@ export function DataTable<T extends object>({
   onRefresh,
   empty,
   fill = false,
+  toolsContainer,
   columns = [],
   locale,
   ...tableProps
@@ -117,76 +120,97 @@ export function DataTable<T extends object>({
     ? pageRange(pagination.page, pagination.pageSize, pagination.total)
     : null;
 
-  return (
-    <section className={`erp-card erp-table${fill ? ' is-fill' : ''}`}>
-      <div className={`erp-table__bar${selected.length ? ' has-selection' : ''}`}>
-        {selected.length > 0 ? (
-          <>
-            <span className="erp-table__selcount">
-              {t('table.selected', { count: selected.length })}
-            </span>
-            <span className="erp-table__sep" />
-            {bulkActions && <ActionGroup actions={bulkActions(selected)} size="small" />}
-            <button
-              type="button"
-              className="erp-linkbtn is-muted"
-              onClick={() => selection?.onChange([])}
-            >
-              {t('table.clearSelection')}
-            </button>
-          </>
-        ) : (
-          <span className="erp-table__hint">{toolbar}</span>
-        )}
-        <span className="erp-spacer" />
-        <Tooltip title={t('table.density')}>
-          <Button
-            type="text"
-            size="small"
-            icon={<ColumnHeightOutlined />}
-            aria-label={t('table.density')}
-            aria-pressed={density === 'small'}
-            onClick={() => setDensity((d) => (d === 'middle' ? 'small' : 'middle'))}
-          />
-        </Tooltip>
-        {hideable.length > 0 && (
-          <Popover
-            trigger="click"
-            placement="bottomRight"
-            title={t('table.columns')}
-            content={
-              <Checkbox.Group
-                className="erp-stack"
-                value={hideable.map((c) => c.key).filter((k) => !hidden.includes(k))}
-                onChange={(keys) =>
-                  setHidden(hideable.map((c) => c.key).filter((k) => !keys.includes(k)))
-                }
-                options={hideable.map((c) => ({ value: c.key, label: c.title as string }))}
-              />
-            }
-          >
-            <Tooltip title={t('table.columns')}>
-              <Button
-                type="text"
-                size="small"
-                icon={<SettingOutlined />}
-                aria-label={t('table.columns')}
-              />
-            </Tooltip>
-          </Popover>
-        )}
-        {onRefresh && (
-          <Tooltip title={t('table.refresh')}>
+  const external = toolsContainer !== undefined;
+
+  const tools = (
+    <>
+      <Tooltip title={t('table.density')}>
+        <Button
+          type="text"
+          size="small"
+          icon={<ColumnHeightOutlined />}
+          aria-label={t('table.density')}
+          aria-pressed={density === 'small'}
+          onClick={() => setDensity((d) => (d === 'middle' ? 'small' : 'middle'))}
+        />
+      </Tooltip>
+      {hideable.length > 0 && (
+        <Popover
+          trigger="click"
+          placement="bottomRight"
+          title={t('table.columns')}
+          content={
+            <Checkbox.Group
+              className="erp-stack"
+              value={hideable.map((c) => c.key).filter((k) => !hidden.includes(k))}
+              onChange={(keys) =>
+                setHidden(hideable.map((c) => c.key).filter((k) => !keys.includes(k)))
+              }
+              options={hideable.map((c) => ({ value: c.key, label: c.title as string }))}
+            />
+          }
+        >
+          <Tooltip title={t('table.columns')}>
             <Button
               type="text"
               size="small"
-              icon={<ReloadOutlined />}
-              aria-label={t('table.refresh')}
-              onClick={onRefresh}
+              icon={<SettingOutlined />}
+              aria-label={t('table.columns')}
             />
           </Tooltip>
+        </Popover>
+      )}
+      {onRefresh && (
+        <Tooltip title={t('table.refresh')}>
+          <Button
+            type="text"
+            size="small"
+            icon={<ReloadOutlined />}
+            aria-label={t('table.refresh')}
+            onClick={onRefresh}
+          />
+        </Tooltip>
+      )}
+    </>
+  );
+
+  const showBar = !external || selected.length > 0;
+
+  return (
+    <section className={`erp-card erp-table${fill ? ' is-fill' : ''}`}>
+      {external &&
+        toolsContainer &&
+        createPortal(
+          <>
+            <span className="erp-table__hint">{toolbar}</span>
+            {tools}
+          </>,
+          toolsContainer,
         )}
-      </div>
+      {showBar && (
+        <div className={`erp-table__bar${selected.length ? ' has-selection' : ''}`}>
+          {selected.length > 0 ? (
+            <>
+              <span className="erp-table__selcount">
+                {t('table.selected', { count: selected.length })}
+              </span>
+              <span className="erp-table__sep" />
+              {bulkActions && <ActionGroup actions={bulkActions(selected)} size="small" />}
+              <button
+                type="button"
+                className="erp-linkbtn is-muted"
+                onClick={() => selection?.onChange([])}
+              >
+                {t('table.clearSelection')}
+              </button>
+            </>
+          ) : (
+            <span className="erp-table__hint">{toolbar}</span>
+          )}
+          <span className="erp-spacer" />
+          {!external && tools}
+        </div>
+      )}
 
       <div ref={scrollRef} className="erp-table__scroll erp-scroll">
         <Table<T>

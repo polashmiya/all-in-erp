@@ -1,13 +1,22 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { Input, Segmented } from 'antd';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { formatNumber } from '../../utils/format';
 
-export function FilterBar({ children, extra }: { children: ReactNode; extra?: ReactNode }) {
+export function FilterBar({
+  children,
+  extra,
+  toolsRef,
+}: {
+  children: ReactNode;
+  extra?: ReactNode;
+  toolsRef?: Ref<HTMLDivElement>;
+}) {
   return (
     <div className="erp-filterbar">
       <div className="erp-filterbar__main">{children}</div>
       {extra && <div className="erp-filterbar__extra">{extra}</div>}
+      {toolsRef && <div ref={toolsRef} className="erp-filterbar__tools" />}
     </div>
   );
 }
