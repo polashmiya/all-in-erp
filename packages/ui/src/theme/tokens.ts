@@ -1,14 +1,13 @@
 import { theme, type ThemeConfig } from 'antd';
-import type { Brand, ThemeMode } from './brand';
 import {
-  controlHeight,
-  fontFamily,
-  fontSize,
-  radius,
-  shadows,
-  surfaces,
-  tones,
-} from './design-tokens';
+  defaultUiPrefs,
+  fontStacks,
+  scaledFontSizes,
+  scaledRadii,
+  type UiPrefs,
+} from './appearance';
+import { tableHeadColors, type Brand, type ThemeMode } from './brand';
+import { controlHeight, fontFamily, shadows, surfaces, tones } from './design-tokens';
 
 export type { ThemeMode } from './brand';
 
@@ -16,11 +15,16 @@ export interface ThemeOptions {
   mode: ThemeMode;
   compact: boolean;
   brand: Brand;
+  prefs?: Partial<UiPrefs>;
 }
 
 export { fontFamily };
 
-export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig {
+export function buildTheme({ mode, compact, brand, prefs }: ThemeOptions): ThemeConfig {
+  const ui = { ...defaultUiPrefs, ...prefs };
+  const fontSize = scaledFontSizes(ui.fontScale);
+  const radius = scaledRadii(ui.radius);
+  const head = tableHeadColors(brand, ui.tableHeader);
   const light = mode === 'light';
   const algorithm = [light ? theme.defaultAlgorithm : theme.darkAlgorithm];
   if (compact) algorithm.push(theme.compactAlgorithm);
@@ -55,8 +59,9 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
       controlHeight: controlHeight.input,
       controlHeightSM: controlHeight.sm,
       controlHeightLG: controlHeight.lg,
-      fontFamily,
+      fontFamily: fontStacks[ui.font],
       fontSize: fontSize.base,
+      motion: ui.motion,
       boxShadowSecondary: `${shadows[mode].popover}, 0 0 0 1px ${brand.borderSecondary}`,
       wireframe: false,
     },
@@ -81,11 +86,11 @@ export function buildTheme({ mode, compact, brand }: ThemeOptions): ThemeConfig 
       },
       Dropdown: { paddingBlock: 8 },
       Table: {
-        headerBg: brand.tableHeadTint,
-        headerSortActiveBg: brand.tableHeadTintStrong,
-        headerSortHoverBg: brand.tableHeadTintStrong,
-        fixedHeaderSortActiveBg: brand.tableHeadTintStrong,
-        headerColor: brand.textSecondary,
+        headerBg: head.bg,
+        headerSortActiveBg: head.sortBg,
+        headerSortHoverBg: head.sortBg,
+        fixedHeaderSortActiveBg: head.sortBg,
+        headerColor: head.fg,
         headerSplitColor: 'transparent',
         headerBorderRadius: 0,
         borderColor: brand.divider,

@@ -8,20 +8,43 @@ import { useShallow } from 'zustand/react/shallow';
 import { requiredMark } from '../components/fields/required-mark';
 import { useLanguageStore } from '../i18n/i18n';
 import { HomePathContext } from '../layout/app-shell/ShellContext';
-import { buildBrand, type Brand } from '../theme/brand';
+import {
+  fontStacks,
+  scaledFontSizes,
+  scaledRadii,
+  tableMetrics,
+  type UiPrefs,
+} from '../theme/appearance';
+import { buildBrand, tableHeadColors, type Brand } from '../theme/brand';
 import { BrandContext } from '../theme/brand-context';
 import { tokenVariables } from '../theme/design-tokens';
 import { resolvePreset } from '../theme/presets';
 import { buildTheme } from '../theme/tokens';
-import { useResolvedMode, useThemeStore } from '../theme/theme-store';
+import { useResolvedMode, useThemeStore, useUiPrefs } from '../theme/theme-store';
 import { proIntl } from './pro-intl';
 
 const antdLocales = { en: enUS, bn: bnBD } as const;
 
-function cssVariables(brand: Brand): Record<string, string> {
+const px = (values: Record<string, number>, prefix: string) =>
+  Object.fromEntries(Object.entries(values).map(([k, v]) => [`--erp-${prefix}-${k}`, `${v}px`]));
+
+function cssVariables(brand: Brand, prefs: UiPrefs): Record<string, string> {
   const { sider } = brand;
+  const head = tableHeadColors(brand, prefs.tableHeader);
+  const table = tableMetrics[prefs.tableSize];
   return {
     ...tokenVariables(brand.mode),
+    ...px(scaledFontSizes(prefs.fontScale), 'font'),
+    ...px(scaledRadii(prefs.radius), 'radius'),
+    '--erp-font-family': fontStacks[prefs.font],
+    '--erp-table-head-bg': head.bg,
+    '--erp-table-head-fg': head.fg,
+    '--erp-table-head-line': head.line,
+    '--erp-table-stripe': brand.stripeBg,
+    '--erp-row-h': `${table.row}px`,
+    '--erp-row-h-sm': `${table.rowSm}px`,
+    '--erp-head-h': `${table.head}px`,
+    '--erp-head-h-sm': `${table.headSm}px`,
     '--erp-primary': brand.primary,
     '--erp-primary-hover': brand.primaryHover,
     '--erp-primary-soft': brand.primarySoft,
@@ -38,7 +61,6 @@ function cssVariables(brand: Brand): Record<string, string> {
     '--erp-text-muted': brand.textMuted,
     '--erp-track': brand.trackBg,
     '--erp-table-head': brand.tableHeaderBg,
-    '--erp-table-head-tint': brand.tableHeadTint,
     '--erp-row-hover': brand.rowHoverBg,
     '--erp-tint': brand.tintBg,
     '--erp-card-shadow': brand.cardShadow,
@@ -70,17 +92,23 @@ function cssVariables(brand: Brand): Record<string, string> {
   };
 }
 
-function DocumentThemeSync({ brand }: { brand: Brand }) {
+function DocumentThemeSync({ brand, prefs }: { brand: Brand; prefs: UiPrefs }) {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = brand.mode;
+    root.dataset.font = prefs.font;
+    root.dataset.tableHeader = prefs.tableHeader;
+    root.dataset.tableBorder = prefs.tableBorder;
+    root.dataset.tableStripe = String(prefs.tableStripe);
+    root.dataset.contentWidth = prefs.contentWidth;
+    root.dataset.motion = String(prefs.motion);
     root.style.colorScheme = brand.mode;
-    for (const [name, value] of Object.entries(cssVariables(brand)))
+    for (const [name, value] of Object.entries(cssVariables(brand, prefs)))
       root.style.setProperty(name, value);
     document.body.style.background = brand.frameBg;
     document.body.style.color = brand.text;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', brand.primary);
-  }, [brand]);
+  }, [brand, prefs]);
 
   return null;
 }
@@ -101,13 +129,17 @@ export function UiProvider({
     })),
   );
   const mode = useResolvedMode();
+  const prefs = useUiPrefs();
   const language = useLanguageStore((s) => s.language);
 
   const brand = useMemo(
     () => buildBrand(resolvePreset(preset, customPrimary), mode, sider),
     [preset, customPrimary, mode, sider],
   );
-  const themeConfig = useMemo(() => buildTheme({ mode, compact, brand }), [mode, compact, brand]);
+  const themeConfig = useMemo(
+    () => buildTheme({ mode, compact, brand, prefs }),
+    [mode, compact, brand, prefs],
+  );
 
   useEffect(() => {
     dayjs.locale(language);
@@ -118,7 +150,7 @@ export function UiProvider({
       <ProConfigProvider dark={mode === 'dark'} intl={proIntl[language]} hashed={false}>
         <AntApp>
           <BrandContext.Provider value={brand}>
-            <DocumentThemeSync brand={brand} />
+            <DocumentThemeSync brand={brand} prefs={prefs} />
             <HomePathContext.Provider value={homePath}>{children}</HomePathContext.Provider>
           </BrandContext.Provider>
         </AntApp>

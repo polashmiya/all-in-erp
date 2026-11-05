@@ -35,7 +35,8 @@ export {
   themePresets,
 } from './theme/presets';
 export type { ThemePreset, ThemePresetKey } from './theme/presets';
-export { defaultAppearance, useResolvedMode, useThemeStore } from './theme/theme-store';
+export { defaultAppearance, useResolvedMode, useThemeStore, useUiPrefs } from './theme/theme-store';
+export { defaultUiPrefs, type UiPrefs } from './theme/appearance';
 export type { ModePreference } from './theme/theme-store';
 export { buildTheme } from './theme/tokens';
 export {

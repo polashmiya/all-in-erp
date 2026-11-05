@@ -1,4 +1,5 @@
 import { generate } from '@ant-design/colors';
+import type { TableHeaderStyle } from './appearance';
 import { alpha, mix } from './color';
 import { shadows, sidebarPalettes, surfaces, tones } from './design-tokens';
 import type { ThemePreset } from './presets';
@@ -54,6 +55,7 @@ export interface Brand {
   tableHeaderBg: string;
   tableHeadTint: string;
   tableHeadTintStrong: string;
+  stripeBg: string;
   rowHoverBg: string;
   tintBg: string;
   textStrong: string;
@@ -158,6 +160,26 @@ function siderColors(
   };
 }
 
+export function tableHeadColors(brand: Brand, style: TableHeaderStyle) {
+  if (style === 'solid') {
+    const bg = brand.mode === 'light' ? brand.primary : shade(brand.primary, 0.2);
+    return { bg, fg: WHITE, sortBg: shade(bg, 0.14), line: alpha(WHITE, 0.18) };
+  }
+  if (style === 'neutral')
+    return {
+      bg: brand.tableHeaderBg,
+      fg: brand.textSecondary,
+      sortBg: brand.trackBg,
+      line: brand.divider,
+    };
+  return {
+    bg: brand.tableHeadTint,
+    fg: brand.textSecondary,
+    sortBg: brand.tableHeadTintStrong,
+    line: brand.divider,
+  };
+}
+
 export function buildBrand(preset: ThemePreset, mode: ThemeMode, siderStyle: SiderStyle): Brand {
   const { primary, accent } = preset;
   const palette = generate(primary);
@@ -190,6 +212,7 @@ export function buildBrand(preset: ThemePreset, mode: ThemeMode, siderStyle: Sid
     tableHeaderBg: tone.tableHead!,
     tableHeadTint: light ? mix(primary, WHITE, 0.08) : mix(primary, containerBg, 0.16),
     tableHeadTintStrong: light ? mix(primary, WHITE, 0.14) : mix(primary, containerBg, 0.24),
+    stripeBg: light ? mix(primary, WHITE, 0.03) : mix(primary, containerBg, 0.06),
     rowHoverBg: tone.rowHover!,
     tintBg: light ? mix(primary, WHITE, 0.12) : mix(primary, containerBg, 0.24),
     textStrong: tone.textStrong!,

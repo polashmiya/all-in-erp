@@ -1,4 +1,12 @@
 import { theme } from 'antd';
+import {
+  defaultUiPrefs,
+  fontKeys,
+  fontStacks,
+  sanitizeUiPrefs,
+  scaledFontSizes,
+  scaledRadii,
+} from './appearance';
 import { buildBrand, shade, siderStyles, type ThemeMode } from './brand';
 import { contrast, luminance, mix } from './color';
 import { CUSTOM_PRESET, DEFAULT_PRESET, findPreset, resolvePreset, themePresets } from './presets';
@@ -111,5 +119,45 @@ describe('buildTheme', () => {
 
   it('keeps a Bangla-capable font in the stack', () => {
     expect(fontFamily).toContain('Hind Siliguri');
+    for (const key of fontKeys) expect(fontStacks[key]).toContain('Hind Siliguri');
+  });
+
+  it('applies font, size, radius, motion and header prefs', () => {
+    const config = buildTheme({
+      mode: 'light',
+      compact: false,
+      brand,
+      prefs: {
+        font: 'roboto',
+        fontScale: 'lg',
+        radius: 'round',
+        motion: false,
+        tableHeader: 'solid',
+      },
+    });
+
+    expect(config.token?.fontFamily).toBe(fontStacks.roboto);
+    expect(config.token?.fontSize).toBe(15);
+    expect(config.token?.borderRadius).toBe(12);
+    expect(config.token?.motion).toBe(false);
+    expect(config.components?.Table?.headerBg).toBe(brand.primary);
+    expect(config.components?.Table?.headerColor).toBe('#FFFFFF');
+  });
+});
+
+describe('appearance prefs', () => {
+  it('falls back to defaults for unknown or missing values', () => {
+    expect(sanitizeUiPrefs({})).toEqual(defaultUiPrefs);
+    expect(sanitizeUiPrefs({ font: 'comic', tableStripe: 'yes', tableSize: 'compact' })).toEqual({
+      ...defaultUiPrefs,
+      tableSize: 'compact',
+    });
+  });
+
+  it('scales font sizes and radii', () => {
+    expect(scaledFontSizes('md').base).toBe(14);
+    expect(scaledFontSizes('xl').base).toBe(16);
+    expect(scaledRadii('sharp').md).toBe(2);
+    expect(scaledRadii('round').pill).toBe(999);
   });
 });

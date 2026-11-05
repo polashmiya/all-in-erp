@@ -72,6 +72,12 @@
   min-width: 0;
 }
 
+html[data-content-width='boxed'] .erp-page {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
 .erp-page.is-fill {
   flex: 1 1 auto;
   min-height: 0;
@@ -1479,24 +1485,75 @@
 .erp-table .ant-table-thead > tr > th {
   font-size: var(--erp-font-sm);
   font-weight: 600;
-  height: 36px;
+  height: var(--erp-head-h, 36px);
   padding-block: 0 !important;
   border-bottom-color: var(--erp-header-border) !important;
   white-space: nowrap;
 }
 
 .erp-table .ant-table-tbody > tr > td {
-  height: 40px;
+  height: var(--erp-row-h, 40px);
   padding-block: 4px !important;
 }
 
 .erp-table .ant-table-small .ant-table-thead > tr > th {
-  height: 32px;
+  height: var(--erp-head-h-sm, 32px);
 }
 
 .erp-table .ant-table-small .ant-table-tbody > tr > td {
-  height: 32px;
+  height: var(--erp-row-h-sm, 32px);
   padding-block: 2px !important;
+}
+
+.erp-table .ant-table-thead > tr > th {
+  border-inline-end: 1px solid var(--erp-table-head-line, var(--erp-divider));
+}
+
+.erp-table .ant-table-tbody > tr > td {
+  border-inline-end: 1px solid var(--erp-divider);
+}
+
+.erp-table .ant-table-thead > tr > th:last-child,
+.erp-table .ant-table-tbody > tr > td:last-child,
+.erp-table .ant-table-thead > tr > th:has(+ .ant-table-cell-fix-right-first),
+.erp-table .ant-table-tbody > tr > td:has(+ .ant-table-cell-fix-right-first),
+html:not([data-table-border='grid']) .erp-table .ant-table-thead > tr > th,
+html:not([data-table-border='grid']) .erp-table .ant-table-tbody > tr > td {
+  border-inline-end: 0;
+}
+
+html[data-table-border='none'] .erp-table .ant-table-tbody > tr > td {
+  border-bottom-color: transparent;
+}
+
+html[data-table-stripe='true']
+  .erp-table
+  .ant-table-tbody
+  > tr.ant-table-row:nth-child(even of .ant-table-row):not(:hover):not(.ant-table-row-selected)
+  > td {
+  background: var(--erp-table-stripe);
+}
+
+html[data-table-header='solid'] .erp-table .ant-table-thead > tr > th {
+  border-bottom-color: transparent !important;
+}
+
+html[data-table-header='solid'] .erp-table .ant-table-thead .ant-table-column-sorter,
+html[data-table-header='solid'] .erp-table .ant-table-thead .ant-table-filter-trigger {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+html[data-table-header='solid'] .erp-table .ant-table-thead .ant-table-column-sorter .active,
+html[data-table-header='solid']
+  .erp-table
+  .ant-table-thead
+  .ant-table-column-sorters:hover
+  .ant-table-column-sorter {
+  color: #ffffff;
+}
+
+html[data-table-header='solid'] .erp-table .ant-table-thead .ant-checkbox-inner {
+  border-color: rgba(255, 255, 255, 0.75);
 }
 
 .erp-table .ant-table-cell-fix-right {
@@ -1566,11 +1623,20 @@
 
 .erp-subtable th {
   padding: 8px var(--erp-space-md);
-  background: var(--erp-table-head-tint);
-  color: var(--erp-text-2);
+  background: var(--erp-table-head-bg);
+  color: var(--erp-table-head-fg);
   font-size: var(--erp-font-sm);
   font-weight: 600;
   text-align: start;
+}
+
+html[data-table-border='grid'] .erp-subtable th:not(:last-child),
+html[data-table-border='grid'] .erp-subtable td:not(:last-child) {
+  border-inline-end: 1px solid var(--erp-divider);
+}
+
+html[data-table-border='grid'] .erp-subtable th:not(:last-child) {
+  border-inline-end-color: var(--erp-table-head-line);
 }
 
 .erp-subtable td {
