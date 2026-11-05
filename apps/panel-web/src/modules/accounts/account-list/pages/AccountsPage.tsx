@@ -204,7 +204,7 @@ export function AccountsPage() {
         rows={result?.items}
         rowKey="id"
         total={result?.total}
-        loading={query.isFetching && !result}
+        loading={query.isFetching}
         onRefresh={() => void query.refetch()}
         onRowClick={(account) => setSelectedId(account.id)}
         empty={{

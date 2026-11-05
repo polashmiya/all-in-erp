@@ -15,7 +15,7 @@ import { keepPreviousData } from '@tanstack/react-query';
 import type { TableColumnsType } from 'antd';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import { appConfig } from '@/common/config/app.config';
 import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
@@ -39,7 +39,6 @@ type Filters = { departmentId: string | null; categoryId: string | null };
 
 export function ItemSubCategoryPage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const unit = useAuthStore(selectCurrentUnit);
   const access = useFeatureAccess(itemManagementFeatures.subCategory);
   const canOpenMinor = useFeatureAccess(itemManagementFeatures.minorCategory).view;
@@ -47,8 +46,8 @@ export function ItemSubCategoryPage() {
   const refresh = useRefreshItemManagement();
   const list = useListState<Filters, StatusView>({
     filters: {
-      departmentId: searchParams.get('departmentId'),
-      categoryId: searchParams.get('categoryId'),
+      departmentId: null,
+      categoryId: null,
     },
     view: 'all',
     pageSize: appConfig.defaultPageSize,
@@ -154,7 +153,7 @@ export function ItemSubCategoryPage() {
         },
       ]}
       data={query.data}
-      loading={query.isFetching && !query.data}
+      loading={query.isFetching}
       onRefresh={() => void query.refetch()}
       columns={columns}
       csvColumns={csvColumns}

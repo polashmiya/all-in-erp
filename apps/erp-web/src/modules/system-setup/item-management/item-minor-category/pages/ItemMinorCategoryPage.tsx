@@ -17,7 +17,6 @@ import { keepPreviousData } from '@tanstack/react-query';
 import type { TableColumnsType } from 'antd';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router';
 import { appConfig } from '@/common/config/app.config';
 import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
@@ -44,16 +43,15 @@ type Filters = {
 
 export function ItemMinorCategoryPage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const unit = useAuthStore(selectCurrentUnit);
   const access = useFeatureAccess(itemManagementFeatures.minorCategory);
   const modal = useDisclosure<ItemMinorCategoryRow>();
   const refresh = useRefreshItemManagement();
   const list = useListState<Filters, StatusView>({
     filters: {
-      departmentId: searchParams.get('departmentId'),
-      categoryId: searchParams.get('categoryId'),
-      subCategoryId: searchParams.get('subCategoryId'),
+      departmentId: null,
+      categoryId: null,
+      subCategoryId: null,
     },
     view: 'all',
     pageSize: appConfig.defaultPageSize,
@@ -174,7 +172,7 @@ export function ItemMinorCategoryPage() {
         },
       ]}
       data={query.data}
-      loading={query.isFetching && !query.data}
+      loading={query.isFetching}
       onRefresh={() => void query.refetch()}
       columns={columns}
       csvColumns={csvColumns}

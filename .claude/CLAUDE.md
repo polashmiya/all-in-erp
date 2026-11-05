@@ -1,5 +1,11 @@
 # Project rules
 
+## Simplicity
+
+- Keep code simple, small and readable. Prefer the plainest solution that works.
+- No over-engineering: no extra abstractions, layers, options or generic helpers until a real second use exists.
+- Reuse what the project already has before adding new code or dependencies.
+
 ## Comments
 
 - Do not add comments to code.

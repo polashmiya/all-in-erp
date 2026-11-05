@@ -6,12 +6,13 @@ import {
   Pagination,
   Popover,
   Select,
+  Skeleton,
   Table,
   Tooltip,
   type TableProps,
 } from 'antd';
 import type { ColumnType } from 'antd/es/table';
-import { useMemo, useRef, useState, type Key, type ReactNode } from 'react';
+import { useMemo, useRef, type Key, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import type { ListSort } from '../../hooks/useListState';
@@ -19,8 +20,8 @@ import { formatNumber, pageRange } from '../../utils/format';
 import { ActionGroup } from '../actions/ActionGroup';
 import type { ActionItem } from '../actions/types';
 import { EmptyState } from '../feedback/EmptyState';
-
 import { PAGE_SIZE_OPTIONS } from './constants';
+import { useTableSettings } from './table-settings';
 
 export interface DataTablePagination {
   page: number;
@@ -38,9 +39,10 @@ export interface DataTableEmpty {
 
 export interface DataTableProps<T> extends Omit<
   TableProps<T>,
-  'pagination' | 'title' | 'footer' | 'rowSelection' | 'size'
+  'pagination' | 'title' | 'footer' | 'rowSelection' | 'size' | 'loading'
 > {
   toolbar?: ReactNode;
+  loading?: boolean;
   selection?: { selectedKeys: Key[]; onChange: (keys: Key[]) => void };
   bulkActions?: (selectedKeys: Key[]) => ActionItem[];
   sort?: ListSort;
@@ -50,9 +52,8 @@ export interface DataTableProps<T> extends Omit<
   empty?: DataTableEmpty;
   fill?: boolean;
   toolsContainer?: HTMLElement | null;
+  settingsKey?: string;
 }
-
-type Density = 'middle' | 'small';
 
 const columnKey = <T,>(column: ColumnType<T>, index: number) =>
   String(column.key ?? column.dataIndex ?? index);
@@ -68,6 +69,8 @@ export function DataTable<T extends object>({
   empty,
   fill = false,
   toolsContainer,
+  loading = false,
+  settingsKey = '',
   columns = [],
   locale,
   ...tableProps
@@ -75,8 +78,7 @@ export function DataTable<T extends object>({
   const { t } = useTranslation();
   const screens = Grid.useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [density, setDensity] = useState<Density>('middle');
-  const [hidden, setHidden] = useState<string[]>([]);
+  const [{ density, hidden }, updateSettings] = useTableSettings(settingsKey);
   const selected = selection?.selectedKeys ?? [];
 
   const hideable = (columns as ColumnType<T>[])
@@ -131,7 +133,7 @@ export function DataTable<T extends object>({
           icon={<ColumnHeightOutlined />}
           aria-label={t('table.density')}
           aria-pressed={density === 'small'}
-          onClick={() => setDensity((d) => (d === 'middle' ? 'small' : 'middle'))}
+          onClick={() => updateSettings({ density: density === 'middle' ? 'small' : 'middle' })}
         />
       </Tooltip>
       {hideable.length > 0 && (
@@ -144,7 +146,9 @@ export function DataTable<T extends object>({
               className="erp-stack"
               value={hideable.map((c) => c.key).filter((k) => !hidden.includes(k))}
               onChange={(keys) =>
-                setHidden(hideable.map((c) => c.key).filter((k) => !keys.includes(k)))
+                updateSettings({
+                  hidden: hideable.map((c) => c.key).filter((k) => !keys.includes(k)),
+                })
               }
               options={hideable.map((c) => ({ value: c.key, label: c.title as string }))}
             />
@@ -175,9 +179,15 @@ export function DataTable<T extends object>({
   );
 
   const showBar = !external || selected.length > 0;
+  const firstLoad = loading && !tableProps.dataSource?.length;
+  const refreshing = loading && !firstLoad;
 
   return (
-    <section className={`erp-card erp-table${fill ? ' is-fill' : ''}`}>
+    <section
+      className={`erp-card erp-table${fill ? ' is-fill' : ''}${refreshing ? ' is-refreshing' : ''}`}
+      aria-busy={loading}
+    >
+      {refreshing && <div className="erp-progress" />}
       {external &&
         toolsContainer &&
         createPortal(
@@ -231,7 +241,14 @@ export function DataTable<T extends object>({
           }
           locale={{
             ...locale,
-            emptyText: empty ? (
+            emptyText: firstLoad ? (
+              <Skeleton
+                active
+                title={false}
+                paragraph={{ rows: 6 }}
+                className="erp-table__skeleton"
+              />
+            ) : empty ? (
               <EmptyState
                 title={empty.title}
                 description={empty.description}

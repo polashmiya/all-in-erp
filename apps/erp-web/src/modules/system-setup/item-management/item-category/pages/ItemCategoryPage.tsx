@@ -12,7 +12,7 @@ import { formatNumber, SoftTag, useDisclosure, useListState, type CsvColumn } fr
 import { keepPreviousData } from '@tanstack/react-query';
 import type { TableColumnsType } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import { appConfig } from '@/common/config/app.config';
 import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
@@ -35,14 +35,13 @@ type Filters = { departmentId: string | null };
 
 export function ItemCategoryPage() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const unit = useAuthStore(selectCurrentUnit);
   const access = useFeatureAccess(itemManagementFeatures.category);
   const canOpenSubCategories = useFeatureAccess(itemManagementFeatures.subCategory).view;
   const modal = useDisclosure<ItemCategoryRow>();
   const refresh = useRefreshItemManagement();
   const list = useListState<Filters, StatusView>({
-    filters: { departmentId: searchParams.get('departmentId') },
+    filters: { departmentId: null },
     view: 'all',
     pageSize: appConfig.defaultPageSize,
   });
@@ -129,7 +128,7 @@ export function ItemCategoryPage() {
         },
       ]}
       data={query.data}
-      loading={query.isFetching && !query.data}
+      loading={query.isFetching}
       onRefresh={() => void query.refetch()}
       columns={columns}
       csvColumns={csvColumns}

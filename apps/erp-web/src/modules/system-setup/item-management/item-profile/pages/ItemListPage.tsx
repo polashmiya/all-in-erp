@@ -21,6 +21,7 @@ import {
   TitleCell,
   useDisclosure,
   useListState,
+  useUndoMessage,
   type ActionItem,
   type CsvColumn,
 } from '@erp/ui';
@@ -37,6 +38,7 @@ import {
   listItems,
   useDeleteItems,
   useItemList,
+  usePrefetchItem,
   useSetItemsActive,
 } from '../services/item.service';
 import { categories, labelOf, unitShort, units } from '../services/reference.mock';
@@ -50,6 +52,7 @@ const STOCK_LEVELS: StockLevel[] = ['ok', 'low', 'out'];
 export function ItemListPage() {
   const { t } = useTranslation();
   const { message } = App.useApp();
+  const showUndo = useUndoMessage();
   const unit = useAuthStore(selectCurrentUnit);
   const statusModal = useDisclosure<string[]>();
   const list = useListState<Filters, View, ItemSortField>({
@@ -63,6 +66,7 @@ export function ItemListPage() {
   const { data, isFetching, refetch } = useItemList(query);
   const remove = useDeleteItems();
   const setActive = useSetItemsActive();
+  const prefetchItem = usePrefetchItem();
 
   const removeItems = async (ids: string[]) => {
     await remove.mutateAsync(ids);
@@ -70,9 +74,13 @@ export function ItemListPage() {
     void message.success(t('item.deleted', { count: ids.length }));
   };
 
-  const changeStatus = async (ids: string[], isActive: boolean) => {
-    await setActive.mutateAsync({ ids, isActive });
-    void message.success(t('item.statusChanged', { count: ids.length }));
+  const changeStatus = async (ids: string[], isActive: boolean, undoable = true) => {
+    const changed = ids.filter((id) => data?.rows.find((r) => r.id === id)?.isActive !== isActive);
+    if (!changed.length) return;
+    await setActive.mutateAsync({ ids: changed, isActive });
+    const text = t('item.statusChanged', { count: changed.length });
+    if (undoable) showUndo(text, () => void changeStatus(changed, !isActive, false));
+    else void message.success(text);
   };
 
   const csvColumns: CsvColumn<ItemListRow>[] = [
@@ -258,8 +266,9 @@ export function ItemListPage() {
         rows={data?.rows}
         rowKey="id"
         total={data?.total}
-        loading={isFetching && !data}
+        loading={isFetching}
         onRefresh={() => void refetch()}
+        onRowHover={(row) => prefetchItem(row.id)}
         selectable
         bulkActions={(keys) => [
           {

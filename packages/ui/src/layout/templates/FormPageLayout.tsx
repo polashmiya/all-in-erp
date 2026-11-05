@@ -2,6 +2,7 @@ import { App, Form, Tabs, type FormInstance } from 'antd';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ActionItem, ActionVariant } from '../../components/actions/types';
+import { useHotkey } from '../../hooks/useHotkey';
 import { useUnsavedGuard } from '../../hooks/useUnsavedGuard';
 import { ActionBar, PageContainer, type PageStatus } from '../page/PageContainer';
 import { SplitLayout } from '../page/CardGrid';
@@ -109,6 +110,12 @@ export function FormPageLayout<T extends object>({
       dirtyRef.current = dirty;
     }
   };
+
+  const saveAction =
+    submitActions.find((a) => a.variant === 'primary' && !a.hidden) ??
+    submitActions.find((a) => !a.hidden);
+
+  useHotkey('s', () => saveAction && void submit(saveAction), { mod: true, enabled: !saving });
 
   const toAction = (action: FormSubmitAction): ActionItem => ({
     key: action.key,

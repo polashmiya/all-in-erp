@@ -117,7 +117,7 @@ export function UomPage() {
         },
       ]}
       data={query.data}
-      loading={query.isFetching && !query.data}
+      loading={query.isFetching}
       onRefresh={() => void query.refetch()}
       columns={columns}
       csvColumns={csvColumns}

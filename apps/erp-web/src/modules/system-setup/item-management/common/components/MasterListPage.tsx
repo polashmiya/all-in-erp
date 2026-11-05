@@ -15,8 +15,10 @@ import {
   StatusTag,
   type ActionItem,
   type CsvColumn,
+  type ListFilters,
   type ListFilterDef,
   type ListState,
+  useUndoMessage,
 } from '@erp/ui';
 import { App, type TableColumnsType } from 'antd';
 import { useState, type Key, type ReactNode } from 'react';
@@ -25,7 +27,9 @@ import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
 import { problemMessage } from '@/common/utils/api-errors';
 import type { MasterList, MasterRow, StatusView } from '../master-data';
 
-export interface MasterListPageProps<T extends MasterRow, F extends Record<string, unknown>> {
+type Override = { isActive: boolean } | 'deleted';
+
+export interface MasterListPageProps<T extends MasterRow, F extends ListFilters> {
   feature: string;
   title: string;
   subtitle: ReactNode;
@@ -48,7 +52,7 @@ export interface MasterListPageProps<T extends MasterRow, F extends Record<strin
   children?: ReactNode;
 }
 
-export function MasterListPage<T extends MasterRow, F extends Record<string, unknown>>({
+export function MasterListPage<T extends MasterRow, F extends ListFilters>({
   feature,
   title,
   subtitle,
@@ -73,43 +77,60 @@ export function MasterListPage<T extends MasterRow, F extends Record<string, unk
   const { t } = useTranslation();
   const { message } = App.useApp();
   const access = useFeatureAccess(feature);
-  const [working, setWorking] = useState<string | null>(null);
+  const showUndo = useUndoMessage();
+  const [overrides, setOverrides] = useState<Record<number, Override>>({});
 
   if (!access.view) return <ForbiddenResult />;
 
-  const run = async (key: string, work: () => Promise<unknown>, success: string) => {
-    setWorking(key);
-    try {
-      await work();
-      void message.success(success);
-      return true;
-    } catch (error) {
-      void message.error(problemMessage(error, t('master.failed')));
-      return false;
-    } finally {
-      setWorking(null);
-    }
-  };
+  const rows = data?.items
+    .filter((row) => overrides[row.id] !== 'deleted')
+    .map((row) => {
+      const override = overrides[row.id];
+      return override && override !== 'deleted' ? { ...row, ...override } : row;
+    });
+
+  const setOverride = (ids: number[], value?: Override) =>
+    setOverrides((current) => {
+      const next = { ...current };
+      for (const id of ids) {
+        if (value) next[id] = value;
+        else delete next[id];
+      }
+      return next;
+    });
 
   const unselect = (ids: number[]) =>
     list.setSelected(list.selected.filter((k) => !ids.includes(Number(k))));
 
-  const changeStatus = async (ids: number[], isActive: boolean) => {
-    const done = await run(
-      isActive ? 'activate' : 'deactivate',
-      () => onSetStatus(ids, isActive),
-      t(isActive ? 'master.activated' : 'master.deactivated', { count: ids.length }),
-    );
-    if (done) unselect(ids);
+  const changeStatus = async (ids: number[], isActive: boolean, undoable = true) => {
+    const changed = ids.filter((id) => rows?.find((r) => r.id === id)?.isActive !== isActive);
+    unselect(ids);
+    if (!changed.length) return;
+    setOverride(changed, { isActive });
+    try {
+      await onSetStatus(changed, isActive);
+      const count = changed.length;
+      const text = t(isActive ? 'master.activated' : 'master.deactivated', { count });
+      if (undoable) showUndo(text, () => void changeStatus(changed, !isActive, false));
+      else void message.success(text);
+    } catch (error) {
+      void message.error(problemMessage(error, t('master.failed')));
+    } finally {
+      setOverride(changed);
+    }
   };
 
   const remove = async (ids: number[]) => {
-    const done = await run(
-      'delete',
-      () => onDelete(ids),
-      t('master.deleted', { count: ids.length }),
-    );
-    if (done) unselect(ids);
+    setOverride(ids, 'deleted');
+    unselect(ids);
+    try {
+      await onDelete(ids);
+      void message.success(t('master.deleted', { count: ids.length }));
+    } catch (error) {
+      void message.error(problemMessage(error, t('master.failed')));
+    } finally {
+      setOverride(ids);
+    }
   };
 
   const exportRows = async (ids?: Key[]) => {
@@ -225,7 +246,7 @@ export function MasterListPage<T extends MasterRow, F extends Record<string, unk
           { key: 'inactive', label: t('master.viewInactive'), count: data?.counts.inactive },
         ]}
         columns={allColumns}
-        rows={data?.items}
+        rows={rows}
         rowKey={(row) => row.id}
         total={data?.total}
         loading={loading}
@@ -239,7 +260,6 @@ export function MasterListPage<T extends MasterRow, F extends Record<string, unk
               label: t('master.activate'),
               icon: <CheckCircleOutlined />,
               hidden: !access.edit,
-              loading: working === 'activate',
               onClick: () => changeStatus(ids, true),
             },
             {
@@ -247,7 +267,6 @@ export function MasterListPage<T extends MasterRow, F extends Record<string, unk
               label: t('master.deactivate'),
               icon: <StopOutlined />,
               hidden: !access.edit,
-              loading: working === 'deactivate',
               onClick: () => changeStatus(ids, false),
             },
             {
@@ -263,7 +282,6 @@ export function MasterListPage<T extends MasterRow, F extends Record<string, unk
               icon: <DeleteOutlined />,
               variant: 'danger',
               hidden: !access.delete,
-              loading: working === 'delete',
               confirm: {
                 title: t('master.deleteMany', { count: ids.length }),
                 description: t('master.deleteHint'),

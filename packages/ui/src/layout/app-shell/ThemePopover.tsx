@@ -1,6 +1,6 @@
 import { BgColorsOutlined, CheckOutlined, UndoOutlined } from '@ant-design/icons';
 import { Button, Drawer, Segmented, Switch } from 'antd';
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { useLanguageStore } from '../../i18n/i18n';
@@ -19,6 +19,7 @@ import {
 } from '../../theme/appearance';
 import { buildBrand, siderStyles, type SiderStyle } from '../../theme/brand';
 import { useBrand } from '../../theme/brand-context';
+import { loadFont } from '../../theme/fonts';
 import { CUSTOM_PRESET, themePresets } from '../../theme/presets';
 import { useThemeStore, useUiPrefs, type ModePreference } from '../../theme/theme-store';
 
@@ -116,6 +117,8 @@ function ThemePanel() {
       setPrefs: s.setPrefs,
     })),
   );
+
+  useEffect(() => fontKeys.forEach(loadFont), []);
 
   const set =
     <K extends keyof UiPrefs>(key: K) =>

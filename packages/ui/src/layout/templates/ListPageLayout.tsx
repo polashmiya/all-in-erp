@@ -1,11 +1,14 @@
-import type { TableColumnsType } from 'antd';
-import { useState, type Key, type ReactNode } from 'react';
+import type { InputRef, TableColumnsType } from 'antd';
+import { useRef, useState, type Key, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router';
 import type { ActionItem } from '../../components/actions/types';
+import { useRunAction } from '../../components/actions/useRunAction';
+import { useHotkey } from '../../hooks/useHotkey';
 import { FilterSelect, type FilterOption } from '../../components/dropdown/FilterSelect';
 import { FilterBar, QuickViews, SearchInput } from '../../components/filters/filters';
 import { DataTable, type DataTableEmpty } from '../../components/table/DataTable';
-import type { ListSort, ListState } from '../../hooks/useListState';
+import type { ListFilters, ListSort, ListState } from '../../hooks/useListState';
 import { PageContainer } from '../page/PageContainer';
 
 export interface ListFilterDef<F> {
@@ -22,7 +25,7 @@ export interface ListViewDef<V extends string> {
 
 export interface ListPageLayoutProps<
   T extends object,
-  F extends Record<string, unknown>,
+  F extends ListFilters,
   V extends string,
   S extends string = string,
 > {
@@ -45,6 +48,7 @@ export interface ListPageLayoutProps<
   empty?: DataTableEmpty;
   onRefresh?: () => void;
   onRowClick?: (row: T) => void;
+  onRowHover?: (row: T) => void;
 }
 
 function SortHint({ sort, columns }: { sort?: ListSort; columns: TableColumnsType<object> }) {
@@ -65,7 +69,7 @@ function SortHint({ sort, columns }: { sort?: ListSort; columns: TableColumnsTyp
 
 export function ListPageLayout<
   T extends object,
-  F extends Record<string, unknown>,
+  F extends ListFilters,
   V extends string,
   S extends string = string,
 >({
@@ -88,9 +92,18 @@ export function ListPageLayout<
   empty,
   onRefresh,
   onRowClick,
+  onRowHover,
 }: ListPageLayoutProps<T, F, V, S>) {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
   const [toolsEl, setToolsEl] = useState<HTMLDivElement | null>(null);
+  const searchRef = useRef<InputRef>(null);
+  const runAction = useRunAction();
+  const newAction = actions?.find((a) => a.key === 'new' && !a.hidden && !a.disabled);
+
+  useHotkey('/', () => searchRef.current?.focus(), { enabled: !!search });
+  useHotkey('n', () => newAction && void runAction(newAction), { enabled: !!newAction });
+
   const hasFilterBar = !!search || filters.length > 0 || !!views;
   const filteredEmpty: DataTableEmpty = {
     title: t('common.noMatchTitle'),
@@ -118,6 +131,7 @@ export function ListPageLayout<
         >
           {search && (
             <SearchInput
+              ref={searchRef}
               label={search.label}
               placeholder={search.placeholder}
               value={state.search}
@@ -143,6 +157,7 @@ export function ListPageLayout<
       <DataTable<T>
         fill
         toolsContainer={hasFilterBar ? toolsEl : undefined}
+        settingsKey={pathname}
         rowKey={rowKey}
         columns={columns}
         dataSource={rows}
@@ -158,11 +173,11 @@ export function ListPageLayout<
         }
         bulkActions={bulkActions}
         empty={state.hasActiveFilters ? filteredEmpty : empty}
-        onRow={
-          onRowClick
-            ? (row) => ({ onClick: () => onRowClick(row), className: 'is-clickable' })
-            : undefined
-        }
+        onRow={(row) => ({
+          onClick: onRowClick && (() => onRowClick(row)),
+          onMouseEnter: onRowHover && (() => onRowHover(row)),
+          className: onRowClick ? 'is-clickable' : undefined,
+        })}
         pagination={{
           page: state.page,
           pageSize: state.pageSize,

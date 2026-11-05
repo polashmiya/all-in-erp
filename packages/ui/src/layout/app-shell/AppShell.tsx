@@ -1,13 +1,21 @@
 import { Drawer, Grid } from 'antd';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
+import { useLocation, useNavigation } from 'react-router';
 import { ErrorBoundary } from '../../components/feedback/ResultPages';
 import { useHotkey } from '../../hooks/useHotkey';
 import { useThemeStore } from '../../theme/theme-store';
 import { findTrail, type MenuNode } from '../../utils/menu';
 import { CommandPalette, ShortcutsModal } from './CommandPalette';
 import type { ShellUser } from './ProfileMenu';
-import { ShellContext } from './ShellContext';
+import { useRecentPages } from './recent-pages';
+import { ShellContext, usePreloadRoute } from './ShellContext';
 import { Sidebar, type SidebarWorkspace } from './Sidebar';
 import { Topbar } from './Topbar';
 
@@ -39,6 +47,8 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const { pathname } = useLocation();
+  const navigating = useNavigation().state === 'loading';
+  const preload = usePreloadRoute();
   const screens = Grid.useBreakpoint();
   const mobile = screens.md === false;
   const rail = useThemeStore((s) => s.siderCollapsed);
@@ -61,6 +71,17 @@ export function AppShell({
   useHotkey('[', () => setRail(!rail), { enabled: !mobile });
   useHotkey('?', () => setShortcutsOpen(true));
 
+  const visit = useRecentPages((s) => s.visit);
+  const currentPage = trail.at(-1)?.path;
+  useEffect(() => {
+    if (currentPage) visit(currentPage);
+  }, [currentPage, visit]);
+
+  const preloadLink = (event: SyntheticEvent) => {
+    const href = (event.target as Element).closest('a[href^="/"]')?.getAttribute('href');
+    if (href) preload(href);
+  };
+
   const sidebar = (inDrawer: boolean) => (
     <Sidebar
       workspace={workspace}
@@ -81,7 +102,7 @@ export function AppShell({
 
   return (
     <ShellContext.Provider value={shell}>
-      <div className="erp-app">
+      <div className="erp-app" onPointerOver={preloadLink} onFocus={preloadLink}>
         {mobile ? (
           <Drawer
             open={drawerOpen}
@@ -101,6 +122,7 @@ export function AppShell({
         )}
         <div className="erp-main">
           <div className="erp-panel">
+            {navigating && <div className="erp-progress" />}
             <Topbar
               crumbs={crumbs}
               user={user}

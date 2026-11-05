@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
+import { vendorChunks } from '../../vite.shared.ts';
 
 export default defineConfig({
   plugins: [react()],
@@ -9,5 +10,5 @@ export default defineConfig({
   },
   server: { port: 5174, strictPort: true },
   preview: { port: 4174, strictPort: true },
-  build: { chunkSizeWarningLimit: 2000 },
+  build: { rolldownOptions: { output: { codeSplitting: vendorChunks } } },
 });

@@ -100,6 +100,16 @@ export function useItem(id: string | undefined) {
   });
 }
 
+export function usePrefetchItem() {
+  const unitId = useUnitId();
+  const client = useQueryClient();
+  return (id: string) =>
+    void client.prefetchQuery({
+      queryKey: itemKeys.detail(unitId, id),
+      queryFn: () => getItem(id),
+    });
+}
+
 function useInvalidateItems() {
   const unitId = useUnitId();
   const client = useQueryClient();

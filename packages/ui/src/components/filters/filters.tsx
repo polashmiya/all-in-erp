@@ -1,5 +1,5 @@
 import { SearchOutlined } from '@ant-design/icons';
-import { Input, Segmented } from 'antd';
+import { Input, Segmented, type InputRef } from 'antd';
 import type { ReactNode, Ref } from 'react';
 import { formatNumber } from '../../utils/format';
 
@@ -27,6 +27,7 @@ export interface SearchInputProps {
   placeholder?: string;
   label: string;
   width?: number;
+  ref?: Ref<InputRef>;
 }
 
 export function SearchInput({
@@ -35,9 +36,11 @@ export function SearchInput({
   placeholder,
   label,
   width = 280,
+  ref,
 }: SearchInputProps) {
   return (
     <Input
+      ref={ref}
       allowClear
       className="erp-search"
       style={{ width }}

@@ -11,3 +11,4 @@ export { SystemStatusCard } from './SystemStatusCard';
 export type { SystemStatus, SystemStatusCardProps } from './SystemStatusCard';
 export { PageState } from './PageState';
 export type { PageStateProps } from './PageState';
+export { useUndoMessage } from './useUndoMessage';

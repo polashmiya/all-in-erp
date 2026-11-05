@@ -1,5 +1,6 @@
 import { Form, type FormInstance } from 'antd';
 import { useEffect, useState, type ReactNode } from 'react';
+import { useHotkey } from '../../hooks/useHotkey';
 import { AppModal, type OverlaySize } from './AppModal';
 
 export interface FormModalProps<T> {
@@ -51,6 +52,11 @@ export function FormModal<T extends object>({
       setSaving(false);
     }
   };
+
+  useHotkey('s', () => void submit().catch(() => undefined), {
+    mod: true,
+    enabled: open && !saving,
+  });
 
   return (
     <AppModal

@@ -1,13 +1,13 @@
-import { ProConfigProvider } from '@ant-design/pro-components';
 import { App as AntApp, ConfigProvider } from 'antd';
 import bnBD from 'antd/es/locale/bn_BD';
 import enUS from 'antd/es/locale/en_US';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, type ReactNode } from 'react';
+import type { RouteObject } from 'react-router';
 import { useShallow } from 'zustand/react/shallow';
 import { requiredMark } from '../components/fields/required-mark';
 import { useLanguageStore } from '../i18n/i18n';
-import { HomePathContext } from '../layout/app-shell/ShellContext';
+import { HomePathContext, RoutesContext } from '../layout/app-shell/ShellContext';
 import {
   fontStacks,
   scaledFontSizes,
@@ -19,9 +19,9 @@ import { buildBrand, tableHeadColors, type Brand } from '../theme/brand';
 import { BrandContext } from '../theme/brand-context';
 import { tokenVariables } from '../theme/design-tokens';
 import { resolvePreset } from '../theme/presets';
+import { loadFont } from '../theme/fonts';
 import { buildTheme } from '../theme/tokens';
 import { useResolvedMode, useThemeStore, useUiPrefs } from '../theme/theme-store';
-import { proIntl } from './pro-intl';
 
 const antdLocales = { en: enUS, bn: bnBD } as const;
 
@@ -97,6 +97,7 @@ function DocumentThemeSync({ brand, prefs }: { brand: Brand; prefs: UiPrefs }) {
     const root = document.documentElement;
     root.dataset.theme = brand.mode;
     root.dataset.font = prefs.font;
+    loadFont(prefs.font);
     root.dataset.tableHeader = prefs.tableHeader;
     root.dataset.tableBorder = prefs.tableBorder;
     root.dataset.tableStripe = String(prefs.tableStripe);
@@ -116,9 +117,11 @@ function DocumentThemeSync({ brand, prefs }: { brand: Brand; prefs: UiPrefs }) {
 export function UiProvider({
   children,
   homePath = '/dashboard',
+  routes = [],
 }: {
   children: ReactNode;
   homePath?: string;
+  routes?: RouteObject[];
 }) {
   const { preset, customPrimary, sider, compact } = useThemeStore(
     useShallow((s) => ({
@@ -137,7 +140,7 @@ export function UiProvider({
     [preset, customPrimary, mode, sider],
   );
   const themeConfig = useMemo(
-    () => buildTheme({ mode, compact, brand, prefs }),
+    () => ({ ...buildTheme({ mode, compact, brand, prefs }), hashed: false }),
     [mode, compact, brand, prefs],
   );
 
@@ -147,14 +150,14 @@ export function UiProvider({
 
   return (
     <ConfigProvider theme={themeConfig} locale={antdLocales[language]} form={{ requiredMark }}>
-      <ProConfigProvider dark={mode === 'dark'} intl={proIntl[language]} hashed={false}>
-        <AntApp>
-          <BrandContext.Provider value={brand}>
-            <DocumentThemeSync brand={brand} prefs={prefs} />
-            <HomePathContext.Provider value={homePath}>{children}</HomePathContext.Provider>
-          </BrandContext.Provider>
-        </AntApp>
-      </ProConfigProvider>
+      <AntApp>
+        <BrandContext.Provider value={brand}>
+          <DocumentThemeSync brand={brand} prefs={prefs} />
+          <HomePathContext.Provider value={homePath}>
+            <RoutesContext.Provider value={routes}>{children}</RoutesContext.Provider>
+          </HomePathContext.Provider>
+        </BrandContext.Provider>
+      </AntApp>
     </ConfigProvider>
   );
 }

@@ -1,11 +1,13 @@
-import { SearchOutlined } from '@ant-design/icons';
+import { HistoryOutlined, SearchOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useLanguageStore } from '../../i18n/i18n';
 import { localize } from '../../i18n/language';
 import { flattenLeavesWithTrail, type MenuNode } from '../../utils/menu';
+import { useRecentPages } from './recent-pages';
+import { usePreloadRoute } from './ShellContext';
 
 const MAX_RESULTS = 50;
 
@@ -23,9 +25,15 @@ export function CommandPalette({
   const language = useLanguageStore((s) => s.language);
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
+  const preload = usePreloadRoute();
+  const recent = useRecentPages((s) => s.paths);
 
   const results = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
+    const rank = (path = '') => {
+      const index = needle ? -1 : recent.indexOf(path);
+      return index === -1 ? recent.length : index;
+    };
     return flattenLeavesWithTrail(menu)
       .map(({ node, ancestors }) => ({
         node,
@@ -38,8 +46,15 @@ export function CommandPalette({
           .toLocaleLowerCase(),
       }))
       .filter((r) => !needle || r.haystack.includes(needle))
+      .map((r) => ({ ...r, rank: rank(r.node.path) }))
+      .sort((a, b) => a.rank - b.rank)
       .slice(0, MAX_RESULTS);
-  }, [menu, query, language]);
+  }, [menu, query, language, recent]);
+
+  const activePath = results[cursor]?.node.path;
+  useEffect(() => {
+    if (activePath) preload(activePath);
+  }, [activePath, preload]);
 
   const close = () => {
     setQuery('');
@@ -112,7 +127,9 @@ export function CommandPalette({
               onMouseEnter={() => setCursor(index)}
               onClick={() => go(index)}
             >
-              <span className="erp-cmd__tile">{r.icon}</span>
+              <span className="erp-cmd__tile">
+                {r.rank < recent.length ? <HistoryOutlined /> : r.icon}
+              </span>
               <span className="erp-stack is-tight">
                 <span className="erp-cmd__label">{r.label}</span>
                 {r.path && <span className="erp-cmd__path">{r.path}</span>}
@@ -141,6 +158,9 @@ export function ShortcutsModal({ open, onClose }: { open: boolean; onClose: () =
   const rows: [string[], string][] = [
     [['Ctrl', 'K'], t('shell.shortcutSearch')],
     [['['], t('shell.shortcutSidebar')],
+    [['/'], t('shell.shortcutFind')],
+    [['N'], t('shell.shortcutNew')],
+    [['Ctrl', 'S'], t('shell.shortcutSave')],
     [['?'], t('shell.shortcutHelp')],
     [['Esc'], t('shell.shortcutClose')],
   ];

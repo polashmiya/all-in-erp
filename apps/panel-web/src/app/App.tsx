@@ -8,7 +8,7 @@ import { router } from './router';
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UiProvider homePath={HOME_PATH}>
+      <UiProvider homePath={HOME_PATH} routes={router.routes}>
         <RouterProvider router={router} />
       </UiProvider>
     </QueryClientProvider>
