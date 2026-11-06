@@ -17,7 +17,12 @@ export interface SystemStatusCardProps {
   onRefresh: () => void;
 }
 
-export function SystemStatusCard({ status, loading, refreshing, onRefresh }: SystemStatusCardProps) {
+export function SystemStatusCard({
+  status,
+  loading,
+  refreshing,
+  onRefresh,
+}: SystemStatusCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -25,7 +30,12 @@ export function SystemStatusCard({ status, loading, refreshing, onRefresh }: Sys
       title={t('status.title')}
       extra={
         <Tooltip title={t('status.refresh')}>
-          <Button type="text" size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={onRefresh} />
+          <Button
+            type="text"
+            size="small"
+            icon={<ReloadOutlined spin={refreshing} />}
+            onClick={onRefresh}
+          />
         </Tooltip>
       }
     >
@@ -33,13 +43,25 @@ export function SystemStatusCard({ status, loading, refreshing, onRefresh }: Sys
         <Skeleton active paragraph={{ rows: 3 }} title={false} />
       ) : (
         <Descriptions column={1} size="small" colon={false} styles={{ label: { width: 120 } }}>
-          <Descriptions.Item label={<><ApiOutlined /> {t('status.api')}</>}>
+          <Descriptions.Item
+            label={
+              <>
+                <ApiOutlined /> {t('status.api')}
+              </>
+            }
+          >
             <Badge
               status={status.apiOnline ? 'success' : 'error'}
               text={status.apiOnline ? t('status.online') : t('status.offline')}
             />
           </Descriptions.Item>
-          <Descriptions.Item label={<><DatabaseOutlined /> {t('status.database')}</>}>
+          <Descriptions.Item
+            label={
+              <>
+                <DatabaseOutlined /> {t('status.database')}
+              </>
+            }
+          >
             {status.databaseHealthy === undefined ? (
               <Badge status="default" text="—" />
             ) : (
@@ -55,7 +77,9 @@ export function SystemStatusCard({ status, loading, refreshing, onRefresh }: Sys
             )}
           </Descriptions.Item>
           <Descriptions.Item label={t('status.version')}>{status.version ?? '—'}</Descriptions.Item>
-          <Descriptions.Item label={t('status.environment')}>{status.environment ?? '—'}</Descriptions.Item>
+          <Descriptions.Item label={t('status.environment')}>
+            {status.environment ?? '—'}
+          </Descriptions.Item>
         </Descriptions>
       )}
     </Card>

@@ -71,6 +71,8 @@ public class ErpDbContext : DbContext
 
     public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
 
+    public DbSet<Item> Items => Set<Item>();
+
     /// <summary>Codes of the active features an account has been given (e.g. "system-setup.item-profile").</summary>
     public async Task<HashSet<string>> AccountFeatureCodesAsync(Guid accountId, CancellationToken cancellationToken = default)
     {

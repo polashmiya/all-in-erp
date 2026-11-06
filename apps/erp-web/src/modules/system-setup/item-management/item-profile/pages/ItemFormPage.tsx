@@ -1,47 +1,55 @@
 import { CheckOutlined } from '@ant-design/icons';
-import { DetailSection, Dropzone, FormPageLayout, PageState } from '@erp/ui';
+import {
+  getGetItemQueryKey,
+  useCreateItem,
+  useGetItem,
+  useUpdateItem,
+  type ItemDetail,
+} from '@erp/api-client';
+import { ForbiddenResult, FormPageLayout, PageState, useGoBack } from '@erp/ui';
 import { App, Form } from 'antd';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
 import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
-import { itemStatus } from '../components/item-display';
-import { GeneralSection } from '../components/form/GeneralSection';
-import {
-  ATTACHMENT_ACCEPT,
-  emptyItemValues,
-  ITEM_TAB_FIELDS,
-  toFormValues,
-} from '../components/form/item-form.model';
-import { ItemFormAside } from '../components/form/ItemFormAside';
-import { PricingSection } from '../components/form/PricingSection';
-import { StockSection } from '../components/form/StockSection';
-import { itemPaths } from '../constants';
-import { nextItemCode } from '../services/item.mock';
-import { useItem, useSaveItem } from '../services/item.service';
-import type { ItemDetail, ItemFormValues } from '../types/item.types';
-
-type SubmitMode = 'draft' | 'save' | 'new';
+import { applyFieldErrors, problemMessage } from '@/common/utils/api-errors';
+import { useRefreshItemManagement, useUnitKey } from '../../common/master-data';
+import { GeneralSection } from '../components/GeneralSection';
+import { PricingSection } from '../components/PricingSection';
+import { StatusSection } from '../components/StatusSection';
+import { TaxSection } from '../components/TaxSection';
+import { ITEM_PROFILE_FEATURE, itemPaths } from '../constants';
+import { copyOf, ITEM_TAB_FIELDS, NEW_ITEM, toRequest, type ItemFormValues } from '../item-form';
+import { useItemLookups } from '../item-lookups';
 
 export function ItemFormPage() {
   const { t } = useTranslation();
   const { id } = useParams();
   const [params] = useSearchParams();
-  const copyId = params.get('copy') ?? undefined;
-  const source = useItem(id ?? copyId);
-  const loading = !!(id || copyId) && source.isPending;
+  const copyId = params.get('copy');
+  const sourceId = Number(id ?? copyId ?? 0);
+  const access = useFeatureAccess(ITEM_PROFILE_FEATURE);
+  const allowed = id ? access.edit : access.create;
+  const source = useGetItem(sourceId, {
+    query: { queryKey: useUnitKey(getGetItemQueryKey(sourceId)), enabled: allowed && sourceId > 0 },
+  });
+
+  if (!allowed) return <ForbiddenResult />;
+
+  const loading = sourceId > 0 && source.isPending;
 
   return (
     <PageState
       loading={loading}
-      missing={!!id && !loading && !source.data}
+      missing={sourceId > 0 && !loading && !source.data}
       missingTitle={t('item.notFound')}
       missingActions={[{ key: 'back', label: t('item.backToList'), to: itemPaths.list }]}
     >
       <ItemForm
         key={id ?? copyId ?? 'new'}
-        item={id ? (source.data ?? undefined) : undefined}
-        copyFrom={copyId ? (source.data ?? undefined) : undefined}
+        item={id ? source.data : undefined}
+        copyFrom={copyId ? source.data : undefined}
       />
     </PageState>
   );
@@ -52,32 +60,40 @@ function ItemForm({ item, copyFrom }: { item?: ItemDetail; copyFrom?: ItemDetail
   const { message } = App.useApp();
   const navigate = useNavigate();
   const unit = useAuthStore(selectCurrentUnit);
-  const actor = useAuthStore((s) => s.user?.fullName ?? '');
   const [form] = Form.useForm<ItemFormValues>();
-  const save = useSaveItem();
-  const isNew = !item;
+  const lookups = useItemLookups();
+  const create = useCreateItem();
+  const update = useUpdateItem();
+  const refresh = useRefreshItemManagement();
+  const source = item ?? copyFrom;
+  const goBack = useGoBack(item ? itemPaths.view(item.id) : itemPaths.list);
 
   const initialValues = useMemo(
     () =>
-      item
-        ? toFormValues(item)
-        : copyFrom
-          ? toFormValues(copyFrom, { copy: true, copyName: (name) => t('item.copyName', { name }) })
-          : emptyItemValues(),
+      item ?? (copyFrom ? copyOf(copyFrom, t('item.copyName', { name: copyFrom.name })) : NEW_ITEM),
     [item, copyFrom, t],
   );
 
-  const submit = async (values: ItemFormValues, mode: string) => {
-    const saved = await save.mutateAsync({ id: item?.id, values, draft: mode === 'draft' });
-    void message.success(
-      t(mode === 'draft' ? 'item.form.draftSaved' : 'item.form.saved', { code: saved.code }),
-    );
-    if ((mode as SubmitMode) === 'new') {
-      form.resetFields();
-      form.setFieldsValue(emptyItemValues());
-      if (!isNew) navigate(itemPaths.create);
-    } else {
-      navigate(itemPaths.view(saved.id));
+  const submit = async (values: ItemFormValues, action: string) => {
+    try {
+      const data = toRequest(values);
+      const saved = item
+        ? await update.mutateAsync({ id: item.id, data })
+        : await create.mutateAsync({ data });
+      await refresh();
+      void message.success(t('item.form.saved', { code: saved.code }));
+      if (action === 'new') {
+        if (source) void navigate(itemPaths.create);
+        else form.resetFields();
+      } else if (item) goBack();
+      else void navigate(itemPaths.view(saved.id), { replace: true });
+    } catch (error) {
+      void message.error(
+        applyFieldErrors(form, error)
+          ? t('master.fixFields')
+          : problemMessage(error, t('master.failed')),
+      );
+      throw error;
     }
   };
 
@@ -85,22 +101,21 @@ function ItemForm({ item, copyFrom }: { item?: ItemDetail; copyFrom?: ItemDetail
     <FormPageLayout<ItemFormValues>
       form={form}
       initialValues={initialValues}
-      title={isNew ? t('item.form.newTitle') : t('item.form.editTitle')}
-      status={isNew ? { tone: 'warning', label: t('item.draft') } : itemStatus(t, item)}
+      title={item ? t('item.form.editTitle') : t('item.form.newTitle')}
+      status={
+        item
+          ? item.isActive
+            ? { tone: 'success', label: t('master.active') }
+            : { tone: 'neutral', label: t('master.inactive') }
+          : undefined
+      }
       subTitle={t('item.form.subtitle', { unit: unit?.name ?? '' })}
       backTo={item ? itemPaths.view(item.id) : itemPaths.list}
-      crumbs={[isNew ? t('item.form.newTitle') : item.code]}
+      crumbs={[item ? item.code : t('item.form.newTitle')]}
       cancelTo={item ? itemPaths.view(item.id) : itemPaths.list}
-      saving={save.isPending}
+      saving={create.isPending || update.isPending}
       onSubmit={submit}
       submitActions={[
-        {
-          key: 'draft',
-          label: t('item.form.saveDraft'),
-          validate: ['name'],
-          placement: ['header'],
-          hidden: !(isNew || item?.isDraft),
-        },
         { key: 'new', label: t('item.form.saveNew'), placement: ['footer'] },
         { key: 'save', label: t('item.form.save'), icon: <CheckOutlined />, variant: 'primary' },
       ]}
@@ -109,37 +124,27 @@ function ItemForm({ item, copyFrom }: { item?: ItemDetail; copyFrom?: ItemDetail
           key: 'general',
           label: t('item.tab.general'),
           fields: ITEM_TAB_FIELDS.general,
-          content: <GeneralSection code={item?.code ?? nextItemCode()} />,
+          content: <GeneralSection source={source} itemId={item?.id} lookups={lookups} />,
         },
         {
           key: 'pricing',
           label: t('item.tab.pricing'),
           fields: ITEM_TAB_FIELDS.pricing,
-          content: <PricingSection />,
+          content: <PricingSection source={source} lookups={lookups} />,
         },
         {
-          key: 'stock',
-          label: t('item.tab.stock'),
-          fields: ITEM_TAB_FIELDS.stock,
-          content: <StockSection isNew={isNew} />,
+          key: 'tax',
+          label: t('item.tab.tax'),
+          fields: ITEM_TAB_FIELDS.tax,
+          content: <TaxSection lookups={lookups} />,
         },
         {
-          key: 'attachments',
-          label: t('item.tab.attachments'),
-          fields: ITEM_TAB_FIELDS.attachments,
-          content: (
-            <DetailSection
-              title={t('item.sec.attachments')}
-              description={t('item.sec.attachmentsHint')}
-            >
-              <Form.Item name="attachments" valuePropName="value" noStyle>
-                <Dropzone accept={ATTACHMENT_ACCEPT} hint={t('item.f.attachHint')} />
-              </Form.Item>
-            </DetailSection>
-          ),
+          key: 'status',
+          label: t('item.tab.status'),
+          fields: ITEM_TAB_FIELDS.status,
+          content: <StatusSection />,
         },
       ]}
-      aside={<ItemFormAside item={item} businessUnit={unit?.name ?? '—'} actor={actor} />}
     />
   );
 }

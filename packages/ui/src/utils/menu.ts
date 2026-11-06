@@ -39,7 +39,8 @@ export function filterMenu(nodes: MenuNode[], keyword: string, language: Languag
 
   const labelMatches = (node: MenuNode) =>
     localize(node.label, language).toLocaleLowerCase().includes(needle) ||
-    (typeof node.label !== 'string' && localize(node.label, 'en').toLocaleLowerCase().includes(needle));
+    (typeof node.label !== 'string' &&
+      localize(node.label, 'en').toLocaleLowerCase().includes(needle));
 
   const visit = (list: MenuNode[]): MenuNode[] =>
     list.flatMap((node) => {
@@ -59,7 +60,9 @@ export function collectGroupKeys(nodes: MenuNode[]): string[] {
 }
 
 export function flattenLeaves(nodes: MenuNode[]): MenuNode[] {
-  return nodes.flatMap((node) => (node.children ? flattenLeaves(node.children) : node.path ? [node] : []));
+  return nodes.flatMap((node) =>
+    node.children ? flattenLeaves(node.children) : node.path ? [node] : [],
+  );
 }
 
 export interface LeafWithTrail {
@@ -67,8 +70,15 @@ export interface LeafWithTrail {
   ancestors: MenuNode[];
 }
 
-export function flattenLeavesWithTrail(nodes: MenuNode[], ancestors: MenuNode[] = []): LeafWithTrail[] {
+export function flattenLeavesWithTrail(
+  nodes: MenuNode[],
+  ancestors: MenuNode[] = [],
+): LeafWithTrail[] {
   return nodes.flatMap((node) =>
-    node.children ? flattenLeavesWithTrail(node.children, [...ancestors, node]) : node.path ? [{ node, ancestors }] : [],
+    node.children
+      ? flattenLeavesWithTrail(node.children, [...ancestors, node])
+      : node.path
+        ? [{ node, ancestors }]
+        : [],
   );
 }

@@ -1,323 +1,178 @@
 import {
-  DeleteOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  SwapOutlined,
-  UploadOutlined,
-} from '@ant-design/icons';
-import {
-  ActionGroup,
-  DotValue,
-  downloadCsv,
-  formatDate,
-  formatMoney,
-  formatNumber,
-  InitialsTile,
-  ListPageLayout,
-  SoftTag,
-  StatusTag,
-  TitleCell,
-  useDisclosure,
-  useListState,
-  useUndoMessage,
-  type ActionItem,
-  type CsvColumn,
-} from '@erp/ui';
-import { App, type TableColumnsType } from 'antd';
-import type { Key } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
-import { appConfig } from '@/common/config/app.config';
-import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
-import { ChangeStatusModal } from '../components/ChangeStatusModal';
-import { itemStatus, STOCK_TONE, stockLabel } from '../components/item-display';
-import { itemPaths } from '../constants';
-import {
+  getListItemsQueryKey,
   listItems,
   useDeleteItems,
-  useItemList,
-  usePrefetchItem,
-  useSetItemsActive,
-} from '../services/item.service';
-import { categories, labelOf, unitShort, units } from '../services/reference.mock';
-import type { ItemListQuery, ItemListRow, ItemSortField, StockLevel } from '../types/item.types';
+  useListItems,
+  useSetItemsStatus,
+  type ItemRow,
+} from '@erp/api-client';
+import { formatMoney, TitleCell, useListState, type CsvColumn } from '@erp/ui';
+import { keepPreviousData } from '@tanstack/react-query';
+import type { TableColumnsType } from 'antd';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { appConfig } from '@/common/config/app.config';
+import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
+import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
+import { MasterListPage } from '../../common/components/MasterListPage';
+import { RecordNameCell } from '../../common/components/RecordNameCell';
+import {
+  EXPORT_PAGE_SIZE,
+  filterOptions,
+  idParam,
+  listParams,
+  parentOf,
+  useRefreshItemManagement,
+  useUnitKey,
+  type StatusView,
+} from '../../common/master-data';
+import { ITEM_PROFILE_FEATURE, itemPaths } from '../constants';
+import { useItemLookups } from '../item-lookups';
 
-type View = NonNullable<ItemListQuery['status']>;
-type Filters = { categoryId: string | null; stockLevel: StockLevel | null; uomId: string | null };
-
-const STOCK_LEVELS: StockLevel[] = ['ok', 'low', 'out'];
+type Filters = {
+  departmentId: string | null;
+  categoryId: string | null;
+  itemTypeId: string | null;
+};
 
 export function ItemListPage() {
   const { t } = useTranslation();
-  const { message } = App.useApp();
-  const showUndo = useUndoMessage();
+  const navigate = useNavigate();
   const unit = useAuthStore(selectCurrentUnit);
-  const statusModal = useDisclosure<string[]>();
-  const list = useListState<Filters, View, ItemSortField>({
-    filters: { categoryId: null, stockLevel: null, uomId: null },
+  const access = useFeatureAccess(ITEM_PROFILE_FEATURE);
+  const refresh = useRefreshItemManagement();
+  const list = useListState<Filters, StatusView>({
+    filters: { departmentId: null, categoryId: null, itemTypeId: null },
     view: 'all',
-    sort: { field: 'updatedAt', order: 'desc' },
     pageSize: appConfig.defaultPageSize,
   });
 
-  const query: ItemListQuery = { ...list.query, status: list.query.view, sort: list.query.sort };
-  const { data, isFetching, refetch } = useItemList(query);
+  const departmentId = idParam(list.filters.departmentId);
+  const categoryId = idParam(list.filters.categoryId);
+  const itemTypeId = idParam(list.filters.itemTypeId);
+  const params = { ...listParams(list.query), departmentId, categoryId, itemTypeId };
+  const query = useListItems(params, {
+    query: {
+      queryKey: useUnitKey(getListItemsQueryKey(params)),
+      placeholderData: keepPreviousData,
+      enabled: access.view,
+    },
+  });
+  const lookups = useItemLookups(access.view);
+  const setStatus = useSetItemsStatus();
   const remove = useDeleteItems();
-  const setActive = useSetItemsActive();
-  const prefetchItem = usePrefetchItem();
+  const { setFilter } = list;
 
-  const removeItems = async (ids: string[]) => {
-    await remove.mutateAsync(ids);
-    list.setSelected(list.selected.filter((k) => !ids.includes(String(k))));
-    void message.success(t('item.deleted', { count: ids.length }));
-  };
+  useEffect(() => {
+    if (departmentId == null || categoryId == null || !lookups.categories) return;
+    if (parentOf(lookups.categories, categoryId) !== departmentId) setFilter('categoryId', null);
+  }, [departmentId, categoryId, lookups.categories, setFilter]);
 
-  const changeStatus = async (ids: string[], isActive: boolean, undoable = true) => {
-    const changed = ids.filter((id) => data?.rows.find((r) => r.id === id)?.isActive !== isActive);
-    if (!changed.length) return;
-    await setActive.mutateAsync({ ids: changed, isActive });
-    const text = t('item.statusChanged', { count: changed.length });
-    if (undoable) showUndo(text, () => void changeStatus(changed, !isActive, false));
-    else void message.success(text);
-  };
+  const inactive = (name: string) => t('master.inactiveOption', { name });
+  const visibleCategories = lookups.categories?.filter(
+    (c) => departmentId == null || c.parentId === departmentId,
+  );
 
-  const csvColumns: CsvColumn<ItemListRow>[] = [
-    { header: t('item.colCode'), value: (r) => r.code },
-    { header: t('item.colItem'), value: (r) => r.name },
-    { header: t('item.f.genericName'), value: (r) => r.genericName },
-    { header: t('item.colCategory'), value: (r) => labelOf(categories, r.categoryId) },
-    { header: t('item.colUnit'), value: (r) => unitShort[r.uomId] },
-    { header: t('item.colSalePrice'), value: (r) => formatMoney(r.salePrice, { symbol: false }) },
-    { header: t('item.colStock'), value: (r) => r.stockOnHand },
-    { header: t('item.colStatus'), value: (r) => itemStatus(t, r).label as string },
-    { header: t('item.colUpdated'), value: (r) => formatDate(r.updatedAt) },
-  ];
-
-  const exportRows = async (ids?: Key[]) => {
-    const all = await listItems({ ...query, page: 1, pageSize: Number.MAX_SAFE_INTEGER });
-    downloadCsv(
-      t('item.exportFile'),
-      ids ? all.rows.filter((r) => ids.includes(r.id)) : all.rows,
-      csvColumns,
-    );
-  };
-
-  const rowActions = (row: ItemListRow): ActionItem[] => [
-    {
-      key: 'view',
-      label: t('item.view'),
-      icon: <EyeOutlined />,
-      variant: 'text',
-      iconOnly: true,
-      to: itemPaths.view(row.id),
-    },
-    {
-      key: 'edit',
-      label: t('item.edit'),
-      icon: <EditOutlined />,
-      variant: 'text',
-      iconOnly: true,
-      to: itemPaths.edit(row.id),
-    },
-    { key: 'duplicate', label: t('item.duplicate'), to: itemPaths.duplicate(row.id) },
-    {
-      key: 'toggle',
-      label: row.isActive ? t('item.deactivate') : t('item.activate'),
-      onClick: () => changeStatus([row.id], !row.isActive),
-    },
-    { key: 'divider', label: '', divider: true },
-    {
-      key: 'delete',
-      label: t('item.delete'),
-      danger: true,
-      confirm: {
-        title: t('item.deleteConfirm', { count: 1 }),
-        description: t('item.deleteHint'),
-        okText: t('item.delete'),
-        danger: true,
-      },
-      onClick: () => removeItems([row.id]),
-    },
-  ];
-
-  const columns: TableColumnsType<ItemListRow> = [
+  const columns: TableColumnsType<ItemRow> = [
     {
       key: 'name',
-      title: t('item.colItem'),
+      title: t('item.col.item'),
       sorter: true,
       render: (_, row, index) => (
-        <TitleCell
-          leading={<InitialsTile name={row.name} index={index} />}
-          title={<Link to={itemPaths.view(row.id)}>{row.name}</Link>}
-          subtitle={row.genericName}
+        <RecordNameCell
+          name={row.name}
+          image={row.imageSource}
+          index={index}
+          subtitle={row.barCode}
+          onOpen={() => navigate(itemPaths.view(row.id))}
         />
       ),
     },
     {
       key: 'code',
-      title: t('item.colCode'),
-      dataIndex: 'code',
+      title: t('item.col.code'),
       sorter: true,
-      render: (code: string) => <span className="erp-text-sm">{code}</span>,
+      render: (_, row) => <span className="erp-text-sm">{row.code}</span>,
     },
     {
       key: 'category',
-      title: t('item.colCategory'),
-      render: (_, row) => <SoftTag>{labelOf(categories, row.categoryId)}</SoftTag>,
-    },
-    {
-      key: 'unit',
-      title: t('item.colUnit'),
-      render: (_, row) => unitShort[row.uomId] ?? row.uomId,
-    },
-    {
-      key: 'salePrice',
-      title: t('item.colSalePrice'),
-      align: 'end',
-      sorter: true,
-      render: (_, row) => <strong>{formatMoney(row.salePrice)}</strong>,
-    },
-    {
-      key: 'stockOnHand',
-      title: t('item.colStock'),
-      sorter: true,
+      title: t('item.col.category'),
       render: (_, row) => (
-        <DotValue tone={STOCK_TONE[row.stockLevel]} label={stockLabel(t, row.stockLevel)}>
-          {formatNumber(row.stockOnHand)}
-        </DotValue>
+        <TitleCell
+          title={row.categoryName}
+          subtitle={`${row.subCategoryName} › ${row.minorCategoryName}`}
+        />
       ),
     },
+    { key: 'type', title: t('item.col.type'), render: (_, row) => row.itemTypeName },
+    { key: 'unit', title: t('item.col.unit'), render: (_, row) => row.uomName },
     {
-      key: 'status',
-      title: t('item.colStatus'),
-      render: (_, row) => {
-        const status = itemStatus(t, row);
-        return (
-          <StatusTag tone={status.tone} dot>
-            {status.label}
-          </StatusTag>
-        );
-      },
-    },
-    {
-      key: 'updatedAt',
-      title: t('item.colUpdated'),
+      key: 'salesPrice',
+      title: t('item.col.salesPrice'),
+      align: 'end',
       sorter: true,
-      render: (_, row) => formatDate(row.updatedAt),
+      render: (_, row) => <strong>{formatMoney(row.salesPrice)}</strong>,
     },
+  ];
+
+  const csvColumns: CsvColumn<ItemRow>[] = [
+    { header: t('item.col.code'), value: (r) => r.code },
+    { header: t('item.col.item'), value: (r) => r.name },
+    { header: t('item.col.barcode'), value: (r) => r.barCode },
+    { header: t('item.col.type'), value: (r) => r.itemTypeName },
+    { header: t('item.col.department'), value: (r) => r.departmentName },
+    { header: t('item.col.category'), value: (r) => r.categoryName },
+    { header: t('item.col.subCategory'), value: (r) => r.subCategoryName },
+    { header: t('item.col.minorCategory'), value: (r) => r.minorCategoryName },
+    { header: t('item.col.unit'), value: (r) => r.uomName },
     {
-      key: 'actions',
-      title: t('item.colActions'),
-      fixed: 'right',
-      render: (_, row) => <ActionGroup actions={rowActions(row)} size="small" overflowAfter={2} />,
+      header: t('item.col.salesPrice'),
+      value: (r) => formatMoney(r.salesPrice, { symbol: false }),
     },
   ];
 
   return (
-    <>
-      <ListPageLayout<ItemListRow, Filters, View, ItemSortField>
-        title={t('item.title')}
-        subtitle={t('item.subtitle', { unit: unit?.name ?? '' })}
-        actions={[
-          {
-            key: 'import',
-            label: t('item.import'),
-            icon: <UploadOutlined />,
-            disabled: true,
-            tooltip: t('item.importSoon'),
-          },
-          {
-            key: 'export',
-            label: t('item.export'),
-            icon: <DownloadOutlined />,
-            onClick: () => exportRows(),
-          },
-          {
-            key: 'new',
-            label: t('item.new'),
-            icon: <PlusOutlined />,
-            variant: 'primary',
-            to: itemPaths.create,
-          },
-        ]}
-        state={list}
-        search={{ label: t('item.searchLabel'), placeholder: t('item.search') }}
-        filters={[
-          { key: 'categoryId', label: t('item.category'), options: categories },
-          {
-            key: 'stockLevel',
-            label: t('item.stock'),
-            options: STOCK_LEVELS.map((value) => ({ value, label: stockLabel(t, value) })),
-          },
-          {
-            key: 'uomId',
-            label: t('item.unit'),
-            options: units.map((u) => ({ value: u.value, label: unitShort[u.value] ?? u.label })),
-          },
-        ]}
-        views={[
-          { key: 'all', label: t('item.viewAll'), count: data?.counts.all },
-          { key: 'active', label: t('item.viewActive'), count: data?.counts.active },
-          { key: 'inactive', label: t('item.viewInactive'), count: data?.counts.inactive },
-        ]}
-        columns={columns}
-        rows={data?.rows}
-        rowKey="id"
-        total={data?.total}
-        loading={isFetching}
-        onRefresh={() => void refetch()}
-        onRowHover={(row) => prefetchItem(row.id)}
-        selectable
-        bulkActions={(keys) => [
-          {
-            key: 'status',
-            label: t('item.changeStatus'),
-            icon: <SwapOutlined />,
-            onClick: () => statusModal.onOpen(keys.map(String)),
-          },
-          {
-            key: 'export',
-            label: t('item.export'),
-            icon: <DownloadOutlined />,
-            onClick: () => exportRows(keys),
-          },
-          {
-            key: 'delete',
-            label: t('item.delete'),
-            icon: <DeleteOutlined />,
-            variant: 'danger',
-            loading: remove.isPending,
-            confirm: {
-              title: t('item.deleteConfirm', { count: keys.length }),
-              description: t('item.deleteHint'),
-              okText: t('item.delete'),
-              danger: true,
-            },
-            onClick: () => removeItems(keys.map(String)),
-          },
-        ]}
-        empty={{
-          title: t('item.emptyListTitle'),
-          description: t('item.emptyListText'),
-          actions: [
-            {
-              key: 'new',
-              label: t('item.new'),
-              icon: <PlusOutlined />,
-              variant: 'primary',
-              to: itemPaths.create,
-            },
-          ],
-        }}
-      />
-      <ChangeStatusModal
-        open={statusModal.open}
-        count={statusModal.data?.length ?? 0}
-        onClose={statusModal.onClose}
-        onSubmit={({ isActive }) => changeStatus(statusModal.data ?? [], isActive)}
-      />
-    </>
+    <MasterListPage<ItemRow, Filters>
+      feature={ITEM_PROFILE_FEATURE}
+      title={t('item.title')}
+      subtitle={t('item.subtitle', { unit: unit?.name ?? '' })}
+      newLabel={t('item.new')}
+      search={{ label: t('item.searchLabel'), placeholder: t('item.search') }}
+      list={list}
+      filters={[
+        {
+          key: 'departmentId',
+          label: t('item.department'),
+          options: filterOptions(lookups.departments, inactive),
+        },
+        {
+          key: 'categoryId',
+          label: t('item.category'),
+          options: filterOptions(visibleCategories, inactive),
+        },
+        {
+          key: 'itemTypeId',
+          label: t('item.itemType'),
+          options: filterOptions(lookups.itemTypes, inactive),
+        },
+      ]}
+      data={query.data}
+      loading={query.isFetching}
+      onRefresh={() => void query.refetch()}
+      columns={columns}
+      csvColumns={csvColumns}
+      exportFile={t('item.exportFile')}
+      fetchAll={() =>
+        listItems({ ...params, page: 1, pageSize: EXPORT_PAGE_SIZE }).then((r) => r.items)
+      }
+      empty={{ title: t('item.emptyTitle'), description: t('item.emptyText') }}
+      onCreate={() => navigate(itemPaths.create)}
+      onEdit={(row) => navigate(itemPaths.edit(row.id))}
+      onSetStatus={(ids, isActive) =>
+        setStatus.mutateAsync({ data: { ids, isActive } }).then(refresh)
+      }
+      onDelete={(ids) => remove.mutateAsync({ data: { ids } }).then(refresh)}
+    />
   );
 }

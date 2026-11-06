@@ -144,13 +144,24 @@ internal static class UomEndpoints
         var (code, name) = Normalize(request);
         if (await DuplicatesAsync(db, id, code, name, ct) is { } invalid) return invalid;
 
+        var renamed = uom.Name != name;
         uom.Code = code;
         uom.Name = name;
         Apply(uom, request);
 
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
         {
             await db.SaveChangesAsync(ct);
+            if (renamed)
+            {
+                var accountId = uom.AccountId;
+                var items = db.Items.AcrossTenants().Where(i => i.AccountId == accountId);
+                await items.Where(i => i.UomId == id).ExecuteUpdateAsync(s => s.SetProperty(x => x.UomName, name), ct);
+                await items.Where(i => i.AltUomId == id).ExecuteUpdateAsync(s => s.SetProperty(x => x.AltUomName, name), ct);
+            }
+
+            await transaction.CommitAsync(ct);
         }
         catch (DbUpdateException e) when (MasterData.IsUniqueViolation(e))
         {

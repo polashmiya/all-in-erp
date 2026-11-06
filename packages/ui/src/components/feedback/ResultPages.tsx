@@ -67,7 +67,11 @@ export function RouteErrorResult() {
     if (error.status === 403) return <ForbiddenResult />;
   }
 
-  return <ErrorResult detail={import.meta.env.DEV && error instanceof Error ? error.message : undefined} />;
+  return (
+    <ErrorResult
+      detail={import.meta.env.DEV && error instanceof Error ? error.message : undefined}
+    />
+  );
 }
 
 interface ErrorBoundaryState {
@@ -86,7 +90,8 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
   }
 
   override render() {
-    if (this.state.error) return <ErrorResult detail={import.meta.env.DEV ? this.state.error.message : undefined} />;
+    if (this.state.error)
+      return <ErrorResult detail={import.meta.env.DEV ? this.state.error.message : undefined} />;
     return this.props.children;
   }
 }

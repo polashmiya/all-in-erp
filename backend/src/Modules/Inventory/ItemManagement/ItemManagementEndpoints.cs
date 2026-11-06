@@ -1,6 +1,7 @@
 using Erp.Core.Modules;
 using Erp.Modules.Inventory.ItemManagement.Categories;
 using Erp.Modules.Inventory.ItemManagement.Departments;
+using Erp.Modules.Inventory.ItemManagement.Items;
 using Erp.Modules.Inventory.ItemManagement.MinorCategories;
 using Erp.Modules.Inventory.ItemManagement.SubCategories;
 using Erp.Modules.Inventory.ItemManagement.Uoms;
@@ -20,5 +21,6 @@ public sealed class ItemManagementEndpoints : IErpEndpoints
         ItemSubCategoryEndpoints.Map(group);
         ItemMinorCategoryEndpoints.Map(group);
         UomEndpoints.Map(group);
+        ItemEndpoints.Map(group);
     }
 }

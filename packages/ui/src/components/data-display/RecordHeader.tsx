@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ActionGroup } from '../actions/ActionGroup';
+import { BackButton } from '../actions/BackButton';
 import type { ActionItem } from '../actions/types';
 import type { Tint } from '../../theme/design-tokens';
 
@@ -16,6 +17,7 @@ export interface RecordHeaderProps {
   tags?: ReactNode;
   meta?: RecordMeta[];
   actions?: ActionItem[];
+  backTo?: string;
 }
 
 export function RecordHeader({
@@ -25,9 +27,11 @@ export function RecordHeader({
   tags,
   meta = [],
   actions = [],
+  backTo,
 }: RecordHeaderProps) {
   return (
     <section className="erp-card erp-record-head">
+      {backTo && <BackButton to={backTo} />}
       {icon && (
         <span className={`erp-tile erp-tile--${tint} is-xl`} aria-hidden="true">
           {icon}

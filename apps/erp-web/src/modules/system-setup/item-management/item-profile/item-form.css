@@ -1,0 +1,24 @@
+.erp-item-span-3 {
+  grid-column: span 3;
+}
+
+.erp-item-attach {
+  display: flex;
+  align-items: center;
+  gap: var(--erp-space-sm);
+}
+
+.erp-item-attach__thumb {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-sm);
+}
+
+@media (max-width: 991.98px) {
+  .erp-item-span-3 {
+    grid-column: 1 / -1;
+  }
+}

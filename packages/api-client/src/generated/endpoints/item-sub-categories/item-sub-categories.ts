@@ -35,8 +35,8 @@ import type {
   SaveItemSubCategoryRequest,
 } from '../../model';
 
-import { customFetch } from '../../../http/client';
-import type { ErrorType, BodyType } from '../../../http/client';
+import { customFetch } from '../../../http/client.ts';
+import type { ErrorType, BodyType } from '../../../http/client.ts';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 

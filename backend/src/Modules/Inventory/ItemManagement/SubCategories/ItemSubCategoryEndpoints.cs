@@ -188,9 +188,13 @@ internal static class ItemSubCategoryEndpoints
             await db.SaveChangesAsync(ct);
             if (moved)
             {
-                var categoryId = request.CategoryId;
+                var (categoryId, departmentId) = (request.CategoryId, category.DepartmentId);
                 await db.ItemMinorCategories.Where(m => m.SubCategoryId == id)
                     .ExecuteUpdateAsync(m => m.SetProperty(x => x.CategoryId, categoryId), ct);
+                await db.Items.Where(i => i.SubCategoryId == id)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(x => x.CategoryId, categoryId)
+                        .SetProperty(x => x.DepartmentId, departmentId), ct);
             }
 
             await transaction.CommitAsync(ct);

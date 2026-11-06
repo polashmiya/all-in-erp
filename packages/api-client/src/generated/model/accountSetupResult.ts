@@ -5,7 +5,7 @@
  * Configurable ERP API. `/api/panel/*` serves the internal configuration Panel, `/api/erp/*` serves the client ERP app. Authenticate with the bearer token from the matching `/auth/login`; ERP calls that work on business-unit data also send `X-Business-Unit: {id}`.
  * OpenAPI spec version: v1
  */
-import type { AdminCredentials } from './adminCredentials';
+import type { AdminCredentials } from './adminCredentials.ts';
 
 export interface AccountSetupResult {
   accountId: string;

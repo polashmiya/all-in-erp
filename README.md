@@ -2,11 +2,11 @@
 
 One ERP codebase whose screens and data shape are driven by configuration, per **Account › Business Unit**.
 
-| App | Who uses it | Dev URL |
-|---|---|---|
-| **Panel** (`apps/panel-web`) | Internal team (Super Admin, Implementer): accounts, business units, fields, layouts | http://localhost:5173 |
-| **ERP** (`apps/erp-web`) | Client users; UI rendered from the business unit's resolved configuration | http://localhost:5174 |
-| **API** (`backend/src/Erp.Api`) | Both apps: `/api/panel/*` and `/api/erp/*` | http://localhost:5000 (docs: `/docs`) |
+| App                             | Who uses it                                                                         | Dev URL                               |
+| ------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------- |
+| **Panel** (`apps/panel-web`)    | Internal team (Super Admin, Implementer): accounts, business units, fields, layouts | http://localhost:5173                 |
+| **ERP** (`apps/erp-web`)        | Client users; UI rendered from the business unit's resolved configuration           | http://localhost:5174                 |
+| **API** (`backend/src/Erp.Api`) | Both apps: `/api/panel/*` and `/api/erp/*`                                          | http://localhost:5000 (docs: `/docs`) |
 
 ## Prerequisites
 
@@ -32,10 +32,10 @@ Override it without editing files via `ConnectionStrings__Erp`.
 In Development the API **applies pending EF migrations and seeds demo data on startup**
 (`Database:MigrateOnStartup` / `Database:SeedDemoData`). Seeding only fills in missing rows, so restarting is safe.
 
-| App | Email | Password | What you get |
-|---|---|---|---|
-| Panel | `superadmin@myerp.local` | `Admin@12345` | Super Admin |
-| ERP | `admin@demopharma.com` | `Demo@12345` | Primary admin of **Demo Pharma Ltd**, with access to Dhaka Depot and Chattogram Depot |
+| App   | Email                    | Password      | What you get                                                                          |
+| ----- | ------------------------ | ------------- | ------------------------------------------------------------------------------------- |
+| Panel | `superadmin@myerp.local` | `Admin@12345` | Super Admin                                                                           |
+| ERP   | `admin@demopharma.com`   | `Demo@12345`  | Primary admin of **Demo Pharma Ltd**, with access to Dhaka Depot and Chattogram Depot |
 
 These are development-only values from `appsettings.Development.json`. The login pages show a "Fill in" helper
 in dev builds only.
@@ -51,7 +51,7 @@ dotnet ef database update      --project backend/src/Erp.Infrastructure --startu
 ### Panel: accounts and account setup
 
 - **The Panel sidebar is read from the `PanelMenuItems` table** (`GET /api/panel/navigation`): any depth, EN/বাংলা
-  labels, an icon name from the shared icon registry, path and sort order. Startup only *inserts* missing default
+  labels, an icon name from the shared icon registry, path and sort order. Startup only _inserts_ missing default
   items (currently just **Accounts**) and never overwrites edited rows. Menu entries without a built screen show a
   placeholder.
 - **Accounts** (`/accounts`) has totals, a server-paged table (status tabs, search, sort) and a detail drawer with
@@ -66,6 +66,22 @@ dotnet ef database update      --project backend/src/Erp.Infrastructure --startu
 - Data model: `Account` (profile, base currency, time zone) → `BusinessUnit` → `Office` → `Warehouse`
   (`Warehouse.OfficeId` is optional). Offices and warehouses are business-unit-owned, so in the ERP they are filtered
   to the selected unit.
+
+### ERP: Item Management (System Setup)
+
+- **Master data** (`/api/erp/item-management/{departments,categories,sub-categories,minor-categories,uoms}`): the item
+  hierarchy Department → Category → Sub Category → Minor Category belongs to a business unit; units of measure belong
+  to the account. Each has list (status counts), options for dropdowns, create, update, bulk status and delete.
+  Records that still have children cannot be deleted; deactivate them instead.
+- **Item Profile** (`/api/erp/item-management/items`, table `Item`): landing list with filters and export, a create /
+  edit page and a view page. The item stores all four hierarchy IDs, but the user only picks the **minor category**;
+  the rest are filled in from it. Moving a category or minor category, or renaming a UOM, updates its items.
+- **Item code** left empty is generated from the category code (`INJ-00001`). **Generate barcode** creates an in-store
+  EAN-13 (`20` + serial + check digit); serials are never reused. Manual barcodes must be unique in the business unit.
+- **Child items** point to an active master item that is not itself a child. A master item cannot be deleted while it
+  has child items.
+- Item types and VAT supply types are fixed lists in `ItemChoices.cs` until they get their own tables. `SupplierID`,
+  `PurchaseVatID` and `SalesVatID` stay empty until supplier and VAT setup exist; the supplier is free text for now.
 
 ### Authentication model
 
@@ -88,14 +104,14 @@ dotnet ef database update      --project backend/src/Erp.Infrastructure --startu
 
 ## Scripts
 
-| Script | What it does |
-|---|---|
-| `pnpm dev` | Both frontends with HMR |
-| `pnpm dev:api` | ASP.NET Core API (`http` launch profile, port 5000) |
-| `pnpm gen:api` | Regenerates `packages/api-client` from `http://localhost:5000/openapi/v1.json` (**API must be running**) |
-| `pnpm test` | Vitest (all packages) + `dotnet test` |
-| `pnpm typecheck` / `pnpm lint` / `pnpm format` | Static checks |
-| `pnpm build` | Production build of both apps |
+| Script                                         | What it does                                                                                             |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                     | Both frontends with HMR                                                                                  |
+| `pnpm dev:api`                                 | ASP.NET Core API (`http` launch profile, port 5000)                                                      |
+| `pnpm gen:api`                                 | Regenerates `packages/api-client` from `http://localhost:5000/openapi/v1.json` (**API must be running**) |
+| `pnpm test`                                    | Vitest (all packages) + `dotnet test`                                                                    |
+| `pnpm typecheck` / `pnpm lint` / `pnpm format` | Static checks                                                                                            |
+| `pnpm build`                                   | Production build of both apps                                                                            |
 
 API integration tests boot the real API (migrations and seed included) against a throwaway **`myErp_Test`**
 LocalDB database. Tenant-filter tests use **`myErp_Test_Tenancy`**. Both are created and dropped by the tests,
@@ -155,8 +171,10 @@ apps/<app>/src/
 How to build a feature:
 
 - **Landing page** — `useListState` + `ListPageLayout` (filters, quick views, columns, bulk actions as config).
-- **Create / edit** — `FormPageLayout` (tabs with their field names, submit actions, aside). Errors per tab, dirty state and the
-  leave-page guard are built in. Multi-step creation uses `WizardLayout`.
+- **Create / edit** — `FormPageLayout` (tabs with their field names, submit actions). All tabs render as one scrolling
+  form: the tab bar stays on top, follows the scroll and jumps to a section on click, with a go-to-top/bottom button.
+  Error counts per tab (including server field errors, which are scrolled into view), dirty state and the leave-page
+  guard are built in. Multi-step creation uses `WizardLayout`.
 - **View / details** — `DetailsPageLayout` (record header, stats, tabs, aside, loading and not-found states).
 - **Buttons** — pass `ActionItem` objects (`label`, `icon`, `variant`, `to`, `onClick`, `confirm`, `menu`) instead of hand-made buttons.
 - **Modals** — `AppModal` / `FormModal` with `useDisclosure()`; confirmations with `useConfirm()`.
@@ -164,8 +182,8 @@ How to build a feature:
 Modules never import from `app/`. Register routes in `modules/index.ts` and translations in `common/i18n/resources.ts`.
 Example feature: `apps/erp-web/src/modules/system-setup/item-management/item-profile/`.
 
-Item Profile and the dashboard read from in-browser sample data (`services/*.mock.ts`) until their APIs exist;
-swap the bodies of the functions in `services/*.service.ts` for the generated api-client calls.
+Features call the generated hooks from `@erp/api-client` (`pnpm gen:api` after an API change). Only the dashboard
+still reads in-browser sample data (`modules/dashboard/services/*.mock.ts`) until its APIs exist.
 
 ## Theme system
 
@@ -203,14 +221,14 @@ Both apps share one theme engine in `packages/ui/src/theme`:
 
 ## Roadmap
 
-| Phase | Scope | Status |
-|---|---|---|
-| 0 | Repo skeleton, API host, LocalDB health, shared UI shell (3-level menu, dark mode, EN/বাংলা) | ✅ Done |
-| 1 | Core domain, migrations, JWT auth (panel/erp audiences), tenant context, login + BU picker | ✅ Done |
-| 2 | Metadata schema, manifests, screen resolver, bootstrap endpoint | ⏳ |
-| 3 | Dynamic data API (JSON attributes, query builder, CRUD, import/export) | ⏳ |
-| 4 | Frontend metadata-engine (DynamicPage/Table/Filter/Form/View, rules) | ⏳ |
-| 5 | ERP wiring: Item Profile end-to-end from configuration | ⏳ |
-| 6 | Panel: accounts, business units, entitlements, field manager | ⏳ |
-| 7 | Panel: visual layout builder + live preview, draft/publish | ⏳ |
-| 8 | Hardening: E2E, caching, audit log, docs | ⏳ |
+| Phase | Scope                                                                                        | Status  |
+| ----- | -------------------------------------------------------------------------------------------- | ------- |
+| 0     | Repo skeleton, API host, LocalDB health, shared UI shell (3-level menu, dark mode, EN/বাংলা) | ✅ Done |
+| 1     | Core domain, migrations, JWT auth (panel/erp audiences), tenant context, login + BU picker   | ✅ Done |
+| 2     | Metadata schema, manifests, screen resolver, bootstrap endpoint                              | ⏳      |
+| 3     | Dynamic data API (JSON attributes, query builder, CRUD, import/export)                       | ⏳      |
+| 4     | Frontend metadata-engine (DynamicPage/Table/Filter/Form/View, rules)                         | ⏳      |
+| 5     | ERP wiring: Item Profile end-to-end from configuration                                       | ⏳      |
+| 6     | Panel: accounts, business units, entitlements, field manager                                 | ⏳      |
+| 7     | Panel: visual layout builder + live preview, draft/publish                                   | ⏳      |
+| 8     | Hardening: E2E, caching, audit log, docs                                                     | ⏳      |

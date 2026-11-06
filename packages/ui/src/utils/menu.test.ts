@@ -10,7 +10,11 @@ const menu: MenuNode[] = [
         key: 'inventory.master-data',
         label: { en: 'Master Data', bn: 'মাস্টার ডেটা' },
         children: [
-          { key: 'inventory.item', label: { en: 'Item Profile', bn: 'আইটেম প্রোফাইল' }, path: '/app/inventory/item' },
+          {
+            key: 'inventory.item',
+            label: { en: 'Item Profile', bn: 'আইটেম প্রোফাইল' },
+            path: '/app/inventory/item',
+          },
           {
             key: 'inventory.item-category',
             label: { en: 'Item Category', bn: 'আইটেম ক্যাটাগরি' },
@@ -22,7 +26,11 @@ const menu: MenuNode[] = [
         key: 'inventory.transactions',
         label: { en: 'Transactions', bn: 'লেনদেন' },
         children: [
-          { key: 'inventory.goods-receipt', label: 'Goods Receipt', path: '/app/inventory/goods-receipt' },
+          {
+            key: 'inventory.goods-receipt',
+            label: 'Goods Receipt',
+            path: '/app/inventory/goods-receipt',
+          },
         ],
       },
     ],
@@ -43,7 +51,9 @@ describe('findTrail', () => {
   });
 
   it('does not confuse sibling paths that share a prefix', () => {
-    expect(findTrail(menu, '/app/inventory/item-category').at(-1)?.key).toBe('inventory.item-category');
+    expect(findTrail(menu, '/app/inventory/item-category').at(-1)?.key).toBe(
+      'inventory.item-category',
+    );
   });
 
   it('returns an empty trail for unknown paths', () => {
@@ -57,7 +67,9 @@ describe('filterMenu', () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.key).toBe('inventory');
     expect(result[0]?.children?.map((n) => n.key)).toEqual(['inventory.master-data']);
-    expect(result[0]?.children?.[0]?.children?.map((n) => n.key)).toEqual(['inventory.item-category']);
+    expect(result[0]?.children?.[0]?.children?.map((n) => n.key)).toEqual([
+      'inventory.item-category',
+    ]);
   });
 
   it('keeps the full subtree when a group label matches', () => {
@@ -79,6 +91,10 @@ describe('filterMenu', () => {
 
 describe('collectGroupKeys', () => {
   it('lists every node that has children', () => {
-    expect(collectGroupKeys(menu)).toEqual(['inventory', 'inventory.master-data', 'inventory.transactions']);
+    expect(collectGroupKeys(menu)).toEqual([
+      'inventory',
+      'inventory.master-data',
+      'inventory.transactions',
+    ]);
   });
 });

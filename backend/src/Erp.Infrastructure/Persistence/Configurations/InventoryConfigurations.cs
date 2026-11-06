@@ -162,3 +162,80 @@ internal sealed class UnitOfMeasureConfiguration : IEntityTypeConfiguration<Unit
         ]);
     }
 }
+
+internal sealed class ItemConfiguration : IEntityTypeConfiguration<Item>
+{
+    public void Configure(EntityTypeBuilder<Item> builder)
+    {
+        builder.MapRecord("Item", "ItemID");
+        builder.Property(x => x.Code).HasColumnName("ItemCode").HasMaxLength(50);
+        builder.Property(x => x.BarCode).HasMaxLength(50);
+        builder.Property(x => x.HsCode).HasColumnName("HSCode").HasMaxLength(50);
+        builder.Property(x => x.Name).HasColumnName("ItemName").HasMaxLength(200);
+        builder.Property(x => x.Description).HasColumnName("ItemDescription");
+        builder.Property(x => x.ItemTypeId).HasColumnName("ItemTypeID");
+        builder.Property(x => x.ItemTypeName).HasMaxLength(200);
+        builder.Property(x => x.DepartmentId).HasColumnName("ItemDepartmentID");
+        builder.Property(x => x.CategoryId).HasColumnName("ItemCategoryID");
+        builder.Property(x => x.SubCategoryId).HasColumnName("ItemSubCategoryID");
+        builder.Property(x => x.MinorCategoryId).HasColumnName("ItemMinorCategoryID");
+        builder.Property(x => x.SupplierId).HasColumnName("SupplierID");
+        builder.Property(x => x.SupplierName).HasMaxLength(100);
+        builder.Property(x => x.UomId).HasColumnName("UomID");
+        builder.Property(x => x.UomName).HasMaxLength(200);
+        builder.Property(x => x.AltUomId).HasColumnName("AltUomID");
+        builder.Property(x => x.AltUomName).HasMaxLength(200);
+        builder.Property(x => x.AltUomConversionQty).HasPrecision(18, 4);
+        builder.Property(x => x.AverageCostPrice).HasPrecision(18, 4);
+        builder.Property(x => x.LastCostPrice).HasPrecision(18, 4);
+        builder.Property(x => x.SalesPrice).HasPrecision(18, 4);
+        builder.Property(x => x.PurchaseSupplyTypeId).HasColumnName("PurchaseSupplyTypeID");
+        builder.Property(x => x.PurchaseSupplyTypeName).HasMaxLength(200);
+        builder.Property(x => x.PurchaseVatId).HasColumnName("PurchaseVatID");
+        builder.Property(x => x.PurchaseVatPercentage).HasPrecision(18, 4);
+        builder.Property(x => x.SalesSupplyTypeId).HasColumnName("SalesSupplyTypeID");
+        builder.Property(x => x.SalesSupplyTypeName).HasMaxLength(200);
+        builder.Property(x => x.SalesVatId).HasColumnName("SalesVatID");
+        builder.Property(x => x.SalesVatPercentage).HasPrecision(18, 4);
+        builder.Property(x => x.SdPercentage).HasColumnName("SDPercentage").HasPrecision(18, 4);
+        builder.Property(x => x.IsVatInclusive).HasColumnName("isVatInclusive");
+        builder.Property(x => x.IsVatRebatable).HasColumnName("isVatRebatable");
+        builder.Property(x => x.IsSaleable).HasColumnName("isSaleAble");
+        builder.Property(x => x.IsPurchase).HasColumnName("isPurchase");
+        builder.Property(x => x.IsNegativeSales).HasColumnName("isNegativeSales");
+        builder.Property(x => x.IsMultipleSalesPrice).HasColumnName("isMultipleSalesPrice");
+        builder.Property(x => x.IsAutoBarcode).HasColumnName("isAutoBarcode");
+        builder.Property(x => x.IsChildBarcode).HasColumnName("isChaildBarCode");
+        builder.Property(x => x.MasterItemId).HasColumnName("MasterItemID").HasConversion<long?>();
+        builder.Property(x => x.BusinessUnitId).HasColumnName("BusinessUnitID");
+
+        builder.HasIndex(x => x.BarCode).HasDatabaseName("IX_Item_BarCode");
+        builder.HasIndex(x => new { x.BusinessUnitId, x.Code }).IsUnique();
+
+        builder.HasOne<BusinessUnit>().WithMany().HasForeignKey(x => x.BusinessUnitId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Department).WithMany().HasForeignKey(x => x.DepartmentId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Category).WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.SubCategory).WithMany().HasForeignKey(x => x.SubCategoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.MinorCategory).WithMany().HasForeignKey(x => x.MinorCategoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Uom).WithMany().HasForeignKey(x => x.UomId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.AltUom).WithMany().HasForeignKey(x => x.AltUomId).OnDelete(DeleteBehavior.Restrict);
+
+        builder.ColumnOrder(
+        [
+            nameof(Item.Id), nameof(Item.Code), nameof(Item.BarCode), nameof(Item.HsCode), nameof(Item.Name),
+            nameof(Item.Description), nameof(Item.ItemTypeId), nameof(Item.ItemTypeName), nameof(Item.DepartmentId),
+            nameof(Item.CategoryId), nameof(Item.SubCategoryId), nameof(Item.MinorCategoryId), nameof(Item.SupplierId),
+            nameof(Item.SupplierName), nameof(Item.UomId), nameof(Item.UomName), nameof(Item.AltUomId), nameof(Item.AltUomName),
+            nameof(Item.AltUomConversionQty), nameof(Item.IsNoDecimalQty), nameof(Item.AverageCostPrice),
+            nameof(Item.LastCostPrice), nameof(Item.SalesPrice), nameof(Item.PurchaseSupplyTypeId),
+            nameof(Item.PurchaseSupplyTypeName), nameof(Item.PurchaseVatId), nameof(Item.PurchaseVatPercentage),
+            nameof(Item.SalesSupplyTypeId), nameof(Item.SalesSupplyTypeName), nameof(Item.SalesVatId),
+            nameof(Item.SalesVatPercentage), nameof(Item.SdPercentage), nameof(Item.IsVatInclusive),
+            nameof(Item.IsVatRebatable), nameof(Item.IsSaleable), nameof(Item.IsPurchase), nameof(Item.IsNegativeSales),
+            nameof(Item.IsMultipleSalesPrice), nameof(Item.IsAutoBarcode), nameof(Item.IsChildBarcode),
+            nameof(Item.MasterItemId), nameof(Item.BarCodeSerial), nameof(Item.ImageSource), nameof(Item.AccountId),
+            nameof(Item.BusinessUnitId),
+            .. MasterRecordMapping.AuditColumns,
+        ]);
+    }
+}

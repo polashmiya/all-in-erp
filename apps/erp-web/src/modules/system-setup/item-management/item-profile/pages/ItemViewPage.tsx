@@ -1,473 +1,335 @@
 import {
+  AppstoreOutlined,
   BarcodeOutlined,
   CalendarOutlined,
   CopyOutlined,
   EditOutlined,
-  MedicineBoxOutlined,
-  PrinterOutlined,
   TagOutlined,
 } from '@ant-design/icons';
 import {
-  ActivityList,
-  BarList,
+  getGetItemQueryKey,
+  useDeleteItem,
+  useGetItem,
+  useSetItemsStatus,
+  type ItemDetail,
+} from '@erp/api-client';
+import {
   DescriptionList,
   DetailSection,
   DetailsPageLayout,
-  formatDate,
+  ForbiddenResult,
   formatDateTime,
   formatMoney,
-  formatMoneyCompact,
   formatNumber,
   formatPercent,
-  ProgressBar,
   SectionCard,
   StatusTag,
-  Timeline,
-  type StatusTone,
 } from '@erp/ui';
-import { App, Table, type TableColumnsType } from 'antd';
+import { App } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router';
-import { itemStatus } from '../components/item-display';
-import { itemPaths } from '../constants';
-import { stockOnHand } from '../services/item.mock';
-import { useDeleteItems, useItem, useSetItemsActive } from '../services/item.service';
-import {
-  brands,
-  categories,
-  countries,
-  labelOf,
-  priceLists,
-  unitShort,
-  units,
-  warehouses,
-} from '../services/reference.mock';
-import type { ItemDetail, ItemTransaction, WarehouseStock } from '../types/item.types';
-
-const TX_TONE: Record<ItemTransaction['kind'], StatusTone> = {
-  receipt: 'success',
-  sale: 'neutral',
-  transfer: 'warning',
-  adjustment: 'danger',
-};
-const TYPE_KEY = {
-  stock: 'item.f.typeStock',
-  service: 'item.f.typeService',
-  consumable: 'item.f.typeConsumable',
-} as const;
+import { Link, useNavigate, useParams } from 'react-router';
+import { useFeatureAccess } from '@/common/hooks/useFeatureAccess';
+import { selectCurrentUnit, useAuthStore } from '@/common/store/auth-store';
+import { problemMessage } from '@/common/utils/api-errors';
+import '../../common/master-data.css';
+import { useRefreshItemManagement, useUnitKey } from '../../common/master-data';
+import { ITEM_PROFILE_FEATURE, itemPaths } from '../constants';
 
 export function ItemViewPage() {
-  const { id } = useParams();
   const { t } = useTranslation();
-  const { data: item, isPending } = useItem(id);
+  const id = Number(useParams().id);
+  const access = useFeatureAccess(ITEM_PROFILE_FEATURE);
+  const query = useGetItem(id, {
+    query: { queryKey: useUnitKey(getGetItemQueryKey(id)), enabled: access.view },
+  });
 
-  if (isPending || !item) {
+  if (!access.view) return <ForbiddenResult />;
+
+  if (!query.data) {
     return (
       <DetailsPageLayout
-        loading={isPending}
-        missing={!isPending && !item}
+        loading={query.isPending}
+        missing={!query.isPending}
         missingTitle={t('item.notFound')}
         missingActions={[{ key: 'back', label: t('item.backToList'), to: itemPaths.list }]}
       />
     );
   }
 
-  return <ItemView item={item} />;
+  return <ItemView item={query.data} />;
 }
 
 function ItemView({ item }: { item: ItemDetail }) {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const navigate = useNavigate();
-  const remove = useDeleteItems();
-  const setActive = useSetItemsActive();
-
-  const onHand = stockOnHand(item);
-  const status = itemStatus(t, item);
-  const category = labelOf(categories, item.categoryId);
-  const maxWarehouse = Math.max(...item.stockByWarehouse.map((w) => w.onHand), 1);
-  const warehouseName = (wid?: string) => labelOf(warehouses, wid) ?? wid;
+  const unit = useAuthStore(selectCurrentUnit);
+  const access = useFeatureAccess(ITEM_PROFILE_FEATURE);
+  const setStatus = useSetItemsStatus();
+  const remove = useDeleteItem();
+  const refresh = useRefreshItemManagement();
   const yesNo = (on: boolean) => (on ? t('common.yes') : t('common.no'));
 
-  const stockColumns: TableColumnsType<WarehouseStock> = [
-    {
-      key: 'warehouse',
-      title: t('item.f.warehouse'),
-      render: (_, w) => <strong>{warehouseName(w.warehouseId)}</strong>,
-    },
-    { key: 'bin', title: t('item.f.bin'), render: (_, w) => w.bin ?? '—' },
-    {
-      key: 'onHand',
-      title: t('item.v.onHand'),
-      align: 'end',
-      render: (_, w) => <strong>{formatNumber(w.onHand)}</strong>,
-    },
-    {
-      key: 'reorder',
-      title: t('item.f.reorderLevel'),
-      align: 'end',
-      render: (_, w) =>
-        formatNumber(
-          item.warehouseLevels.find((l) => l.warehouseId === w.warehouseId)?.reorderLevel ??
-            item.reorderLevel,
-        ),
-    },
-    {
-      key: 'fill',
-      title: t('item.v.fill'),
-      render: (_, w) => (
-        <ProgressBar
-          percent={(w.onHand / maxWarehouse) * 100}
-          label={warehouseName(w.warehouseId)}
-        />
-      ),
-    },
-  ];
+  const failed = (error: unknown) => void message.error(problemMessage(error, t('master.failed')));
 
-  const txColumns: TableColumnsType<ItemTransaction> = [
-    { key: 'ref', title: t('item.v.reference'), dataIndex: 'reference' },
-    {
-      key: 'type',
-      title: t('item.v.type'),
-      render: (_, tx) => <StatusTag tone={TX_TONE[tx.kind]}>{t(`item.tx.${tx.kind}`)}</StatusTag>,
-    },
-    {
-      key: 'qty',
-      title: t('item.v.qty'),
-      align: 'end',
-      render: (_, tx) => (
-        <strong>
-          {tx.quantity > 0 ? `+${formatNumber(tx.quantity)}` : `−${formatNumber(-tx.quantity)}`}
-        </strong>
-      ),
-    },
-    { key: 'date', title: t('item.v.date'), render: (_, tx) => formatDate(tx.date) },
-  ];
+  const toggleStatus = async () => {
+    try {
+      await setStatus.mutateAsync({ data: { ids: [item.id], isActive: !item.isActive } });
+      await refresh();
+      void message.success(
+        t(item.isActive ? 'master.deactivated' : 'master.activated', { count: 1 }),
+      );
+    } catch (error) {
+      failed(error);
+    }
+  };
+
+  const deleteItem = async () => {
+    try {
+      await remove.mutateAsync({ id: item.id });
+      void navigate(itemPaths.list, { replace: true });
+      void refresh();
+      void message.success(t('master.deleted', { count: 1 }));
+    } catch (error) {
+      failed(error);
+    }
+  };
 
   return (
     <DetailsPageLayout
       crumbs={[item.code]}
       header={{
-        icon: <MedicineBoxOutlined />,
+        backTo: itemPaths.list,
+        icon: <AppstoreOutlined />,
         title: item.name,
         tags: (
           <>
-            <StatusTag tone={status.tone} dot>
-              {status.label}
+            <StatusTag tone={item.isActive ? 'success' : 'neutral'} dot>
+              {item.isActive ? t('master.active') : t('master.inactive')}
             </StatusTag>
-            {item.tags.map((tag) => (
-              <StatusTag key={tag}>{tag}</StatusTag>
-            ))}
+            <StatusTag tone="violet">{item.itemTypeName}</StatusTag>
+            {item.isChildBarcode && (
+              <StatusTag tone="warning">{t('item.f.childBarcode')}</StatusTag>
+            )}
           </>
         ),
         meta: [
-          { key: 'code', icon: <BarcodeOutlined />, label: item.code },
+          { key: 'code', icon: <BarcodeOutlined />, label: `${item.code} · ${item.barCode}` },
           {
-            key: 'cat',
+            key: 'category',
             icon: <TagOutlined />,
-            label: `${category ?? '—'} · ${unitShort[item.uomId] ?? item.uomId}`,
+            label: `${item.categoryName} › ${item.subCategoryName} › ${item.minorCategoryName}`,
           },
           {
-            key: 'upd',
+            key: 'updated',
             icon: <CalendarOutlined />,
             label: t('item.v.updatedBy', {
-              date: formatDate(item.updatedAt),
-              name: item.updatedBy,
+              date: formatDateTime(item.modifiedAt ?? item.createdAt),
+              name: (item.modifiedAt ? item.modifiedByName : item.createdByName) ?? '—',
             }),
           },
         ],
         actions: [
           {
-            key: 'print',
-            label: t('item.print'),
-            icon: <PrinterOutlined />,
-            iconOnly: true,
-            onClick: () => window.print(),
-          },
-          {
             key: 'duplicate',
             label: t('item.duplicate'),
             icon: <CopyOutlined />,
+            hidden: !access.create,
             to: itemPaths.duplicate(item.id),
           },
           {
             key: 'more',
             label: t('common.moreActions'),
+            hidden: !access.edit && !access.delete,
             menu: [
               {
                 key: 'toggle',
-                label: item.isActive ? t('item.deactivate') : t('item.activate'),
-                onClick: async () => {
-                  await setActive.mutateAsync({ ids: [item.id], isActive: !item.isActive });
-                  void message.success(t('item.statusChanged', { count: 1 }));
-                },
+                label: item.isActive ? t('master.deactivate') : t('master.activate'),
+                hidden: !access.edit,
+                onClick: toggleStatus,
               },
               {
                 key: 'delete',
-                label: t('item.delete'),
+                label: t('master.delete'),
                 danger: true,
+                hidden: !access.delete,
                 confirm: {
-                  title: t('item.deleteConfirm', { count: 1 }),
-                  description: t('item.deleteHint'),
-                  okText: t('item.delete'),
+                  title: t('master.deleteOne', { name: item.name }),
+                  description: t('master.deleteHint'),
+                  okText: t('master.delete'),
                   danger: true,
                 },
-                onClick: async () => {
-                  await remove.mutateAsync([item.id]);
-                  void message.success(t('item.deleted', { count: 1 }));
-                  navigate(itemPaths.list);
-                },
+                onClick: deleteItem,
               },
             ],
           },
           {
             key: 'edit',
-            label: t('item.edit'),
+            label: t('master.edit'),
             icon: <EditOutlined />,
             variant: 'primary',
+            hidden: !access.edit,
             to: itemPaths.edit(item.id),
           },
         ],
       }}
       stats={[
+        { key: 'sales', label: t('item.f.salesPrice'), value: formatMoney(item.salesPrice) },
+        { key: 'last', label: t('item.f.lastCost'), value: formatMoney(item.lastCostPrice) },
         {
-          key: 'onhand',
-          label: t('item.v.stockOnHand'),
-          value: formatNumber(onHand),
-          caption: t('item.v.warehouses', { count: item.stockByWarehouse.length }),
+          key: 'average',
+          label: t('item.f.averageCost'),
+          value: formatMoney(item.averageCostPrice),
         },
         {
-          key: 'value',
-          label: t('item.v.stockValue'),
-          value: formatMoneyCompact(onHand * item.purchasePrice),
-          caption: t('item.v.atPurchasePrice'),
-        },
-        {
-          key: 'last',
-          label: t('item.v.lastPurchase'),
-          value: item.lastPurchase ? formatDate(item.lastPurchase.date) : '—',
-          caption: item.lastPurchase
-            ? `${item.lastPurchase.reference} · ${formatNumber(item.lastPurchase.quantity)}`
-            : t('item.v.noPurchase'),
-        },
-        {
-          key: 'sold',
-          label: t('item.v.sold30'),
-          value: formatNumber(item.soldLast30Days.quantity),
-          caption: formatMoneyCompact(item.soldLast30Days.amount),
-        },
-      ]}
-      tabsLabel={t('item.v.details')}
-      tabs={[
-        {
-          key: 'overview',
-          label: t('item.v.overview'),
-          content: (
-            <>
-              <DetailSection title={t('item.v.general')}>
-                <DescriptionList
-                  items={[
-                    { key: 'code', label: t('item.f.code'), value: item.code, code: true },
-                    { key: 'name', label: t('item.f.name'), value: item.name },
-                    {
-                      key: 'generic',
-                      label: t('item.f.genericName'),
-                      labelExtra: <StatusTag tone="violet">{t('item.v.custom')}</StatusTag>,
-                      value: item.genericName,
-                    },
-                    { key: 'category', label: t('item.f.category'), value: category },
-                    {
-                      key: 'brand',
-                      label: t('item.f.brand'),
-                      value: labelOf(brands, item.brandId),
-                    },
-                    { key: 'uom', label: t('item.f.uom'), value: labelOf(units, item.uomId) },
-                    { key: 'barcode', label: t('item.f.barcode'), value: item.barcode, code: true },
-                    { key: 'type', label: t('item.f.itemType'), value: t(TYPE_KEY[item.itemType]) },
-                    {
-                      key: 'country',
-                      label: t('item.f.country'),
-                      value: labelOf(countries, item.countryCode),
-                    },
-                  ]}
-                />
-              </DetailSection>
-              {item.description && (
-                <DetailSection title={t('item.v.description')}>
-                  <p className="erp-prose">{item.description}</p>
-                </DetailSection>
-              )}
-              <DetailSection title={t('item.v.pricing')}>
-                <DescriptionList
-                  items={[
-                    {
-                      key: 'sale',
-                      label: t('item.f.salePrice'),
-                      value: formatMoney(item.salePrice),
-                    },
-                    {
-                      key: 'mrp',
-                      label: t('item.f.mrp'),
-                      value: item.mrp !== undefined ? formatMoney(item.mrp) : null,
-                    },
-                    {
-                      key: 'vat',
-                      label: t('item.f.vat'),
-                      value: item.vatPercent !== undefined ? formatPercent(item.vatPercent) : null,
-                    },
-                    {
-                      key: 'discount',
-                      label: t('item.f.discountAllowed'),
-                      value: (
-                        <StatusTag tone={item.discountAllowed ? 'success' : 'neutral'} dot>
-                          {yesNo(item.discountAllowed)}
-                        </StatusTag>
-                      ),
-                    },
-                    {
-                      key: 'max',
-                      label: t('item.f.maxDiscount'),
-                      value:
-                        item.discountAllowed && item.maxDiscountPercent !== undefined
-                          ? formatPercent(item.maxDiscountPercent, 0)
-                          : null,
-                    },
-                    {
-                      key: 'till',
-                      label: t('item.f.discountTill'),
-                      value:
-                        item.discountAllowed && item.discountValidTill
-                          ? formatDate(item.discountValidTill)
-                          : null,
-                    },
-                    {
-                      key: 'from',
-                      label: t('item.f.priceFrom'),
-                      value: item.priceEffectiveFrom ? formatDate(item.priceEffectiveFrom) : null,
-                    },
-                    {
-                      key: 'list',
-                      label: t('item.f.priceList'),
-                      value: labelOf(priceLists, item.priceListId),
-                    },
-                  ]}
-                />
-              </DetailSection>
-              <DetailSection title={t('item.v.stockSettings')}>
-                <DescriptionList
-                  items={[
-                    {
-                      key: 'reorder',
-                      label: t('item.f.reorderLevel'),
-                      value: formatNumber(item.reorderLevel),
-                    },
-                    {
-                      key: 'max',
-                      label: t('item.f.maxStock'),
-                      value: item.maxStock !== undefined ? formatNumber(item.maxStock) : null,
-                    },
-                    {
-                      key: 'wh',
-                      label: t('item.f.defaultWarehouse'),
-                      value: warehouseName(item.defaultWarehouseId),
-                    },
-                    {
-                      key: 'shelf',
-                      label: t('item.f.shelfLife'),
-                      value: item.shelfLifeMonths
-                        ? `${item.shelfLifeMonths} ${t('item.f.months')}`
-                        : null,
-                    },
-                    {
-                      key: 'expiry',
-                      label: t('item.f.trackExpiry'),
-                      value: yesNo(item.trackExpiry),
-                    },
-                    {
-                      key: 'storage',
-                      label: t('item.f.storage'),
-                      value:
-                        item.storage === 'cold' ? t('item.f.cold') : t('item.v.roomTemperature'),
-                    },
-                  ]}
-                />
-              </DetailSection>
-            </>
-          ),
-        },
-        {
-          key: 'stock',
-          label: t('item.v.stockByWarehouse'),
-          content: (
-            <div className="erp-card-pad">
-              <Table<WarehouseStock>
-                className="erp-table"
-                size="middle"
-                rowKey="warehouseId"
-                columns={stockColumns}
-                dataSource={item.stockByWarehouse}
-                pagination={false}
-                scroll={{ x: 'max-content' }}
-              />
-            </div>
-          ),
-        },
-        {
-          key: 'tx',
-          label: t('item.v.transactions'),
-          content: (
-            <div className="erp-card-pad">
-              <Table<ItemTransaction>
-                className="erp-table"
-                size="middle"
-                rowKey="id"
-                columns={txColumns}
-                dataSource={item.transactions}
-                pagination={false}
-                scroll={{ x: 'max-content' }}
-              />
-            </div>
-          ),
-        },
-        {
-          key: 'audit',
-          label: t('item.v.auditLog'),
-          content: (
-            <Timeline
-              items={item.audit.map((entry) => ({
-                key: entry.id,
-                title: entry.title,
-                detail: entry.detail,
-                meta: `${entry.actor} · ${formatDateTime(entry.at)}`,
-              }))}
-            />
-          ),
+          key: 'vat',
+          label: t('item.v.salesVat'),
+          value: formatPercent(item.salesVatPercentage),
+          caption: item.salesSupplyTypeName,
         },
       ]}
       aside={
         <>
-          <SectionCard title={t('item.v.stockByWarehouse')} padding="lg">
-            <BarList
-              items={item.stockByWarehouse.map((w) => ({
-                key: w.warehouseId,
-                label: warehouseName(w.warehouseId),
-                value: formatNumber(w.onHand),
-                percent: (w.onHand / maxWarehouse) * 100,
-              }))}
-            />
+          {item.imageSource && (
+            <SectionCard title={t('item.side.image')}>
+              <img
+                src={item.imageSource}
+                alt={item.name}
+                className="erp-record-avatar erp-w-full"
+              />
+            </SectionCard>
+          )}
+          <SectionCard title={t('item.side.usage')}>
+            <dl className="erp-dl-inline">
+              <dt>{t('item.f.saleable')}</dt>
+              <dd>{yesNo(item.isSaleable)}</dd>
+              <dt>{t('item.f.purchasable')}</dt>
+              <dd>{yesNo(item.isPurchase)}</dd>
+              <dt>{t('item.f.negativeSales')}</dt>
+              <dd>{yesNo(item.isNegativeSales)}</dd>
+              <dt>{t('item.f.multiplePrices')}</dt>
+              <dd>{yesNo(item.isMultipleSalesPrice)}</dd>
+            </dl>
           </SectionCard>
-          <SectionCard title={t('item.v.recentChanges')} padding="lg">
-            <ActivityList
-              items={item.audit.map((entry) => ({
-                key: entry.id,
-                actor: entry.actor,
-                text: `${entry.title} · ${entry.detail}`,
-                meta: formatDate(entry.at),
-              }))}
-            />
+          <SectionCard title={t('item.side.recordInfo')}>
+            <dl className="erp-dl-inline">
+              <dt>{t('item.side.businessUnit')}</dt>
+              <dd>{unit?.name ?? '—'}</dd>
+              <dt>{t('item.side.createdBy')}</dt>
+              <dd>{item.createdByName ?? '—'}</dd>
+              <dt>{t('item.side.created')}</dt>
+              <dd>{formatDateTime(item.createdAt)}</dd>
+              {item.modifiedAt && (
+                <>
+                  <dt>{t('item.side.modifiedBy')}</dt>
+                  <dd>{item.modifiedByName ?? '—'}</dd>
+                  <dt>{t('item.side.updated')}</dt>
+                  <dd>{formatDateTime(item.modifiedAt)}</dd>
+                </>
+              )}
+            </dl>
           </SectionCard>
         </>
       }
-    />
+    >
+      <DetailSection title={t('item.sec.basic')}>
+        <DescriptionList
+          items={[
+            { key: 'code', label: t('item.f.code'), value: item.code, code: true },
+            { key: 'name', label: t('item.f.name'), value: item.name },
+            { key: 'type', label: t('item.f.itemType'), value: item.itemTypeName },
+            { key: 'hs', label: t('item.f.hsCode'), value: item.hsCode, code: true },
+            {
+              key: 'barcode',
+              label: t('item.f.barcode'),
+              labelExtra: item.isAutoBarcode && <StatusTag>{t('item.v.generated')}</StatusTag>,
+              value: item.barCode,
+              code: true,
+            },
+            {
+              key: 'master',
+              label: t('item.f.masterItem'),
+              value: item.masterItemId ? (
+                <Link to={itemPaths.view(item.masterItemId)}>
+                  {item.masterItemName} ({item.masterItemCode})
+                </Link>
+              ) : null,
+            },
+            { key: 'supplier', label: t('item.f.supplier'), value: item.supplierName },
+          ]}
+        />
+      </DetailSection>
+      {item.description && (
+        <DetailSection title={t('item.f.description')}>
+          <p className="erp-prose">{item.description}</p>
+        </DetailSection>
+      )}
+      <DetailSection title={t('item.sec.classification')}>
+        <DescriptionList
+          items={[
+            { key: 'department', label: t('item.f.department'), value: item.departmentName },
+            { key: 'category', label: t('item.f.category'), value: item.categoryName },
+            { key: 'sub', label: t('item.f.subCategory'), value: item.subCategoryName },
+            { key: 'minor', label: t('item.f.minorCategory'), value: item.minorCategoryName },
+          ]}
+        />
+      </DetailSection>
+      <DetailSection title={t('item.sec.units')}>
+        <DescriptionList
+          items={[
+            { key: 'uom', label: t('item.f.uom'), value: item.uomName },
+            {
+              key: 'alt',
+              label: t('item.f.altUom'),
+              value: item.altUomName
+                ? t('item.v.conversion', {
+                    alt: item.altUomName,
+                    qty: formatNumber(item.altUomConversionQty, 2),
+                    uom: item.uomName,
+                  })
+                : null,
+            },
+            { key: 'decimal', label: t('item.f.noDecimal'), value: yesNo(item.isNoDecimalQty) },
+          ]}
+        />
+      </DetailSection>
+      <DetailSection title={t('item.tab.tax')}>
+        <DescriptionList
+          items={[
+            {
+              key: 'pType',
+              label: t('item.v.purchaseSupplyType'),
+              value: item.purchaseSupplyTypeName,
+            },
+            {
+              key: 'pVat',
+              label: t('item.v.purchaseVat'),
+              value:
+                item.purchaseVatPercentage == null
+                  ? null
+                  : formatPercent(item.purchaseVatPercentage),
+            },
+            { key: 'sType', label: t('item.v.salesSupplyType'), value: item.salesSupplyTypeName },
+            {
+              key: 'sVat',
+              label: t('item.v.salesVat'),
+              value:
+                item.salesVatPercentage == null ? null : formatPercent(item.salesVatPercentage),
+            },
+            {
+              key: 'sd',
+              label: t('item.f.sd'),
+              value: item.sdPercentage == null ? null : formatPercent(item.sdPercentage),
+            },
+            {
+              key: 'inclusive',
+              label: t('item.f.vatInclusive'),
+              value: yesNo(item.isVatInclusive),
+            },
+            { key: 'rebate', label: t('item.f.vatRebatable'), value: yesNo(item.isVatRebatable) },
+          ]}
+        />
+      </DetailSection>
+    </DetailsPageLayout>
   );
 }

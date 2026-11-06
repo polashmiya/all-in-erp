@@ -1,8 +1,6 @@
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { ActionGroup } from '../../components/actions/ActionGroup';
+import { BackButton } from '../../components/actions/BackButton';
 import type { ActionItem } from '../../components/actions/types';
 import { StatusTag, type StatusTone } from '../../components/data-display/StatusTag';
 import { useLanguageStore } from '../../i18n/i18n';
@@ -40,18 +38,13 @@ export function PageHeader({
   extra,
   backTo,
 }: PageHeaderProps) {
-  const { t } = useTranslation();
   const hasActions = !!extra || !!actions?.some((a) => !a.hidden);
 
   return (
     <div className="erp-page__head">
       <div className="erp-page__titles">
         <div className="erp-page__titlerow">
-          {backTo && (
-            <Link to={backTo} className="erp-backbtn" aria-label={t('shell.back')}>
-              <ArrowLeftOutlined />
-            </Link>
-          )}
+          {backTo && <BackButton to={backTo} />}
           <h1 className="erp-page__title">{title}</h1>
           {status && (
             <StatusTag tone={status.tone} dot>

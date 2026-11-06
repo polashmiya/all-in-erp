@@ -185,6 +185,8 @@ internal static class ItemCategoryEndpoints
                 int? departmentId = request.DepartmentId;
                 await db.ItemSubCategories.Where(s => s.CategoryId == id)
                     .ExecuteUpdateAsync(s => s.SetProperty(x => x.DepartmentId, departmentId), ct);
+                await db.Items.Where(i => i.CategoryId == id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.DepartmentId, request.DepartmentId), ct);
             }
 
             await transaction.CommitAsync(ct);

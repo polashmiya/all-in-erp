@@ -1,5 +1,6 @@
 export { useDebouncedValue } from './useDebouncedValue';
 export { useDisclosure } from './useDisclosure';
+export { useGoBack } from './useGoBack';
 export { useHotkey } from './useHotkey';
 export type { HotkeyOptions } from './useHotkey';
 export { useListState } from './useListState';

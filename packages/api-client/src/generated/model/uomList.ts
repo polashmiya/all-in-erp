@@ -5,8 +5,8 @@
  * Configurable ERP API. `/api/panel/*` serves the internal configuration Panel, `/api/erp/*` serves the client ERP app. Authenticate with the bearer token from the matching `/auth/login`; ERP calls that work on business-unit data also send `X-Business-Unit: {id}`.
  * OpenAPI spec version: v1
  */
-import type { StatusCounts } from './statusCounts';
-import type { UomRow } from './uomRow';
+import type { StatusCounts } from './statusCounts.ts';
+import type { UomRow } from './uomRow.ts';
 
 export interface UomList {
   items: UomRow[];

@@ -290,6 +290,297 @@ namespace Erp.Infrastructure.Persistence.Migrations
                     b.ToTable("UserBusinessUnits", (string)null);
                 });
 
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.Item", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ItemID")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AccountID")
+                        .HasColumnOrder(43);
+
+                    b.Property<decimal?>("AltUomConversionQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(18);
+
+                    b.Property<int?>("AltUomId")
+                        .HasColumnType("int")
+                        .HasColumnName("AltUomID")
+                        .HasColumnOrder(16);
+
+                    b.Property<string>("AltUomName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnOrder(17);
+
+                    b.Property<decimal?>("AverageCostPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(20);
+
+                    b.Property<string>("BarCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnOrder(2);
+
+                    b.Property<int?>("BarCodeSerial")
+                        .HasColumnType("int")
+                        .HasColumnOrder(41);
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("BusinessUnitID")
+                        .HasColumnOrder(44);
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemCategoryID")
+                        .HasColumnOrder(9);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("ItemCode")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(47);
+
+                    b.Property<Guid?>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatedByID")
+                        .HasColumnOrder(48);
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemDepartmentID")
+                        .HasColumnOrder(8);
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ItemDescription")
+                        .HasColumnOrder(5);
+
+                    b.Property<string>("HsCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("HSCode")
+                        .HasColumnOrder(3);
+
+                    b.Property<string>("ImageSource")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnOrder(42);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive")
+                        .HasColumnOrder(45);
+
+                    b.Property<bool>("IsAutoBarcode")
+                        .HasColumnType("bit")
+                        .HasColumnName("isAutoBarcode")
+                        .HasColumnOrder(38);
+
+                    b.Property<bool>("IsChildBarcode")
+                        .HasColumnType("bit")
+                        .HasColumnName("isChaildBarCode")
+                        .HasColumnOrder(39);
+
+                    b.Property<bool>("IsMultipleSalesPrice")
+                        .HasColumnType("bit")
+                        .HasColumnName("isMultipleSalesPrice")
+                        .HasColumnOrder(37);
+
+                    b.Property<bool>("IsNegativeSales")
+                        .HasColumnType("bit")
+                        .HasColumnName("isNegativeSales")
+                        .HasColumnOrder(36);
+
+                    b.Property<bool>("IsNoDecimalQty")
+                        .HasColumnType("bit")
+                        .HasColumnOrder(19);
+
+                    b.Property<bool>("IsPurchase")
+                        .HasColumnType("bit")
+                        .HasColumnName("isPurchase")
+                        .HasColumnOrder(35);
+
+                    b.Property<bool>("IsSaleable")
+                        .HasColumnType("bit")
+                        .HasColumnName("isSaleAble")
+                        .HasColumnOrder(34);
+
+                    b.Property<bool>("IsVatInclusive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isVatInclusive")
+                        .HasColumnOrder(32);
+
+                    b.Property<bool>("IsVatRebatable")
+                        .HasColumnType("bit")
+                        .HasColumnName("isVatRebatable")
+                        .HasColumnOrder(33);
+
+                    b.Property<int>("ItemTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemTypeID")
+                        .HasColumnOrder(6);
+
+                    b.Property<string>("ItemTypeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnOrder(7);
+
+                    b.Property<decimal?>("LastCostPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(21);
+
+                    b.Property<long?>("MasterItemId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("MasterItemID")
+                        .HasColumnOrder(40);
+
+                    b.Property<int>("MinorCategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemMinorCategoryID")
+                        .HasColumnOrder(11);
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(50);
+
+                    b.Property<Guid?>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ModifiedByID")
+                        .HasColumnOrder(49);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("ItemName")
+                        .HasColumnOrder(4);
+
+                    b.Property<int>("PurchaseSupplyTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("PurchaseSupplyTypeID")
+                        .HasColumnOrder(23);
+
+                    b.Property<string>("PurchaseSupplyTypeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnOrder(24);
+
+                    b.Property<int?>("PurchaseVatId")
+                        .HasColumnType("int")
+                        .HasColumnName("PurchaseVatID")
+                        .HasColumnOrder(25);
+
+                    b.Property<decimal?>("PurchaseVatPercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(26);
+
+                    b.Property<decimal?>("SalesPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(22);
+
+                    b.Property<int>("SalesSupplyTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("SalesSupplyTypeID")
+                        .HasColumnOrder(27);
+
+                    b.Property<string>("SalesSupplyTypeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnOrder(28);
+
+                    b.Property<int?>("SalesVatId")
+                        .HasColumnType("int")
+                        .HasColumnName("SalesVatID")
+                        .HasColumnOrder(29);
+
+                    b.Property<decimal?>("SalesVatPercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnOrder(30);
+
+                    b.Property<decimal?>("SdPercentage")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("SDPercentage")
+                        .HasColumnOrder(31);
+
+                    b.Property<int>("SubCategoryId")
+                        .HasColumnType("int")
+                        .HasColumnName("ItemSubCategoryID")
+                        .HasColumnOrder(10);
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int")
+                        .HasColumnName("SupplierID")
+                        .HasColumnOrder(12);
+
+                    b.Property<string>("SupplierName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnOrder(13);
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime")
+                        .HasColumnOrder(46);
+
+                    b.Property<int>("UomId")
+                        .HasColumnType("int")
+                        .HasColumnName("UomID")
+                        .HasColumnOrder(14);
+
+                    b.Property<string>("UomName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnOrder(15);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("AltUomId");
+
+                    b.HasIndex("BarCode")
+                        .HasDatabaseName("IX_Item_BarCode");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("MinorCategoryId");
+
+                    b.HasIndex("SubCategoryId");
+
+                    b.HasIndex("UomId");
+
+                    b.HasIndex("BusinessUnitId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("Item", (string)null);
+                });
+
             modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -1345,6 +1636,68 @@ namespace Erp.Infrastructure.Persistence.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Erp.Core.Domain.Inventory.Item", b =>
+                {
+                    b.HasOne("Erp.Core.Domain.Tenancy.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.UnitOfMeasure", "AltUom")
+                        .WithMany()
+                        .HasForeignKey("AltUomId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Erp.Core.Domain.Tenancy.BusinessUnit", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemDepartment", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemMinorCategory", "MinorCategory")
+                        .WithMany()
+                        .HasForeignKey("MinorCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.ItemSubCategory", "SubCategory")
+                        .WithMany()
+                        .HasForeignKey("SubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Erp.Core.Domain.Inventory.UnitOfMeasure", "Uom")
+                        .WithMany()
+                        .HasForeignKey("UomId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AltUom");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("MinorCategory");
+
+                    b.Navigation("SubCategory");
+
+                    b.Navigation("Uom");
                 });
 
             modelBuilder.Entity("Erp.Core.Domain.Inventory.ItemCategory", b =>

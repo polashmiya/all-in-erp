@@ -24,6 +24,11 @@ internal static class ItemMinorCategoryEndpoints
             .WithSummary("Minor categories of the current business unit with status counts")
             .RequirePermission($"{Feature}.view");
 
+        minorCategories.MapGet("/options", Options)
+            .WithName("GetItemMinorCategoryOptions")
+            .WithSummary("Minor categories for dropdowns, optionally of one sub category")
+            .RequireAnyPermission(ItemManagementMenu.LookupReaders);
+
         minorCategories.MapGet("/{id:int}", Get)
             .WithName("GetItemMinorCategory")
             .RequirePermission($"{Feature}.view")
@@ -115,6 +120,13 @@ internal static class ItemMinorCategoryEndpoints
         return new ItemMinorCategoryList(items, counts.TotalFor(status), counts);
     }
 
+    private static Task<List<ItemLookup>> Options(int? subCategoryId, ErpDbContext db, CancellationToken ct) =>
+        db.ItemMinorCategories.AsNoTracking()
+            .Where(m => subCategoryId == null || m.SubCategoryId == subCategoryId)
+            .OrderBy(m => m.Name)
+            .Select(m => new ItemLookup(m.Id, null, m.Name, m.IsActive, m.SubCategoryId))
+            .ToListAsync(ct);
+
     private static async Task<Results<Ok<ItemMinorCategoryRow>, NotFound>> Get(int id, ErpDbContext db, CancellationToken ct) =>
         await Rows(db.ItemMinorCategories.AsNoTracking().Where(m => m.Id == id)).SingleOrDefaultAsync(ct) is { } row
             ? TypedResults.Ok(row)
@@ -165,15 +177,28 @@ internal static class ItemMinorCategoryEndpoints
         if (subCategory.Problem is { } badSubCategory) return badSubCategory;
         if (await DuplicateAsync(db, id, request.SubCategoryId, name, ct) is { } invalid) return invalid;
 
+        var moved = minorCategory.SubCategoryId != request.SubCategoryId;
         minorCategory.SubCategoryId = request.SubCategoryId;
         minorCategory.CategoryId = subCategory.CategoryId;
         minorCategory.Name = name;
         minorCategory.ImageSource = MasterData.CleanImage(request.ImageSource);
         minorCategory.IsActive = request.IsActive;
 
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
         {
             await db.SaveChangesAsync(ct);
+            if (moved)
+            {
+                var (subCategoryId, categoryId, departmentId) = (request.SubCategoryId, subCategory.CategoryId, subCategory.DepartmentId);
+                await db.Items.Where(i => i.MinorCategoryId == id)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(x => x.SubCategoryId, subCategoryId)
+                        .SetProperty(x => x.CategoryId, categoryId)
+                        .SetProperty(x => x.DepartmentId, departmentId), ct);
+            }
+
+            await transaction.CommitAsync(ct);
         }
         catch (DbUpdateException e) when (MasterData.IsUniqueViolation(e))
         {
@@ -197,19 +222,19 @@ internal static class ItemMinorCategoryEndpoints
 
     private static Task<string?> NotInUse(List<int> ids, CancellationToken ct) => Task.FromResult<string?>(null);
 
-    private sealed record SubCategoryCheck(int CategoryId, ValidationProblem? Problem);
+    private sealed record SubCategoryCheck(int CategoryId, int DepartmentId, ValidationProblem? Problem);
 
     private static async Task<SubCategoryCheck> FindSubCategoryAsync(
         ErpDbContext db, int subCategoryId, int? currentSubCategoryId, CancellationToken ct)
     {
         var subCategory = await db.ItemSubCategories.Where(s => s.Id == subCategoryId)
-            .Select(s => new { s.CategoryId, s.IsActive })
+            .Select(s => new { s.CategoryId, s.Category!.DepartmentId, s.IsActive })
             .SingleOrDefaultAsync(ct);
 
-        if (subCategory is null) return new(0, MasterData.Invalid("subCategoryId", "Choose a sub category of this business unit."));
+        if (subCategory is null) return new(0, 0, MasterData.Invalid("subCategoryId", "Choose a sub category of this business unit."));
         if (!subCategory.IsActive && subCategoryId != currentSubCategoryId)
-            return new(0, MasterData.Invalid("subCategoryId", "This sub category is inactive. Activate it or choose another."));
-        return new(subCategory.CategoryId, null);
+            return new(0, 0, MasterData.Invalid("subCategoryId", "This sub category is inactive. Activate it or choose another."));
+        return new(subCategory.CategoryId, subCategory.DepartmentId, null);
     }
 
     private static async Task<ValidationProblem?> DuplicateAsync(

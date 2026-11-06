@@ -16,7 +16,13 @@ function parseHex(hex: string): Rgb {
 }
 
 function toHex({ r, g, b }: Rgb): string {
-  return `#${[r, g, b].map((c) => Math.round(Math.min(255, Math.max(0, c))).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+  return `#${[r, g, b]
+    .map((c) =>
+      Math.round(Math.min(255, Math.max(0, c)))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`.toUpperCase();
 }
 
 export function mix(color: string, base: string, amount: number): string {
@@ -44,6 +50,9 @@ export function luminance(color: string): number {
 }
 
 export function contrast(foreground: string, background: string): number {
-  const [light, dark] = [luminance(foreground), luminance(background)].sort((x, y) => y - x) as [number, number];
+  const [light, dark] = [luminance(foreground), luminance(background)].sort((x, y) => y - x) as [
+    number,
+    number,
+  ];
   return (light + 0.05) / (dark + 0.05);
 }

@@ -1,16 +1,5 @@
-import { ColumnHeightOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
-import {
-  Button,
-  Checkbox,
-  Grid,
-  Pagination,
-  Popover,
-  Select,
-  Skeleton,
-  Table,
-  Tooltip,
-  type TableProps,
-} from 'antd';
+import { ColumnHeightOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, Grid, Pagination, Select, Skeleton, Table, Tooltip, type TableProps } from 'antd';
 import type { ColumnType } from 'antd/es/table';
 import { useMemo, useRef, type Key, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,6 +9,7 @@ import { formatNumber, pageRange } from '../../utils/format';
 import { ActionGroup } from '../actions/ActionGroup';
 import type { ActionItem } from '../actions/types';
 import { EmptyState } from '../feedback/EmptyState';
+import { ColumnPicker } from './ColumnPicker';
 import { PAGE_SIZE_OPTIONS } from './constants';
 import { useTableSettings } from './table-settings';
 
@@ -83,7 +73,8 @@ export function DataTable<T extends object>({
 
   const hideable = (columns as ColumnType<T>[])
     .map((c, i) => ({ key: columnKey(c, i), title: c.title, fixed: !!c.fixed }))
-    .filter((c) => !c.fixed && typeof c.title === 'string');
+    .filter((c) => !c.fixed && typeof c.title === 'string')
+    .map((c) => ({ key: c.key, title: c.title as string }));
 
   const visibleColumns = useMemo(
     () =>
@@ -105,6 +96,29 @@ export function DataTable<T extends object>({
         .map((c) => (c.fixed && screens.md === false ? { ...c, fixed: undefined } : c)),
     [columns, hidden, sort, screens.md],
   );
+
+  const picker = hideable.length > 0 && (
+    <ColumnPicker
+      columns={hideable}
+      hidden={hidden}
+      onChange={(next) => updateSettings({ hidden: next })}
+    />
+  );
+  const lastColumn = visibleColumns.at(-1);
+  const tableColumns: ColumnType<T>[] = !picker
+    ? visibleColumns
+    : lastColumn?.key === 'actions'
+      ? [...visibleColumns.slice(0, -1), { ...lastColumn, title: picker }]
+      : [
+          ...visibleColumns,
+          {
+            key: '__columns',
+            title: picker,
+            width: 48,
+            fixed: screens.md === false ? undefined : 'right',
+            render: () => null,
+          },
+        ];
 
   const onChange: TableProps<T>['onChange'] = (pag, filters, sorter, extra) => {
     if (extra.action === 'sort' && onSortChange) {
@@ -136,34 +150,6 @@ export function DataTable<T extends object>({
           onClick={() => updateSettings({ density: density === 'middle' ? 'small' : 'middle' })}
         />
       </Tooltip>
-      {hideable.length > 0 && (
-        <Popover
-          trigger="click"
-          placement="bottomRight"
-          title={t('table.columns')}
-          content={
-            <Checkbox.Group
-              className="erp-stack"
-              value={hideable.map((c) => c.key).filter((k) => !hidden.includes(k))}
-              onChange={(keys) =>
-                updateSettings({
-                  hidden: hideable.map((c) => c.key).filter((k) => !keys.includes(k)),
-                })
-              }
-              options={hideable.map((c) => ({ value: c.key, label: c.title as string }))}
-            />
-          }
-        >
-          <Tooltip title={t('table.columns')}>
-            <Button
-              type="text"
-              size="small"
-              icon={<SettingOutlined />}
-              aria-label={t('table.columns')}
-            />
-          </Tooltip>
-        </Popover>
-      )}
       {onRefresh && (
         <Tooltip title={t('table.refresh')}>
           <Button
@@ -225,7 +211,7 @@ export function DataTable<T extends object>({
       <div ref={scrollRef} className="erp-table__scroll erp-scroll">
         <Table<T>
           size={density}
-          columns={visibleColumns}
+          columns={tableColumns}
           pagination={false}
           sticky={fill ? { getContainer: () => scrollRef.current ?? window } : true}
           scroll={{ x: 'max-content' }}

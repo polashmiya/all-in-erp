@@ -105,6 +105,14 @@ export function ListPageLayout<
   useHotkey('n', () => newAction && void runAction(newAction), { enabled: !!newAction });
 
   const hasFilterBar = !!search || filters.length > 0 || !!views;
+  const serialColumn: TableColumnsType<T>[number] = {
+    key: 'sl',
+    title: t('table.sl'),
+    width: 56,
+    align: 'center',
+    fixed: 'left',
+    render: (_value, _row, index) => (state.page - 1) * state.pageSize + index + 1,
+  };
   const filteredEmpty: DataTableEmpty = {
     title: t('common.noMatchTitle'),
     description: t('common.noMatchText'),
@@ -159,7 +167,7 @@ export function ListPageLayout<
         toolsContainer={hasFilterBar ? toolsEl : undefined}
         settingsKey={pathname}
         rowKey={rowKey}
-        columns={columns}
+        columns={[serialColumn, ...columns]}
         dataSource={rows}
         loading={loading}
         sort={state.sort}

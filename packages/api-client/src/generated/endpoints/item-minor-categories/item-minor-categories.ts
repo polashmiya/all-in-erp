@@ -23,7 +23,9 @@ import type {
 
 import type {
   AffectedRecords,
+  GetItemMinorCategoryOptionsParams,
   HttpValidationProblemDetails,
+  ItemLookup,
   ItemMinorCategoryList,
   ItemMinorCategoryRow,
   ListItemMinorCategoriesParams,
@@ -33,8 +35,8 @@ import type {
   SaveItemMinorCategoryRequest,
 } from '../../model';
 
-import { customFetch } from '../../../http/client';
-import type { ErrorType, BodyType } from '../../../http/client';
+import { customFetch } from '../../../http/client.ts';
+import type { ErrorType, BodyType } from '../../../http/client.ts';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -315,6 +317,157 @@ export const useCreateItemMinorCategory = <
 > => {
   return useMutation(getCreateItemMinorCategoryMutationOptions(options), queryClient);
 };
+export const getGetItemMinorCategoryOptionsUrl = (params?: GetItemMinorCategoryOptionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/erp/item-management/minor-categories/options?${stringifiedParams}`
+    : `/api/erp/item-management/minor-categories/options`;
+};
+
+/**
+ * @summary Minor categories for dropdowns, optionally of one sub category
+ */
+export const getItemMinorCategoryOptions = async (
+  params?: GetItemMinorCategoryOptionsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ItemLookup[]> => {
+  return customFetch<ItemLookup[]>(getGetItemMinorCategoryOptionsUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetItemMinorCategoryOptionsQueryKey = (
+  params?: GetItemMinorCategoryOptionsParams,
+) => {
+  return [
+    `/api/erp/item-management/minor-categories/options`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetItemMinorCategoryOptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: GetItemMinorCategoryOptionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetItemMinorCategoryOptionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>> = ({
+    signal,
+  }) => getItemMinorCategoryOptions(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetItemMinorCategoryOptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getItemMinorCategoryOptions>>
+>;
+export type GetItemMinorCategoryOptionsQueryError = ErrorType<ProblemDetails>;
+
+export function useGetItemMinorCategoryOptions<
+  TData = Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | GetItemMinorCategoryOptionsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getItemMinorCategoryOptions>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetItemMinorCategoryOptions<
+  TData = Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: GetItemMinorCategoryOptionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+          TError,
+          Awaited<ReturnType<typeof getItemMinorCategoryOptions>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetItemMinorCategoryOptions<
+  TData = Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: GetItemMinorCategoryOptionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Minor categories for dropdowns, optionally of one sub category
+ */
+
+export function useGetItemMinorCategoryOptions<
+  TData = Awaited<ReturnType<typeof getItemMinorCategoryOptions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: GetItemMinorCategoryOptionsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getItemMinorCategoryOptions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetItemMinorCategoryOptionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getGetItemMinorCategoryUrl = (id: number) => {
   return `/api/erp/item-management/minor-categories/${id}`;
 };

@@ -30,7 +30,6 @@ import {
 import { App, Segmented, Table, type TableColumnsType } from 'antd';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { itemPaths } from '@/modules/system-setup/item-management/item-profile/constants';
 import type {
   ActivityKind,
@@ -167,9 +166,7 @@ export function ReorderCard({ rows, total }: { rows: ReorderRow[]; total: number
     {
       key: 'item',
       title: t('dashboard.colItem'),
-      render: (_, row) => (
-        <TitleCell title={<Link to={itemPaths.view(row.id)}>{row.name}</Link>} subtitle={row.id} />
-      ),
+      render: (_, row) => <TitleCell title={row.name} subtitle={row.id} />,
     },
     {
       key: 'onHand',
